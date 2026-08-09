@@ -1,0 +1,121 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Command, ArrowRight, ShieldCheck, ChefHat, Layers, Receipt, Award, Settings, User, Sparkles, X } from 'lucide-react';
+
+interface CommandItem {
+  id: string;
+  title: string;
+  category: 'Navigation' | 'Actions' | 'Entities';
+  icon: any;
+  action: () => void;
+  shortcut?: string;
+}
+
+interface CommandPaletteProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
+  const [query, setQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        isOpen ? onClose() : null;
+      }
+      if (e.key === '/' && !isOpen && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault();
+      }
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const items: CommandItem[] = [
+    { id: 'nav-admin', title: 'Operational Admin Mission Control', category: 'Navigation', icon: ShieldCheck, action: () => { navigate('/admin/dashboard'); onClose(); } },
+    { id: 'nav-owner', title: 'Owner CEO Financial Analytics', category: 'Navigation', icon: Award, action: () => { navigate('/owner/dashboard'); onClose(); } },
+    { id: 'nav-kds', title: 'Kitchen Display System (KDS)', category: 'Navigation', icon: ChefHat, action: () => { navigate('/kitchen/kds'); onClose(); } },
+    { id: 'nav-waiter', title: 'Waiter Floor Mission Control', category: 'Navigation', icon: Layers, action: () => { navigate('/waiter/dashboard'); onClose(); } },
+    { id: 'nav-cashier', title: 'Cashier POS Terminal', category: 'Navigation', icon: Receipt, action: () => { navigate('/cashier/pos'); onClose(); } },
+    { id: 'nav-menu', title: 'Customer Gastronomy Menu', category: 'Navigation', icon: Sparkles, action: () => { navigate('/'); onClose(); } },
+    { id: 'nav-settings', title: 'SaaS Platform Settings', category: 'Navigation', icon: Settings, action: () => { navigate('/settings'); onClose(); } },
+    { id: 'nav-profile', title: 'Staff User Profile', category: 'Navigation', icon: User, action: () => { navigate('/profile'); onClose(); } },
+    { id: 'act-demo', title: 'Toggle Live Simulation Mode', category: 'Actions', icon: Sparkles, action: () => { alert('Demo simulation toggled'); onClose(); }, shortcut: 'Alt+D' },
+    { id: 'act-export', title: 'Export Audit Log Report (CSV)', category: 'Actions', icon: ArrowRight, action: () => { alert('Exporting Audit CSV...'); onClose(); } },
+  ];
+
+  const filteredItems = items.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-start justify-center pt-20 p-4">
+      <div className="bg-aura-container border border-aura-border text-aura-ivory w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+        {/* Search Header */}
+        <div className="p-4 border-b border-aura-border flex items-center space-x-3">
+          <Search className="w-5 h-5 text-aura-gold" />
+          <input
+            type="text"
+            autoFocus
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
+            placeholder="Type a command, search pages, or trigger action... (Esc to close)"
+            className="flex-1 bg-transparent text-sm text-aura-ivory placeholder:text-aura-slate focus:outline-none"
+          />
+          <button onClick={onClose} className="text-aura-slate hover:text-aura-ivory">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Results List */}
+        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-aura-border/40">
+          {filteredItems.length === 0 ? (
+            <div className="p-6 text-center text-xs text-aura-slate">No commands or results found</div>
+          ) : (
+            filteredItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.id}
+                  onClick={item.action}
+                  className={`p-3 rounded-xl cursor-pointer flex items-center justify-between transition-all text-xs ${
+                    index === selectedIndex ? 'bg-aura-gold/10 text-aura-gold font-bold border border-aura-gold/30' : 'hover:bg-aura-obsidian/60 text-aura-ivory'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Icon className="w-4 h-4 text-aura-gold" />
+                    <span>{item.title}</span>
+                  </div>
+                  <span className="text-[10px] text-aura-slate font-mono uppercase bg-aura-obsidian px-2 py-0.5 rounded border border-aura-border">
+                    {item.category}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Footer Shortcut Bar */}
+        <div className="bg-aura-obsidian/80 px-4 py-2.5 border-t border-aura-border flex justify-between items-center text-[10px] text-aura-slate font-mono">
+          <div className="flex items-center space-x-3">
+            <span>↑↓ Navigate</span>
+            <span>↵ Select</span>
+            <span>Esc Close</span>
+          </div>
+          <span className="text-aura-gold font-bold">AURA Command Bar</span>
+        </div>
+      </div>
+    </div>
+  );
+};

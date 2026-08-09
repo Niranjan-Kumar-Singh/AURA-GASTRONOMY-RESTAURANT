@@ -1,0 +1,56 @@
+{
+  "restaurant": {
+    "name": "AURA Fine Dining",
+    "tagline": "Where Exceptional Cuisine Meets Intelligent Dining",
+    "location": {
+      "address": "100 Feet Road, Indiranagar",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "country": "India",
+      "postalCode": "560038"
+    },
+    "openingHours": "11:00 AM - 11:30 PM",
+    "seatingCapacity": 120,
+    "totalTables": 30,
+    "zones": ["Main Hall", "VIP Lounge", "Outdoor Garden", "Family Section"]
+  },
+  "colors": {
+    "primary": "#D4AF37",
+    "primaryName": "Luxury Gold",
+    "secondary": "#0B0B0F",
+    "secondaryName": "Obsidian",
+    "accent": "#10B981",
+    "accentName": "Emerald",
+    "surface": "#16161E",
+    "surfaceName": "Dark Velvet",
+    "text": "#F8FAFC",
+    "textName": "Pure Ivory",
+    "muted": "#A1A1AA",
+    "mutedName": "Warm Taupe"
+  },
+  "typography": {
+    "headers": "Playfair Display",
+    "body": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "brandPersonality": [
+    "Elegant",
+    "Modern",
+    "Premium",
+    "Minimal",
+    "Luxury",
+    "Warm Hospitality"
+  ],
+  "interaction": {
+    "animationBudgetMs": 250,
+    "coreUiStates": [
+      "Initial",
+      "Loading",
+      "Empty",
+      "Error",
+      "Success",
+      "Offline",
+      "Unauthorized"
+    ]
+  }
+}
