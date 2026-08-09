@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, Users, ArrowRight, ShieldCheck, RefreshCw, X, Sparkles, Building2, Check, ExternalLink, Percent, Calculator } from 'lucide-react';
+import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, Users, ArrowRight, ShieldCheck, RefreshCw, X, Sparkles, Building2, Check, ExternalLink, Percent, Calculator, History, Search } from 'lucide-react';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
@@ -23,12 +23,27 @@ interface POSBill {
   sgst: number;
   total: number;
   status: 'billing' | 'occupied' | 'settled';
+  paymentMethod?: string;
+  invoiceNumber?: string;
+  paidAt?: string;
 }
 
-// Realistic fallback bills for POS demonstration when floor is empty
-const MOCK_POS_BILLS: POSBill[] = [
+const LOCAL_STORAGE_SETTLED_KEY = 'aura_pos_settled_bills_v2';
+
+// Helper to get stored settled tables from localStorage
+const getStoredSettledBills = (): Record<number, POSBill> => {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_SETTLED_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+};
+
+// Fallback initial sample bills if floor is completely fresh
+const INITIAL_DEMO_BILLS: POSBill[] = [
   {
-    tableId: 'temp-10',
+    tableId: 'demo-10',
     tableNumber: 10,
     tableName: 'Table 10 (Main Hall)',
     zone: 'Main Hall',
@@ -48,7 +63,7 @@ const MOCK_POS_BILLS: POSBill[] = [
     status: 'billing',
   },
   {
-    tableId: 'temp-14',
+    tableId: 'demo-14',
     tableNumber: 14,
     tableName: 'Table 14 (VIP Lounge)',
     zone: 'VIP Lounge',
@@ -66,24 +81,6 @@ const MOCK_POS_BILLS: POSBill[] = [
     total: 18375,
     status: 'billing',
   },
-  {
-    tableId: 'temp-18',
-    tableNumber: 18,
-    tableName: 'Table 18 (Outdoor Garden)',
-    zone: 'Outdoor Garden',
-    orderId: 'ORD-5104',
-    customerName: 'Garden Gazebo Party',
-    items: [
-      { name: 'Smoked Lobster Bisque', qty: 4, price: 1200 },
-      { name: 'Pan-Seared Sea Bass', qty: 4, price: 2400 },
-      { name: 'Tiramisu Tradizionale', qty: 4, price: 800 },
-    ],
-    subtotal: 17600,
-    cgst: 440,
-    sgst: 440,
-    total: 18480,
-    status: 'billing',
-  },
 ];
 
 export const CashierPOSPage: React.FC = () => {
@@ -91,7 +88,8 @@ export const CashierPOSPage: React.FC = () => {
   const [bills, setBills] = useState<POSBill[]>([]);
   const [selectedTableNumber, setSelectedTableNumber] = useState<number>(10);
   const [isLoading, setIsLoading] = useState(false);
-  const [filterTab, setFilterTab] = useState<'BILLING_ONLY' | 'ALL_ACTIVE'>('BILLING_ONLY');
+  const [filterTab, setFilterTab] = useState<'PENDING' | 'SETTLED_TODAY' | 'ALL'>('PENDING');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // POS Payment Options State
   const [splitCount, setSplitCount] = useState<number>(1);
@@ -99,12 +97,21 @@ export const CashierPOSPage: React.FC = () => {
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [cashTendered, setCashTendered] = useState<string>('');
 
-  // Settlement & Invoice Modal
-  const [settledTables, setSettledTables] = useState<Record<number, boolean>>({});
+  // Persistent Settlement Tracking Map
+  const [settledBillsMap, setSettledBillsMap] = useState<Record<number, POSBill>>(() => getStoredSettledBills());
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const [invoiceBill, setInvoiceBill] = useState<POSBill | null>(null);
 
-  // Fetch live tables from database
+  // Sync settled map to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_SETTLED_KEY, JSON.stringify(settledBillsMap));
+    } catch (e) {
+      console.error('Failed to persist settled bills to localStorage:', e);
+    }
+  }, [settledBillsMap]);
+
+  // Fetch live tables & orders from backend
   const fetchLivePOSData = async (isManual = false) => {
     if (isManual) setIsLoading(true);
     try {
@@ -119,12 +126,20 @@ export const CashierPOSPage: React.FC = () => {
       });
 
       const liveBills: POSBill[] = [];
+      const currentSettled = getStoredSettledBills();
 
       tableData.forEach((table: any) => {
         const num = Number(table.tableNumber);
         const activeOrder = orderMap.get(String(num)) || orderMap.get(String(table._id));
 
-        if (table.status === 'billing' || (activeOrder && activeOrder.totalAmount > 0)) {
+        // If table was already settled by cashier, attach settled state
+        if (currentSettled[num]) {
+          liveBills.push(currentSettled[num]);
+          return;
+        }
+
+        // Active billing tables
+        if (table.status === 'billing' || (table.status === 'occupied' && activeOrder && activeOrder.totalAmount > 0)) {
           let zone = 'Main Hall';
           if (num > 12 && num <= 16) zone = 'VIP Lounge';
           if (num > 16 && num <= 24) zone = 'Outdoor Garden';
@@ -156,23 +171,27 @@ export const CashierPOSPage: React.FC = () => {
             cgst,
             sgst,
             total,
-            status: (table.status as any) || 'billing',
+            status: table.status as any,
           });
         }
       });
 
-      // Merge mock bills if no live billing tables found, to ensure Cashier POS is always functional
-      const finalBills = liveBills.length > 0 ? liveBills : MOCK_POS_BILLS;
-      setBills(finalBills);
-
-      if (!finalBills.some((b) => b.tableNumber === selectedTableNumber)) {
-        setSelectedTableNumber(finalBills[0]?.tableNumber || 10);
+      // Merge fallback initial bills if no tables are active at all, BUT respecting settled state!
+      if (liveBills.length === 0) {
+        INITIAL_DEMO_BILLS.forEach((demo) => {
+          if (currentSettled[demo.tableNumber]) {
+            liveBills.push(currentSettled[demo.tableNumber]);
+          } else {
+            liveBills.push(demo);
+          }
+        });
       }
+
+      setBills(liveBills);
 
       if (isManual) showToast('POS Terminal synchronized with floor state', 'info');
     } catch (error) {
       console.error('Failed to sync POS bills:', error);
-      setBills(MOCK_POS_BILLS);
     } finally {
       setIsLoading(false);
     }
@@ -180,14 +199,14 @@ export const CashierPOSPage: React.FC = () => {
 
   useEffect(() => {
     fetchLivePOSData();
-    const interval = setInterval(() => fetchLivePOSData(false), 4000);
+    const interval = setInterval(() => fetchLivePOSData(false), 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const currentBill = bills.find((b) => b.tableNumber === selectedTableNumber) || bills[0] || MOCK_POS_BILLS[0];
-  const isCurrentSettled = !!settledTables[currentBill?.tableNumber];
+  const currentBill = bills.find((b) => b.tableNumber === selectedTableNumber) || bills[0];
+  const isCurrentSettled = currentBill?.status === 'settled' || !!settledBillsMap[currentBill?.tableNumber];
 
-  // Calculations
+  // Financial calculations
   const discountAmount = Math.round((currentBill?.subtotal || 0) * (discountPercent / 100));
   const netSubtotal = Math.max(0, (currentBill?.subtotal || 0) - discountAmount);
   const netCgst = Math.round(netSubtotal * 0.025);
@@ -197,26 +216,43 @@ export const CashierPOSPage: React.FC = () => {
   const perPersonTotal = Math.round(finalGrandTotal / Math.max(1, splitCount));
   const changeDue = Math.max(0, (parseFloat(cashTendered) || 0) - finalGrandTotal);
 
+  // Settlement Handler — executes backend pay-table and permanently persists settled state
   const handleSettlePayment = async () => {
-    if (!currentBill) return;
+    if (!currentBill || isCurrentSettled) return;
 
     try {
-      // 1. Mark table status as 'cleaning' in backend to transition lifecycle
-      await tableService.updateTableStatus(currentBill.tableId, 'cleaning').catch(() => {});
+      setIsLoading(true);
+      const res = await orderService.settleTableBill(currentBill.tableNumber, paymentMethod).catch(() => null);
+      const invNum = res?.data?.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      // 2. Mark order as completed if active
-      if (currentBill.orderId) {
-        await orderService.updateOrderStatus(currentBill.orderId, 'completed').catch(() => {});
-      }
+      const updatedBill: POSBill = {
+        ...currentBill,
+        total: finalGrandTotal,
+        status: 'settled',
+        paymentMethod,
+        invoiceNumber: invNum,
+        paidAt: timestamp,
+      };
 
-      setSettledTables((prev) => ({ ...prev, [currentBill.tableNumber]: true }));
-      showToast(`Bill ₹${finalGrandTotal.toLocaleString('en-IN')} for Table ${currentBill.tableNumber} settled via ${paymentMethod}!`, 'success');
-      
-      // Auto open tax invoice modal
-      setInvoiceBill({ ...currentBill, total: finalGrandTotal });
+      // 1. Update persistent settled map
+      setSettledBillsMap((prev) => ({
+        ...prev,
+        [currentBill.tableNumber]: updatedBill,
+      }));
+
+      // 2. Update bills in React state
+      setBills((prev) => prev.map((b) => (b.tableNumber === currentBill.tableNumber ? updatedBill : b)));
+
+      showToast(`Bill ₹${finalGrandTotal.toLocaleString('en-IN')} for Table ${currentBill.tableNumber} SETTLED via ${paymentMethod}!`, 'success');
+
+      // 3. Open Tax Invoice Receipt Modal
+      setInvoiceBill(updatedBill);
       setIsInvoiceOpen(true);
     } catch (error) {
       showToast(`Settlement process error for Table ${currentBill.tableNumber}`, 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -225,20 +261,38 @@ export const CashierPOSPage: React.FC = () => {
     showToast('Printing Tax Invoice Receipt...', 'info');
   };
 
+  const handleResetSettledHistory = () => {
+    localStorage.removeItem(LOCAL_STORAGE_SETTLED_KEY);
+    setSettledBillsMap({});
+    fetchLivePOSData(true);
+    showToast('POS Settlement History reset', 'info');
+  };
+
+  // Filter bills list for left sidebar
   const filteredBillsList = bills.filter((b) => {
-    if (filterTab === 'BILLING_ONLY') return b.status === 'billing' || !settledTables[b.tableNumber];
+    const isSettled = b.status === 'settled' || !!settledBillsMap[b.tableNumber];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch = b.tableName.toLowerCase().includes(q) || b.orderId.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+    }
+    if (filterTab === 'PENDING') return !isSettled;
+    if (filterTab === 'SETTLED_TODAY') return isSettled;
     return true;
   });
 
+  const pendingCount = bills.filter((b) => b.status !== 'settled' && !settledBillsMap[b.tableNumber]).length;
+  const settledCount = Object.keys(settledBillsMap).length;
+
   return (
-    // Fixed Two-Column Height Layout (identical to Waiter & Kitchen Dashboards)
+    // Fixed Two-Column Height Layout
     <div className="flex h-full min-h-0 w-full font-sans text-aura-ivory overflow-hidden">
 
       {/* ─────────────────────────────────────────────────────────────────
-          LEFT PANEL — Pending Table Bills Queue Sidebar
+          LEFT PANEL — Pending & Settled Table Bills Queue Sidebar
       ───────────────────────────────────────────────────────────────── */}
       <aside className="w-80 flex-shrink-0 h-full flex flex-col bg-aura-container border-r border-aura-border/80 overflow-hidden">
-        
+
         {/* POS Station Header */}
         <div className="p-5 border-b border-aura-border/60 space-y-3">
           <div className="flex items-center justify-between">
@@ -254,45 +308,73 @@ export const CashierPOSPage: React.FC = () => {
 
             <button
               onClick={() => fetchLivePOSData(true)}
-              className="p-2 bg-aura-obsidian border border-aura-border hover:border-aura-gold text-aura-slate hover:text-aura-gold rounded-xl transition-all"
+              className="p-2 bg-aura-obsidian border border-aura-border hover:border-aura-gold text-aura-slate hover:text-aura-gold rounded-xl transition-all cursor-pointer"
               title="Sync POS Floor Data"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-aura-gold' : ''}`} />
             </button>
           </div>
 
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-aura-slate" />
+            <input
+              type="text"
+              placeholder="Search table # or order ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+            />
+          </div>
+
           {/* Filter Tabs */}
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-aura-obsidian/80 rounded-xl border border-aura-border/50 text-[11px] font-bold">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-aura-obsidian/80 rounded-xl border border-aura-border/50 text-[10px] font-bold text-center">
             <button
-              onClick={() => setFilterTab('BILLING_ONLY')}
-              className={`py-1.5 rounded-lg transition-all ${filterTab === 'BILLING_ONLY' ? 'bg-aura-gold text-aura-obsidian font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
+              onClick={() => setFilterTab('PENDING')}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'PENDING' ? 'bg-amber-500 text-aura-obsidian font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
             >
-              Pending ({bills.filter(b => !settledTables[b.tableNumber]).length})
+              Pending ({pendingCount})
             </button>
             <button
-              onClick={() => setFilterTab('ALL_ACTIVE')}
-              className={`py-1.5 rounded-lg transition-all ${filterTab === 'ALL_ACTIVE' ? 'bg-aura-gold text-aura-obsidian font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
+              onClick={() => setFilterTab('SETTLED_TODAY')}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'SETTLED_TODAY' ? 'bg-emerald-500 text-aura-obsidian font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
             >
-              All Tables ({bills.length})
+              Settled ({settledCount})
+            </button>
+            <button
+              onClick={() => setFilterTab('ALL')}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'ALL' ? 'bg-aura-gold text-aura-obsidian font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
+            >
+              All ({bills.length})
             </button>
           </div>
         </div>
 
         {/* Scrollable Bills Queue */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block px-1">
-            Active Billing Queues ({filteredBillsList.length})
-          </span>
-
           {filteredBillsList.length === 0 ? (
-            <div className="py-12 text-center text-aura-slate space-y-2 bg-aura-obsidian/40 border border-aura-border/40 rounded-2xl p-4">
-              <CheckCircle className="w-8 h-8 mx-auto text-emerald-400/60" />
-              <p className="text-xs font-bold text-aura-ivory">No Pending Bills</p>
-              <p className="text-[10px]">All dining table sessions have been settled!</p>
+            <div className="py-12 text-center text-aura-slate space-y-3 bg-aura-obsidian/40 border border-aura-border/40 rounded-2xl p-4">
+              <CheckCircle className="w-8 h-8 mx-auto text-emerald-400/70 animate-bounce" />
+              <div>
+                <p className="text-xs font-bold text-aura-ivory">
+                  {filterTab === 'PENDING' ? 'All Pending Bills Settled!' : 'No Bills Found'}
+                </p>
+                <p className="text-[10px] text-aura-slate mt-0.5">
+                  {filterTab === 'PENDING' ? 'No active tables awaiting checkout.' : 'Try changing search or tab filters.'}
+                </p>
+              </div>
+              {filterTab === 'PENDING' && settledCount > 0 && (
+                <button
+                  onClick={() => setFilterTab('SETTLED_TODAY')}
+                  className="px-3 py-1.5 bg-aura-obsidian border border-emerald-500/40 text-emerald-400 text-[10px] font-bold rounded-xl hover:bg-emerald-500/10 transition-all cursor-pointer"
+                >
+                  View Settled Bills ({settledCount})
+                </button>
+              )}
             </div>
           ) : (
             filteredBillsList.map((bill) => {
-              const isSettled = !!settledTables[bill.tableNumber];
+              const isSettled = bill.status === 'settled' || !!settledBillsMap[bill.tableNumber];
               const isSelected = selectedTableNumber === bill.tableNumber;
 
               return (
@@ -307,7 +389,7 @@ export const CashierPOSPage: React.FC = () => {
                     isSelected
                       ? 'bg-aura-gold/15 border-aura-gold ring-1 ring-aura-gold/40 shadow-xl'
                       : isSettled
-                      ? 'bg-emerald-950/20 border-emerald-500/40 opacity-75'
+                      ? 'bg-emerald-950/20 border-emerald-500/40'
                       : 'bg-aura-obsidian/80 border-aura-border/70 hover:border-aura-gold/50'
                   }`}
                 >
@@ -320,7 +402,7 @@ export const CashierPOSPage: React.FC = () => {
                         {bill.zone}
                       </span>
                     </div>
-                    
+
                     {isSettled ? (
                       <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center space-x-1">
                         <Check className="w-3 h-3" />
@@ -335,7 +417,9 @@ export const CashierPOSPage: React.FC = () => {
 
                   <div className="flex justify-between items-center text-[10px] font-mono text-aura-slate pt-1 border-t border-aura-border/40">
                     <span>{bill.orderId}</span>
-                    <span>{bill.items.length} Recipe Dish(es)</span>
+                    <span className={isSettled ? 'text-emerald-400 font-bold' : ''}>
+                      {isSettled ? `Settled ${bill.paidAt || 'Today'}` : `${bill.items.length} Recipe Dish(es)`}
+                    </span>
                   </div>
                 </div>
               );
@@ -346,13 +430,21 @@ export const CashierPOSPage: React.FC = () => {
         {/* Footer Summary Bar */}
         <div className="p-4 border-t border-aura-border/60 bg-aura-container/90 space-y-2 text-xs font-mono">
           <div className="flex justify-between text-aura-slate">
-            <span>Settled Today:</span>
-            <span className="text-emerald-400 font-bold">{Object.keys(settledTables).length} Sessions</span>
+            <span>Pending Billing Queue:</span>
+            <span className="text-amber-400 font-bold">{pendingCount} Tables</span>
           </div>
           <div className="flex justify-between text-aura-slate">
-            <span>Pending Queue:</span>
-            <span className="text-amber-400 font-bold">{bills.length - Object.keys(settledTables).length} Tables</span>
+            <span>Settled & Closed Today:</span>
+            <span className="text-emerald-400 font-bold">{settledCount} Sessions</span>
           </div>
+          {settledCount > 0 && (
+            <button
+              onClick={handleResetSettledHistory}
+              className="w-full text-[9px] text-aura-slate hover:text-rose-400 font-mono text-center pt-1 border-t border-aura-border/40 block transition-colors cursor-pointer"
+            >
+              Reset Session History
+            </button>
+          )}
         </div>
       </aside>
 
@@ -381,19 +473,19 @@ export const CashierPOSPage: React.FC = () => {
 
               {isCurrentSettled ? (
                 <div className="flex items-center space-x-3">
-                  <span className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-xs rounded-xl flex items-center space-x-1.5">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>SETTLED & PAID</span>
-                  </span>
+                  <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-xs rounded-xl flex items-center space-x-1.5 shadow-lg">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span>SETTLED & PAID ({currentBill.paymentMethod || 'UPI'})</span>
+                  </div>
                   <button
                     onClick={() => {
-                      setInvoiceBill({ ...currentBill, total: finalGrandTotal });
+                      setInvoiceBill(currentBill);
                       setIsInvoiceOpen(true);
                     }}
                     className="px-4 py-2 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 shadow-lg"
                   >
                     <Printer className="w-4 h-4" />
-                    <span>Print Invoice</span>
+                    <span>Print Tax Invoice</span>
                   </button>
                 </div>
               ) : (
@@ -437,58 +529,62 @@ export const CashierPOSPage: React.FC = () => {
                   </div>
 
                   {/* Split Bill N-Ways Calculator */}
-                  <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-3 mt-4">
-                    <div className="flex items-center justify-between text-xs font-semibold text-aura-ivory">
-                      <div className="flex items-center space-x-2">
-                        <Split className="w-4 h-4 text-aura-gold" />
-                        <span>Split Bill Equal N-Ways</span>
+                  {!isCurrentSettled && (
+                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-3 mt-4">
+                      <div className="flex items-center justify-between text-xs font-semibold text-aura-ivory">
+                        <div className="flex items-center space-x-2">
+                          <Split className="w-4 h-4 text-aura-gold" />
+                          <span>Split Bill Equal N-Ways</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setSplitCount(Math.max(1, splitCount - 1))}
+                            className="w-8 h-8 bg-aura-container border border-aura-border rounded-xl text-aura-ivory font-bold hover:border-aura-gold transition-colors cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="font-mono text-sm font-bold px-3 text-aura-gold">{splitCount} Guests</span>
+                          <button
+                            onClick={() => setSplitCount(splitCount + 1)}
+                            className="w-8 h-8 bg-aura-container border border-aura-border rounded-xl text-aura-ivory font-bold hover:border-aura-gold transition-colors cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setSplitCount(Math.max(1, splitCount - 1))}
-                          className="w-8 h-8 bg-aura-container border border-aura-border rounded-xl text-aura-ivory font-bold hover:border-aura-gold transition-colors cursor-pointer"
-                        >
-                          -
-                        </button>
-                        <span className="font-mono text-sm font-bold px-3 text-aura-gold">{splitCount} Guests</span>
-                        <button
-                          onClick={() => setSplitCount(splitCount + 1)}
-                          className="w-8 h-8 bg-aura-container border border-aura-border rounded-xl text-aura-ivory font-bold hover:border-aura-gold transition-colors cursor-pointer"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
 
-                    {splitCount > 1 && (
-                      <div className="p-3 bg-aura-gold/10 border border-aura-gold/30 rounded-xl text-center text-xs font-bold text-aura-gold font-mono flex items-center justify-between">
-                        <span>Share Per Guest ({splitCount}-Way Split):</span>
-                        <span className="text-sm font-black">₹{perPersonTotal.toLocaleString('en-IN')} / person</span>
-                      </div>
-                    )}
-                  </div>
+                      {splitCount > 1 && (
+                        <div className="p-3 bg-aura-gold/10 border border-aura-gold/30 rounded-xl text-center text-xs font-bold text-aura-gold font-mono flex items-center justify-between">
+                          <span>Share Per Guest ({splitCount}-Way Split):</span>
+                          <span className="text-sm font-black">₹{perPersonTotal.toLocaleString('en-IN')} / person</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Discount Selector */}
-                  <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-mono text-aura-slate uppercase block font-bold">
-                      Apply Executive Discount:
-                    </span>
-                    <div className="flex space-x-2">
-                      {[0, 5, 10, 15, 20].map((pct) => (
-                        <button
-                          key={pct}
-                          onClick={() => setDiscountPercent(pct)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
-                            discountPercent === pct
-                              ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-md'
-                              : 'bg-aura-container text-aura-slate border-aura-border hover:text-aura-ivory'
-                          }`}
-                        >
-                          {pct === 0 ? 'None' : `${pct}% OFF`}
-                        </button>
-                      ))}
+                  {!isCurrentSettled && (
+                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-2">
+                      <span className="text-[10px] font-mono text-aura-slate uppercase block font-bold">
+                        Apply Executive Discount:
+                      </span>
+                      <div className="flex space-x-2">
+                        {[0, 5, 10, 15, 20].map((pct) => (
+                          <button
+                            key={pct}
+                            onClick={() => setDiscountPercent(pct)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
+                              discountPercent === pct
+                                ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-md'
+                                : 'bg-aura-container text-aura-slate border-aura-border hover:text-aura-ivory'
+                            }`}
+                          >
+                            {pct === 0 ? 'None' : `${pct}% OFF`}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -500,147 +596,159 @@ export const CashierPOSPage: React.FC = () => {
                     <span>Payment Terminal</span>
                   </h3>
 
-                  {/* Payment Method Tabs */}
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-mono text-aura-slate uppercase block font-bold">
-                      Select Collection Mode:
-                    </span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={() => setPaymentMethod('UPI')}
-                        className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
-                          paymentMethod === 'UPI'
-                            ? 'bg-aura-gold text-aura-obsidian border-aura-gold font-black shadow-lg'
-                            : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                        }`}
-                      >
-                        <QrCode className="w-5 h-5" />
-                        <span>UPI QR</span>
-                      </button>
+                  {!isCurrentSettled ? (
+                    <>
+                      {/* Payment Method Tabs */}
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-mono text-aura-slate uppercase block font-bold">
+                          Select Collection Mode:
+                        </span>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            onClick={() => setPaymentMethod('UPI')}
+                            className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
+                              paymentMethod === 'UPI'
+                                ? 'bg-aura-gold text-aura-obsidian border-aura-gold font-black shadow-lg'
+                                : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                            }`}
+                          >
+                            <QrCode className="w-5 h-5" />
+                            <span>UPI QR</span>
+                          </button>
 
-                      <button
-                        onClick={() => setPaymentMethod('CARD')}
-                        className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
-                          paymentMethod === 'CARD'
-                            ? 'bg-aura-gold text-aura-obsidian border-aura-gold font-black shadow-lg'
-                            : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                        }`}
-                      >
-                        <CreditCard className="w-5 h-5" />
-                        <span>Card POS</span>
-                      </button>
+                          <button
+                            onClick={() => setPaymentMethod('CARD')}
+                            className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
+                              paymentMethod === 'CARD'
+                                ? 'bg-aura-gold text-aura-obsidian border-aura-gold font-black shadow-lg'
+                                : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                            }`}
+                          >
+                            <CreditCard className="w-5 h-5" />
+                            <span>Card POS</span>
+                          </button>
 
-                      <button
-                        onClick={() => setPaymentMethod('CASH')}
-                        className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
-                          paymentMethod === 'CASH'
-                            ? 'bg-aura-gold text-aura-obsidian border-aura-gold font-black shadow-lg'
-                            : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                        }`}
-                      >
-                        <DollarSign className="w-5 h-5" />
-                        <span>Cash</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Dynamic Mode Helper View */}
-                  {paymentMethod === 'UPI' && (
-                    <div className="p-4 bg-white rounded-2xl text-center space-y-2 text-aura-obsidian border border-amber-400/50 shadow-inner">
-                      <span className="text-[10px] font-mono font-bold text-gray-700 uppercase block tracking-wider">
-                        Scan to Pay ₹{finalGrandTotal.toLocaleString('en-IN')}
-                      </span>
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=aura.restaurant@upi%26pn=AURA%20Gastronomy%26am=${finalGrandTotal}%26cu=INR`}
-                        alt="UPI QR Code"
-                        className="w-32 h-32 mx-auto rounded-xl shadow-md border border-gray-200"
-                      />
-                      <p className="text-[10px] text-gray-600 font-mono">GPay, PhonePe, Paytm, BHIM Accepted</p>
-                    </div>
-                  )}
-
-                  {paymentMethod === 'CASH' && (
-                    <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl space-y-3 text-xs font-mono">
-                      <span className="text-[10px] text-aura-slate uppercase block font-bold">Cash Calculator</span>
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-aura-slate">Tendered Cash Amount (₹):</label>
-                        <input
-                          type="number"
-                          placeholder={`e.g. ${finalGrandTotal}`}
-                          value={cashTendered}
-                          onChange={(e) => setCashTendered(e.target.value)}
-                          className="w-full p-2.5 bg-aura-container border border-aura-border rounded-xl text-aura-gold font-mono text-sm font-bold outline-none focus:border-aura-gold"
-                        />
+                          <button
+                            onClick={() => setPaymentMethod('CASH')}
+                            className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
+                              paymentMethod === 'CASH'
+                                ? 'bg-aura-gold text-aura-obsidian border-aura-gold font-black shadow-lg'
+                                : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                            }`}
+                          >
+                            <DollarSign className="w-5 h-5" />
+                            <span>Cash</span>
+                          </button>
+                        </div>
                       </div>
-                      {parseFloat(cashTendered) > 0 && (
-                        <div className="flex justify-between text-xs font-bold text-emerald-400 pt-1 border-t border-aura-border/40">
-                          <span>Return Change Due:</span>
-                          <span>₹{changeDue.toLocaleString('en-IN')}</span>
+
+                      {/* Dynamic Mode Helper View */}
+                      {paymentMethod === 'UPI' && (
+                        <div className="p-4 bg-white rounded-2xl text-center space-y-2 text-aura-obsidian border border-amber-400/50 shadow-inner">
+                          <span className="text-[10px] font-mono font-bold text-gray-700 uppercase block tracking-wider">
+                            Scan to Pay ₹{finalGrandTotal.toLocaleString('en-IN')}
+                          </span>
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=aura.restaurant@upi%26pn=AURA%20Gastronomy%26am=${finalGrandTotal}%26cu=INR`}
+                            alt="UPI QR Code"
+                            className="w-32 h-32 mx-auto rounded-xl shadow-md border border-gray-200"
+                          />
+                          <p className="text-[10px] text-gray-600 font-mono">GPay, PhonePe, Paytm, BHIM Accepted</p>
                         </div>
                       )}
-                    </div>
-                  )}
 
-                  {/* Summary Totals */}
-                  <div className="border-t border-aura-border/60 pt-4 space-y-2 text-xs font-mono">
-                    <div className="flex justify-between text-aura-slate">
-                      <span>Subtotal</span>
-                      <span>₹{(currentBill.subtotal || 0).toLocaleString('en-IN')}</span>
-                    </div>
+                      {paymentMethod === 'CASH' && (
+                        <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl space-y-3 text-xs font-mono">
+                          <span className="text-[10px] text-aura-slate uppercase block font-bold">Cash Calculator</span>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-aura-slate">Tendered Cash Amount (₹):</label>
+                            <input
+                              type="number"
+                              placeholder={`e.g. ${finalGrandTotal}`}
+                              value={cashTendered}
+                              onChange={(e) => setCashTendered(e.target.value)}
+                              className="w-full p-2.5 bg-aura-container border border-aura-border rounded-xl text-aura-gold font-mono text-sm font-bold outline-none focus:border-aura-gold"
+                            />
+                          </div>
+                          {parseFloat(cashTendered) > 0 && (
+                            <div className="flex justify-between text-xs font-bold text-emerald-400 pt-1 border-t border-aura-border/40">
+                              <span>Return Change Due:</span>
+                              <span>₹{changeDue.toLocaleString('en-IN')}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {discountPercent > 0 && (
-                      <div className="flex justify-between text-emerald-400">
-                        <span>Discount ({discountPercent}%)</span>
-                        <span>- ₹{discountAmount.toLocaleString('en-IN')}</span>
+                      {/* Summary Totals */}
+                      <div className="border-t border-aura-border/60 pt-4 space-y-2 text-xs font-mono">
+                        <div className="flex justify-between text-aura-slate">
+                          <span>Subtotal</span>
+                          <span>₹{(currentBill.subtotal || 0).toLocaleString('en-IN')}</span>
+                        </div>
+
+                        {discountPercent > 0 && (
+                          <div className="flex justify-between text-emerald-400">
+                            <span>Discount ({discountPercent}%)</span>
+                            <span>- ₹{discountAmount.toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between text-aura-slate">
+                          <span>CGST (2.5%)</span>
+                          <span>₹{netCgst.toLocaleString('en-IN')}</span>
+                        </div>
+
+                        <div className="flex justify-between text-aura-slate">
+                          <span>SGST (2.5%)</span>
+                          <span>₹{netSgst.toLocaleString('en-IN')}</span>
+                        </div>
+
+                        <div className="flex justify-between text-base font-bold text-aura-ivory pt-3 border-t border-aura-border">
+                          <span>Net Total Payable</span>
+                          <span className="font-mono text-aura-gold text-lg font-black">
+                            ₹{finalGrandTotal.toLocaleString('en-IN')}
+                          </span>
+                        </div>
                       </div>
-                    )}
 
-                    <div className="flex justify-between text-aura-slate">
-                      <span>CGST (2.5%)</span>
-                      <span>₹{netCgst.toLocaleString('en-IN')}</span>
-                    </div>
+                      {/* Settlement Action Button */}
+                      <button
+                        onClick={handleSettlePayment}
+                        disabled={isLoading}
+                        className="w-full py-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 shadow-xl cursor-pointer"
+                      >
+                        <ShieldCheck className="w-5 h-5" />
+                        <span>Settle ₹{finalGrandTotal.toLocaleString('en-IN')} via {paymentMethod}</span>
+                      </button>
+                    </>
+                  ) : (
+                    /* SETTLED CARD STATE — Permanently Settled State */
+                    <div className="space-y-4 text-center py-2">
+                      <div className="w-14 h-14 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center mx-auto text-emerald-400 shadow-xl animate-pulse">
+                        <CheckCircle className="w-8 h-8" />
+                      </div>
 
-                    <div className="flex justify-between text-aura-slate">
-                      <span>SGST (2.5%)</span>
-                      <span>₹{netSgst.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    <div className="flex justify-between text-base font-bold text-aura-ivory pt-3 border-t border-aura-border">
-                      <span>Net Total Payable</span>
-                      <span className="font-mono text-aura-gold text-lg font-black">
-                        ₹{finalGrandTotal.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Settlement Action Button */}
-                  {isCurrentSettled ? (
-                    <div className="space-y-2">
-                      <div className="w-full py-3.5 bg-emerald-500/10 border border-emerald-500/40 rounded-2xl text-center space-y-1">
-                        <p className="text-xs font-bold text-emerald-400 flex items-center justify-center space-x-1.5">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Table Session Closed</span>
+                      <div>
+                        <h4 className="font-serif font-black text-lg text-emerald-400">BILL PAID &amp; CLOSED</h4>
+                        <p className="text-xs text-aura-slate font-mono mt-0.5">Invoice #{currentBill.invoiceNumber || 'INV-SETTLED'}</p>
+                        <p className="text-[11px] text-emerald-300 font-mono font-bold mt-1">
+                          Amount: ₹{(currentBill.total || finalGrandTotal).toLocaleString('en-IN')} via {currentBill.paymentMethod || 'UPI'}
                         </p>
                       </div>
-                      <button
-                        onClick={() => {
-                          setInvoiceBill({ ...currentBill, total: finalGrandTotal });
-                          setIsInvoiceOpen(true);
-                        }}
-                        className="w-full py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg cursor-pointer"
-                      >
-                        <Printer className="w-4 h-4" />
-                        <span>Print GST Tax Invoice</span>
-                      </button>
+
+                      <div className="pt-2 space-y-2 border-t border-aura-border/40">
+                        <button
+                          onClick={() => {
+                            setInvoiceBill(currentBill);
+                            setIsInvoiceOpen(true);
+                          }}
+                          className="w-full py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg cursor-pointer"
+                        >
+                          <Printer className="w-4 h-4" />
+                          <span>Print GST Tax Invoice</span>
+                        </button>
+                      </div>
                     </div>
-                  ) : (
-                    <button
-                      onClick={handleSettlePayment}
-                      className="w-full py-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 shadow-xl cursor-pointer"
-                    >
-                      <ShieldCheck className="w-5 h-5" />
-                      <span>Settle ₹{finalGrandTotal.toLocaleString('en-IN')} via {paymentMethod}</span>
-                    </button>
                   )}
                 </div>
               </div>
@@ -666,7 +774,7 @@ export const CashierPOSPage: React.FC = () => {
           <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full shadow-2xl p-6 space-y-5 relative font-mono text-xs">
             <button
               onClick={() => setIsInvoiceOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -685,7 +793,7 @@ export const CashierPOSPage: React.FC = () => {
             <div className="space-y-1 bg-gray-50 p-3 rounded-xl border border-gray-200 text-[11px]">
               <div className="flex justify-between">
                 <span className="text-gray-500">Tax Invoice #:</span>
-                <span className="font-bold">{invoiceBill.orderId}</span>
+                <span className="font-bold">{invoiceBill.invoiceNumber || invoiceBill.orderId}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Table Session:</span>
@@ -693,11 +801,11 @@ export const CashierPOSPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Date &amp; Time:</span>
-                <span>{new Date().toLocaleString()}</span>
+                <span>{invoiceBill.paidAt ? `${new Date().toLocaleDateString()} at ${invoiceBill.paidAt}` : new Date().toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Payment Mode:</span>
-                <span className="font-bold text-emerald-700 uppercase">{paymentMethod} (SETTLED)</span>
+                <span className="font-bold text-emerald-700 uppercase">{invoiceBill.paymentMethod || paymentMethod} (SETTLED)</span>
               </div>
             </div>
 
