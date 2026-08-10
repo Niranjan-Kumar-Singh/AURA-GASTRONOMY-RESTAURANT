@@ -1,92 +1,180 @@
-# AURA Digital Dining - Enterprise Restaurant Digitalization Platform
+# ✨ AURA Gastronomy & Botanical Bar — Enterprise Digital Dining & POS Platform
 
-> **AURA** (*"Atmospheric Table-Side Digitalization & Gastronomy Platform"*) is a modern, enterprise-grade full-stack SaaS solution for high-end restaurants. It streamlines customer table-side QR code ordering, real-time Kitchen Display Systems (KDS), waiter workflow dispatch, cashier POS bill settlement, and executive business analytics.
+<div align="center">
 
----
+  ![AURA Gastronomy Banner](https://img.shields.io/badge/AURA-Luxury%20Digital%20Dining-D4AF37?style=for-the-badge&logoColor=fff)
+  ![License](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+  ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+  ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+  ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
 
-## 🌟 Key Features
+  <p align="center">
+    <b>A state-of-the-art, real-time luxury restaurant management ecosystem.</b><br />
+    Designed for high-speed dining operations: Contactless QR Ordering, Kitchen Display System (KDS), Waiter Floor Management, Cashier POS Billing, and Executive Analytics.
+  </p>
 
-- 📱 **Customer Table-Side QR Session**: Scan table QR code to instantly view high-resolution menu, customize dish modifiers, place table orders, track live kitchen prep timeline, and request waiter assistance.
-- 🍳 **Kitchen Display System (KDS)**: Real-time STOMP WebSocket ticket board for chefs with color-coded order urgency timers and one-tap status management.
-- 💁 **Waiter Workflow Hub**: Interactive table occupancy grid, instant order dispatch, call-waiter alert notifications.
-- 💳 **Cashier POS & Settlement**: Bill splitting, UPI/Card/Cash transaction settlement, invoice printing.
-- 📊 **Executive Analytics**: Real-time sales velocity graphs, popular dish reports, and menu item availability management.
+  <p align="center">
+    👤 <b>Created & Engineered by:</b> <a href="https://instagram.com/niranjan.ks.in"><b>Niranjan Kumar Singh</b></a><br />
+    📸 <b>Instagram:</b> <a href="https://instagram.com/niranjan.ks.in"><code>@niranjan.ks.in</code></a>
+  </p>
 
----
-
-## 🛠 Tech Stack
-
-### Frontend
-- **Framework**: React 19 + Vite + TypeScript 5
-- **Styling**: Tailwind CSS v4 + shadcn/ui
-- **Animations**: Framer Motion
-- **State**: Zustand (Client UI State) + TanStack Query v5 (Server Async State)
-- **Forms & Validation**: React Hook Form + Zod
-
-### Backend
-- **Runtime**: Java 21 (LTS) + Spring Boot 3.x
-- **Security**: Spring Security 6 + Stateless JWT Pair
-- **ORM & Persistence**: Spring Data JPA + Hibernate 6 + PostgreSQL
-- **Real-Time Messaging**: Spring WebSocket + STOMP Broker
-- **Mapping & Utilities**: MapStruct + Lombok + OpenAPI 3.0 (Swagger)
+</div>
 
 ---
 
-## 📁 Repository Structure
+## 📖 Table of Contents
+- [✨ Project Overview](#-project-overview)
+- [👤 Author & Creator](#-author--creator)
+- [🖥️ Core Terminals & Dashboard Links](#%EF%B8%8F-core-terminals--dashboard-links)
+- [🔄 Complete End-to-End Operating Workflow](#-complete-end-to-end-operating-workflow)
+- [💎 Key System Features](#-key-system-features)
+- [🛠 Tech Stack & Architecture](#-tech-stack--architecture)
+- [🚀 Quickstart Installation Guide](#-quickstart-installation-guide)
+- [🌐 SEO & Social Metadata](#-seo--social-metadata)
+- [📜 License](#-license)
 
+---
+
+## ✨ Project Overview
+
+**AURA Gastronomy** is an enterprise-grade, highly scalable full-stack digital dining platform built to deliver an uncompromised luxury experience for guests while streamlining multi-department restaurant operations.
+
+From table-side QR menu browsing to kitchen preparation queues, live waiter dispatch, and cashier tax invoice settlement, **AURA** connects customers, kitchen chefs, floor waiters, cashiers, and restaurant owners in seamless real-time synchronization.
+
+---
+
+## 👤 Author & Creator
+
+| Attribute | Details |
+| :--- | :--- |
+| **Creator** | **Niranjan Kumar Singh** |
+| **Instagram** | [**`@niranjan.ks.in`**](https://instagram.com/niranjan.ks.in) |
+| **Role** | Lead Architect & Full-Stack Systems Engineer |
+| **Project** | AURA Gastronomy & Botanical Bar Digital POS |
+
+---
+
+## 🖥️ Core Terminals & Dashboard Links
+
+| Terminal / Portal | URL Path | Access Role | Description |
+| :--- | :--- | :--- | :--- |
+| 📱 **Customer Table Menu** | [`/menu?table=17`](http://localhost:5173/menu?table=17) | Guest / Customer | Contactless digital menu with dish customizations, category filters, cart drawer, and table-side ordering. |
+| 📊 **Order Status & Receipt** | [`/orders/tracking`](http://localhost:5173/orders/tracking) | Guest / Customer | Live preparation timeline tracking, itemized receipt breakdown, and service call requests. |
+| 🍳 **Kitchen Display System (KDS)** | [`/kitchen`](http://localhost:5173/kitchen) | Kitchen Staff / Chef | Real-time ticket queue for incoming orders with urgency timers, dish item checks, and status toggles (`Received` ➔ `Preparing` ➔ `Ready`). |
+| 🤵 **Waiter Floor Terminal** | [`/waiter`](http://localhost:5173/waiter) | Waiter / Floor Staff | Interactive 30-table floor grid showing live occupancy, active order totals, ready food pickup alerts, call-waiter assistance notifications, and status transitions. |
+| 💳 **Cashier POS & Tax Terminal** | [`/cashier`](http://localhost:5173/cashier) | Cashier / Billing | Live billing queue, itemized tax invoice compilation, bill splitting, payment settlement (`UPI_QR`, `CARD`, `CASH`), and searchable settlement archives. |
+| 👑 **Owner Executive Portal** | [`/owner`](http://localhost:5173/owner) | Owner / Manager | Real-time shift revenue analytics, popular dish sales leaderboards, table occupancy statistics, and menu item availability controls. |
+
+---
+
+## 🔄 Complete End-to-End Operating Workflow
+
+```mermaid
+flowchart TD
+    A[📱 Customer Scans Table QR] --> B[📖 Views Menu & Places Order]
+    B --> C[🍳 Kitchen Display System receives Order]
+    C --> D[👨‍🍳 Chef marks Order 'PREPARING' -> 'READY']
+    D --> E[🔔 Waiter Terminal receives Hot Pickup Chime Alert]
+    E --> F[🤵 Waiter Serves Food to Guest Table]
+    F --> G[💳 Guest / Waiter Requests Final Bill]
+    G --> H[💰 Cashier POS Settles Session Tax Invoice]
+    H --> I[🧹 Table Auto-Transitions to CLEANING -> AVAILABLE]
 ```
-Restaurant/
-├── frontend/             # React 19 + Vite + TypeScript Frontend
-├── backend/              # Spring Boot 3 + Java 21 REST API Backend
-├── database/             # Schemas, Flyway Migrations, Seed Data
-├── docs/                 # Complete Architecture & Development Specifications
-├── design/               # Design Tokens & UI Guidelines
-├── assets/               # Production Static Brand Assets & Icons
-├── api/                  # OpenAPI 3.0 Specs & Postman Collections
-├── prompts/              # AI Agent Guidance Specs
-├── scripts/              # Development Setup Scripts
-├── docker/               # Docker & Docker Compose Configurations
-└── .github/              # GitHub Actions CI/CD Workflows
-```
+
+1. **Guest Seating & QR Ordering**:
+   * Customer scans table QR code (e.g. Table 17), browses the rich visual menu, adds modifiers, and places an order (`ORD-5830`).
+2. **Kitchen Preparation (KDS)**:
+   * Order appears instantly on the Kitchen KDS board with prep countdown timer.
+   * Chef updates ticket status: **Received ➔ Preparing ➔ Ready for Pickup**.
+3. **Waiter Dispatch & Service**:
+   * Waiter Dashboard plays an audio chime alert: *"Hot Food Ready at Kitchen Pass!"*.
+   * Waiter delivers dish and marks order **`Served`**.
+4. **Session Multi-Ordering**:
+   * Guests can place additional orders during their session. All orders are automatically linked to the table session.
+5. **Bill Settlement & Cleaning**:
+   * Upon requesting the bill, Cashier POS compiles all session orders into **1 Unique Tax Invoice** (`INV-XXXXXX`).
+   * Once payment is settled, the table status automatically transitions to **`CLEANING`**, ready for busboy reset.
 
 ---
 
-## 🚀 Quickstart Guide
+## 💎 Key System Features
+
+- ⚡ **Real-Time Synchronous State**: Active orders and floor states update automatically across all screens.
+- 🧾 **Cumulative Session Invoicing**: Multi-order sessions are consolidated under a single unique tax invoice (`INV-XXXXXX`) upon checkout.
+- 🛡️ **Intelligent Status Safeguards**: Prevents invalid floor status transitions (e.g. reverting a billing table directly back to dining without settlement).
+- 🔔 **Call Waiter & Service Requests**: Customers can request water refills, napkins, extra plates, or the final bill with 1-tap notifications sent to floor staff.
+- 🔍 **Searchable Cashier Archive**: Filter and search settled invoices by order ID, invoice number, customer phone, or table number.
+
+---
+
+## 🛠 Tech Stack & Architecture
+
+### **Frontend**
+* **Framework**: React 19 + TypeScript + Vite
+* **Styling**: Vanilla CSS Design System + Tailwind CSS
+* **Icons**: Lucide React Icons
+* **Networking**: Axios HTTP Client
+
+### **Backend**
+* **Runtime**: Node.js + Express.js
+* **Database**: MongoDB Atlas + Mongoose ORM
+* **REST API**: Modular Route Controllers (`orderRoutes.js`, `tableRoutes.js`, `menuRoutes.js`)
+
+---
+
+## 🚀 Quickstart Installation Guide
 
 ### Prerequisites
-- **Node.js**: `v20+` & `npm v10+`
-- **Java Development Kit (JDK)**: `Java 21`
-- **Maven**: `v3.9+`
-- **PostgreSQL**: `v16+`
+* **Node.js**: `v18+` or `v20+`
+* **npm**: `v9+`
+* **MongoDB**: Local MongoDB instance or MongoDB Atlas Connection URI
 
-### 1. Database Setup
+### 1. Clone the Repository
 ```bash
-# Ensure PostgreSQL server is running, then create database:
-createdb restaurant_db
+git clone https://github.com/Niranjan-Kumar-Singh/AURA-GASTRONOMY-RESTAURANT.git
+cd AURA-GASTRONOMY-RESTAURANT
 ```
 
-### 2. Backend Setup
+### 2. Backend Environment & Setup
 ```bash
 cd backend
-# Run Flyway migrations and start Spring Boot service
-mvn spring-boot:run
+npm install
 ```
-Backend server starts on `http://localhost:8080` (OpenAPI Swagger at `http://localhost:8080/swagger-ui.html`).
 
-### 3. Frontend Setup
+Create a `.env` file in the `backend` folder:
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+NODE_ENV=development
+```
+
+Start the Backend Server:
 ```bash
-cd frontend
+npm start
+# Server will run on http://localhost:5000
+```
+
+### 3. Frontend Setup & Run
+```bash
+cd ../frontend
 npm install
 npm run dev
+# Vite dev server will run on http://localhost:5173
 ```
-Frontend app starts on `http://localhost:5173`.
 
 ---
 
-## 📜 Development Standards & Constitution
-All contributions must adhere to the engineering rules defined in [`docs/coding-standards/CONSTITUTION.md`](file:///d:/Web%20Development/Restaurant/docs/coding-standards/CONSTITUTION.md).
+## 🌐 SEO & Social Metadata
+
+The project incorporates complete **SEO Best Practices**:
+* **Structured Data**: JSON-LD Schema markup for restaurant entity.
+* **Open Graph Tags**: Tailored `og:title`, `og:description`, and `og:image` tags.
+* **Twitter Cards**: Summary card configuration for social previews.
+* **Mobile Responsive Meta**: Optimized viewport settings and dynamic dark theme color (`#0F0F11`).
 
 ---
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 📜 License & Credits
+
+Distributed under the **MIT License**. Created with ❤️ by **Niranjan Kumar Singh** ([`@niranjan.ks.in`](https://instagram.com/niranjan.ks.in)).

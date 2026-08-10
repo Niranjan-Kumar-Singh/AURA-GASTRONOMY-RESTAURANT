@@ -82,9 +82,17 @@ export const WaiterDashboardPage: React.FC = () => {
         orderService.getActiveOrders().catch(() => []),
       ]);
 
-      const orderMap = new Map();
+      // Group ALL active unpaid orders by tableId to support multi-order sessions
+      const tableOrdersMap = new Map<string, any[]>();
       activeOrders.forEach((ord: any) => {
-        orderMap.set(String(ord.tableId), ord);
+        let numKey = String(ord.tableId || '');
+        const matched = numKey.match(/\d+/);
+        if (matched) numKey = String(parseInt(matched[0], 10));
+
+        if (!tableOrdersMap.has(numKey)) {
+          tableOrdersMap.set(numKey, []);
+        }
+        tableOrdersMap.get(numKey)!.push(ord);
       });
 
       // Construct complete array of 30 tables (Table 1 through Table 30)
@@ -98,10 +106,32 @@ export const WaiterDashboardPage: React.FC = () => {
         const existingTable = tableData.find((t: any) => Number(t.tableNumber) === num);
         const statusVal = (existingTable?.status || 'available') as 'available' | 'occupied' | 'billing' | 'cleaning';
 
-        const activeOrder = orderMap.get(String(num)) || (existingTable ? orderMap.get(String(existingTable._id)) : null);
-        const hasActiveOrder = !!activeOrder && (activeOrder.items?.length > 0 || activeOrder.totalAmount > 0);
-        const isTableActive = statusVal === 'occupied' || statusVal === 'billing' || hasActiveOrder;
-        const computedStatus = (hasActiveOrder && statusVal === 'available') ? 'occupied' : statusVal;
+        const tableOrders = tableOrdersMap.get(String(num)) || (existingTable ? tableOrdersMap.get(String(existingTable._id)) : []) || [];
+        const hasActiveOrders = tableOrders.length > 0;
+
+        // If table has 0 active unpaid orders, but DB status is occupied/billing, automatically transition status to 'cleaning'!
+        let computedStatus = statusVal;
+        if (!hasActiveOrders && (statusVal === 'billing' || statusVal === 'occupied')) {
+          computedStatus = 'cleaning';
+        } else if (hasActiveOrders && statusVal === 'available') {
+          computedStatus = 'occupied';
+        }
+
+        // Cumulative Items & Session Total across all active orders for this table session
+        const allItemsList = tableOrders.flatMap((o: any) => o.items || []);
+        const cumulativeSessionTotal = tableOrders.reduce((sum: number, o: any) => {
+          const itemSum = o.items ? o.items.reduce((s: number, it: any) => s + ((it.quantity || it.qty || 1) * (it.price || it.unitPrice || 0)), 0) : 0;
+          const ordTotal = o.totalAmount || o.total || (itemSum > 0 ? itemSum * 1.05 : 0);
+          return sum + ordTotal;
+        }, 0);
+
+        // Overall order status prioritization (ready > preparing > received)
+        const latestOrder = tableOrders[tableOrders.length - 1];
+        let overallOrderStatus = latestOrder?.status;
+        if (tableOrders.some((o: any) => o.status === 'ready')) overallOrderStatus = 'ready';
+        else if (tableOrders.some((o: any) => o.status === 'preparing')) overallOrderStatus = 'preparing';
+
+        const isTableActive = computedStatus === 'occupied' || computedStatus === 'billing' || hasActiveOrders;
 
         return {
           _id: existingTable?._id || `temp-table-${num}`,
@@ -110,10 +140,10 @@ export const WaiterDashboardPage: React.FC = () => {
           capacity: existingTable?.capacity || (num % 4 === 0 ? 6 : num % 2 === 0 ? 4 : 2),
           status: ['available', 'occupied', 'billing', 'cleaning'].includes(computedStatus) ? computedStatus : 'available',
           guestCount: isTableActive ? (existingTable?.guestCount || 2) : 0,
-          activeOrderId: isTableActive ? (activeOrder ? activeOrder.orderId : existingTable?.activeOrderId) : undefined,
-          orderTotal: isTableActive ? (activeOrder ? (activeOrder.totalAmount || activeOrder.total) : (existingTable?.orderTotal || 0)) : 0,
-          orderStatus: isTableActive ? (activeOrder ? activeOrder.status : undefined) : undefined,
-          items: isTableActive ? (activeOrder ? activeOrder.items : []) : [],
+          activeOrderId: hasActiveOrders ? latestOrder?.orderId : null,
+          orderTotal: hasActiveOrders ? cumulativeSessionTotal : 0,
+          orderStatus: hasActiveOrders ? overallOrderStatus : undefined,
+          items: hasActiveOrders ? allItemsList : [],
         };
       });
 
@@ -126,6 +156,13 @@ export const WaiterDashboardPage: React.FC = () => {
       prevReadyCountRef.current = currentReadyCount;
 
       setTables(full30TableList);
+
+      // Keep open selectedTable modal 100% in sync with live floor state
+      setSelectedTable((prevSelected) => {
+        if (!prevSelected) return null;
+        const updated = full30TableList.find((t) => t.tableNumber === prevSelected.tableNumber);
+        return updated || prevSelected;
+      });
       if (isManual) showToast('Floor status refreshed (30 Tables Active)', 'info');
     } catch (error) {
       console.error('Failed to fetch floor tables:', error);
@@ -134,15 +171,42 @@ export const WaiterDashboardPage: React.FC = () => {
     }
   };
 
+  const prevPendingAlertsCountRef = useRef<number>(0);
+
+  const syncWaiterCalls = async () => {
+    try {
+      const remoteCalls = await tableService.getWaiterCalls().catch(() => []);
+      const localCalls = JSON.parse(localStorage.getItem('aura_waiter_alerts') || '[]');
+      const combined = [...remoteCalls];
+
+      localCalls.forEach((lc: any) => {
+        if (!combined.some(rc => rc.id === lc.id)) {
+          combined.push(lc);
+        }
+      });
+
+      const pendingCount = combined.filter((a: any) => a.status === 'PENDING').length;
+      if (pendingCount > prevPendingAlertsCountRef.current && prevPendingAlertsCountRef.current !== 0) {
+        playAudioChime();
+        const latestAlert = combined.find((a: any) => a.status === 'PENDING');
+        if (latestAlert) {
+          showToast(`🔔 Table ${latestAlert.tableId} requested: "${latestAlert.reason}"`, 'info', 'Customer Call Alert');
+        }
+      }
+      prevPendingAlertsCountRef.current = pendingCount;
+
+      setAlerts(combined);
+    } catch (e) {
+      console.error('Failed to sync waiter calls:', e);
+    }
+  };
+
   useEffect(() => {
     fetchFloorState();
-    const tableInterval = setInterval(() => fetchFloorState(false), 3000); // 3s auto sync
+    syncWaiterCalls();
 
-    // Poll live customer waiter calls from localStorage
-    const alertInterval = setInterval(() => {
-      const stored = JSON.parse(localStorage.getItem('aura_waiter_alerts') || '[]');
-      setAlerts(stored);
-    }, 1000);
+    const tableInterval = setInterval(() => fetchFloorState(false), 3000); // 3s auto sync
+    const alertInterval = setInterval(() => syncWaiterCalls(), 1500); // 1.5s live alert sync
 
     return () => {
       clearInterval(tableInterval);
@@ -150,10 +214,17 @@ export const WaiterDashboardPage: React.FC = () => {
     };
   }, []);
 
-  const handleAcknowledgeAlert = (alertId: number) => {
+  const handleAcknowledgeAlert = async (alertId: number) => {
     const updated = alerts.map((a) => (a.id === alertId ? { ...a, status: 'RESOLVED' as const } : a));
     setAlerts(updated);
     localStorage.setItem('aura_waiter_alerts', JSON.stringify(updated));
+
+    try {
+      await tableService.resolveWaiterCall(alertId);
+    } catch (err) {
+      console.error('Failed to resolve waiter call on API:', err);
+    }
+
     showToast('Customer call acknowledged & cleared', 'success');
   };
 
@@ -190,12 +261,12 @@ export const WaiterDashboardPage: React.FC = () => {
       return;
     }
 
-    // Rule 3: Occupied table without an active order CANNOT transition to Billing
-    if (nextStatus === 'billing' && targetTable.status === 'occupied' && (!targetTable.activeOrderId || !targetTable.orderTotal || targetTable.orderTotal === 0)) {
+    // Rule 3: Occupied table without any active unpaid items CANNOT transition to Billing
+    if (nextStatus === 'billing' && (!targetTable.items || targetTable.items.length === 0)) {
       showToast(
-        `Cannot request bill for Table ${tableNum}! No active dining order placed yet. Please add items first.`,
+        `Cannot set Table ${tableNum} to Billing! No active unpaid dining order found. Bill may already be settled.`,
         'error',
-        'No Order Found'
+        'No Active Unpaid Order'
       );
       return;
     }
@@ -216,6 +287,16 @@ export const WaiterDashboardPage: React.FC = () => {
         `Table ${tableNum} is currently dining with order #${targetTable.activeOrderId}. Please complete order & billing first.`,
         'error',
         'Active Dining Session'
+      );
+      return;
+    }
+
+    // Rule 6: Billing table CANNOT transition back to Occupied (dining)
+    if (nextStatus === 'occupied' && targetTable.status === 'billing') {
+      showToast(
+        `Table ${tableNum} is currently in Billing status! Cannot revert to Occupied dining. Settle payment or set to Cleaning once guests depart.`,
+        'error',
+        'Billing In Progress'
       );
       return;
     }
@@ -254,6 +335,10 @@ export const WaiterDashboardPage: React.FC = () => {
     try {
       const res = await orderService.settleTableBill(tableNum, selectedPaymentMethod);
       const invNum = res?.data?.invoiceNumber || 'INV-SETTLED';
+      
+      // Update table status to cleaning in backend API
+      await tableService.updateTableStatus(tableNum, 'cleaning').catch(() => {});
+
       showToast(`Bill settled via ${selectedPaymentMethod}! Invoice #${invNum} generated. Table ${tableNum} set to Cleaning.`, 'success');
       playAudioChime();
       setSelectedTable(null);
@@ -1140,6 +1225,26 @@ export const WaiterDashboardPage: React.FC = () => {
                 >
                   <Check className="w-4 h-4 font-bold" />
                   <span>{isProcessingPayment ? 'Processing Settlement...' : `Confirm Payment & Settle Bill (₹${(selectedTable.orderTotal || 0).toLocaleString('en-IN')})`}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Cleaning / Settled Status Banner */}
+            {selectedTable.status === 'cleaning' && (
+              <div className="p-4 bg-slate-500/15 border border-slate-400/40 rounded-2xl text-center space-y-3">
+                <div className="flex items-center justify-center space-x-2 text-slate-300 font-bold text-xs uppercase tracking-wider font-mono">
+                  <Sparkles className="w-4 h-4 text-sky-400" />
+                  <span>BILL PAID &amp; CLOSED — CLEANING REQUIRED</span>
+                </div>
+                <p className="text-[11px] text-aura-slate">
+                  This session is settled. Please sanitize table &amp; reset utensils for next guests.
+                </p>
+                <button
+                  onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'available')}
+                  className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center space-x-2"
+                >
+                  <Check className="w-4 h-4 font-bold" />
+                  <span>Mark Table Cleaned &amp; Ready for Guests</span>
                 </button>
               </div>
             )}

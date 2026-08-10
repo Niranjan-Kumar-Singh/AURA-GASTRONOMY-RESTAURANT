@@ -97,8 +97,11 @@ router.get('/', async (req, res) => {
       if (activeSession && table.status !== 'available' && table.status !== 'cleaning') {
         guestCount = table.guestCount || activeSession.users.length;
         if (activeSession.orders && activeSession.orders.length > 0) {
-          activeOrderId = activeSession.orders[activeSession.orders.length - 1].orderId;
-          orderTotal = activeSession.orders.reduce((sum, order) => sum + (order.total || 0), 0);
+          const unpaidOrders = activeSession.orders.filter((o) => o.paymentStatus !== 'PAID' && o.status !== 'cancelled');
+          if (unpaidOrders.length > 0) {
+            activeOrderId = unpaidOrders[unpaidOrders.length - 1].orderId;
+            orderTotal = unpaidOrders.reduce((sum, order) => sum + (order.total || order.totalAmount || 0), 0);
+          }
         }
       } else {
         guestCount = (table.status === 'available' || table.status === 'cleaning') ? 0 : (table.guestCount || 0);
@@ -292,6 +295,54 @@ router.put(['/:tableId/status', '/status/:tableId'], async (req, res) => {
     console.error('Error updating table status:', error);
     res.status(500).json({ message: error.message });
   }
+});
+
+// In-memory & DB synchronized Waiter Alerts queue for instant cross-device dispatch
+let globalWaiterAlerts = [];
+
+// POST create waiter call alert
+router.post('/call-waiter', async (req, res) => {
+  try {
+    const { tableId, reason } = req.body;
+    const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || String(tableId || '1');
+
+    const newAlert = {
+      id: Date.now(),
+      tableId: cleanTableNum,
+      reason: reason || 'General Table Assistance',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'PENDING',
+    };
+
+    globalWaiterAlerts.unshift(newAlert);
+    if (globalWaiterAlerts.length > 50) globalWaiterAlerts.pop();
+
+    // If reason is Bill Request, automatically update physical table status to 'billing'
+    if (reason && reason.toLowerCase().includes('bill')) {
+      let table = await Table.findOne({ tableNumber: cleanTableNum });
+      if (table) {
+        table.status = 'billing';
+        await table.save();
+      }
+    }
+
+    res.json({ success: true, data: newAlert });
+  } catch (error) {
+    console.error('Error handling call waiter:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET all active waiter calls
+router.get('/waiter-calls', (req, res) => {
+  res.json({ data: globalWaiterAlerts });
+});
+
+// PUT acknowledge/resolve waiter call
+router.put('/waiter-calls/:id/resolve', (req, res) => {
+  const alertId = Number(req.params.id);
+  globalWaiterAlerts = globalWaiterAlerts.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a);
+  res.json({ success: true, data: globalWaiterAlerts });
 });
 
 module.exports = router;

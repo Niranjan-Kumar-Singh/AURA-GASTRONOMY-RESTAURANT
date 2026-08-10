@@ -33,5 +33,18 @@ export const tableService = {
     return response.data;
   },
 
+  async callWaiter(tableId: string, reason: string) {
+    const response = await apiClient.post('/tables/call-waiter', { tableId, reason });
+    return response.data.data;
+  },
 
+  async getWaiterCalls() {
+    const response = await apiClient.get('/tables/waiter-calls');
+    return response.data.data;
+  },
+
+  async resolveWaiterCall(alertId: number) {
+    const response = await apiClient.put(`/tables/waiter-calls/${alertId}/resolve`);
+    return response.data.data;
+  },
 };

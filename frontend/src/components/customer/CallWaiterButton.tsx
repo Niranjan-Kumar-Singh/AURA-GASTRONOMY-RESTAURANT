@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, Droplet, UtensilsCrossed, Receipt, CheckCircle, X, ShieldAlert, UserCheck, Coffee } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
+import { tableService } from '../../services/table.service';
 
 interface CallWaiterButtonProps {
   tableId?: string;
@@ -11,20 +12,27 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
   const [sentReason, setSentReason] = useState<string | null>(null);
   const { showToast } = useToast();
 
-  const handleRequest = (reason: string) => {
+  const handleRequest = async (reason: string) => {
     setSentReason(reason);
     showToast(`Waiter alerted for Table ${tableId}: "${reason}"`, 'success');
     
-    // Store in localStorage for Waiter Dashboard synchronization
-    const existingAlerts = JSON.parse(localStorage.getItem('aura_waiter_alerts') || '[]');
-    const newAlert = {
-      id: Date.now(),
-      tableId,
-      reason,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'PENDING',
-    };
-    localStorage.setItem('aura_waiter_alerts', JSON.stringify([newAlert, ...existingAlerts]));
+    try {
+      // 1. Dispatch waiter call to backend Express API
+      await tableService.callWaiter(tableId, reason);
+
+      // 2. Local fallback sync for instant tab response
+      const existingAlerts = JSON.parse(localStorage.getItem('aura_waiter_alerts') || '[]');
+      const newAlert = {
+        id: Date.now(),
+        tableId,
+        reason,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: 'PENDING',
+      };
+      localStorage.setItem('aura_waiter_alerts', JSON.stringify([newAlert, ...existingAlerts]));
+    } catch (err) {
+      console.error('Failed to dispatch waiter call:', err);
+    }
 
     setTimeout(() => {
       setIsOpen(false);
@@ -33,15 +41,11 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
   };
 
   const options = [
-    { label: 'General Assistance', reason: 'General Table Assistance', icon: <Bell className="w-4 h-4 text-aura-gold" /> },
-    { label: 'Water Refill', reason: 'Water Refill Request', icon: <Droplet className="w-4 h-4 text-sky-400" /> },
-    { label: 'Need Napkins & Tissues', reason: 'Napkins & Tissues Request', icon: <UtensilsCrossed className="w-4 h-4 text-amber-400" /> },
-    { label: 'Need Spoon & Fork', reason: 'Need Extra Cutlery', icon: <UtensilsCrossed className="w-4 h-4 text-emerald-400" /> },
-    { label: 'Need Extra Plate', reason: 'Need Extra Plate', icon: <UtensilsCrossed className="w-4 h-4 text-purple-400" /> },
-    { label: 'Need Salt & Pepper', reason: 'Need Salt & Pepper Shakers', icon: <Coffee className="w-4 h-4 text-amber-300" /> },
-    { label: 'Request Final Bill', reason: 'Request Final Bill / Settlement', icon: <Receipt className="w-4 h-4 text-aura-emerald" /> },
-    { label: 'Speak to Manager', reason: 'Request Floor Manager Assistance', icon: <UserCheck className="w-4 h-4 text-purple-400" /> },
-    { label: 'Emergency Assistance', reason: 'Emergency Table Assistance', icon: <ShieldAlert className="w-4 h-4 text-rose-500" /> },
+    { label: 'Request Final Bill & Checkout', reason: 'Request Final Bill / Settlement', icon: <Receipt className="w-4.5 h-4.5 text-emerald-400" />, isPrimary: true },
+    { label: 'Water Refill', reason: 'Water Refill Request', icon: <Droplet className="w-4.5 h-4.5 text-sky-400" /> },
+    { label: 'Extra Cutlery & Napkins', reason: 'Cutlery & Napkins Request', icon: <UtensilsCrossed className="w-4.5 h-4.5 text-amber-400" /> },
+    { label: 'General Assistance', reason: 'General Table Assistance', icon: <Bell className="w-4.5 h-4.5 text-aura-gold" /> },
+    { label: 'Speak to Floor Manager', reason: 'Request Manager Assistance', icon: <UserCheck className="w-4.5 h-4.5 text-purple-400" /> },
   ];
 
   return (
@@ -89,7 +93,11 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
                   <button
                     key={i}
                     onClick={() => handleRequest(opt.reason)}
-                    className="w-full p-3 bg-aura-obsidian border border-aura-border/60 hover:border-aura-gold rounded-xl flex items-center space-x-3 text-xs font-semibold text-aura-ivory transition-all hover:translate-x-1"
+                    className={`w-full p-3.5 rounded-xl flex items-center space-x-3 text-xs font-bold transition-all cursor-pointer ${
+                      opt.isPrimary
+                        ? 'bg-emerald-500/15 border-2 border-emerald-500/60 hover:border-emerald-400 text-emerald-300 shadow-md'
+                        : 'bg-aura-obsidian border border-aura-border/60 hover:border-aura-gold text-aura-ivory hover:translate-x-1'
+                    }`}
                   >
                     {opt.icon}
                     <span>{opt.label}</span>

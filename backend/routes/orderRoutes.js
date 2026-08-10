@@ -1,9 +1,11 @@
 const express = require('express');
+const crypto = require('crypto');
 const Order = require('../models/Order');
 const router = express.Router();
 
 // Generate a random order ID like ORD-4829
 const generateOrderId = () => `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+const generateInvoiceNumber = () => `INV-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
 const TableSession = require('../models/TableSession');
 const Table = require('../models/Table');
@@ -89,11 +91,12 @@ router.get('/table/:tableId', async (req, res) => {
   }
 });
 
-// GET active orders for Kitchen / Waiter / Cashier
+// GET active unpaid orders for Kitchen / Waiter / Cashier
 router.get('/active/all', async (req, res) => {
   try {
     const activeOrders = await Order.find({
-      status: { $in: ['received', 'preparing', 'ready', 'served'] }
+      status: { $in: ['received', 'preparing', 'ready', 'served'] },
+      paymentStatus: { $ne: 'PAID' }
     }).sort({ createdAt: 1 }); // Oldest first
     res.json({ data: activeOrders });
   } catch (error) {
@@ -104,9 +107,7 @@ router.get('/active/all', async (req, res) => {
 // GET all settled/paid orders for Cashier POS & History Archive
 router.get('/settled/all', async (req, res) => {
   try {
-    const settledOrders = await Order.find({
-      $or: [{ paymentStatus: 'PAID' }, { status: 'completed' }]
-    }).sort({ paidAt: -1, updatedAt: -1 });
+    const settledOrders = await Order.find({ paymentStatus: 'PAID' }).sort({ paidAt: -1, updatedAt: -1 });
     res.json({ data: settledOrders });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -160,7 +161,7 @@ router.post('/pay-table', async (req, res) => {
       status: { $ne: 'cancelled' }
     });
 
-    const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+    const invoiceNumber = generateInvoiceNumber();
 
     for (const ord of activeOrders) {
       ord.status = 'completed';
@@ -171,16 +172,19 @@ router.post('/pay-table', async (req, res) => {
       await ord.save();
     }
 
-    if (table) {
-      const activeSession = await TableSession.findOne({ tableId: table._id, status: 'active' });
-      if (activeSession) {
-        activeSession.status = 'completed';
-        activeSession.endTime = new Date();
-        await activeSession.save();
-      }
+    const matchedNum = identifier.match(/\d+/);
+    const tableNumStr = matchedNum ? matchedNum[0] : identifier;
 
-      table.status = 'cleaning';
-      await table.save();
+    await Table.updateMany(
+      { $or: [{ tableNumber: tableNumStr }, { tableNumber: identifier }, { _id: isValidObjectId ? identifier : null }] },
+      { $set: { status: 'cleaning', guestCount: 0 } }
+    );
+
+    if (table) {
+      await TableSession.updateMany(
+        { tableId: table._id, status: 'active' },
+        { $set: { status: 'completed', endTime: new Date() } }
+      ).catch(() => {});
     }
 
     res.json({
