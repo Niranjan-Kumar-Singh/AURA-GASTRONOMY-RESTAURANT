@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, Users, ArrowRight, ShieldCheck, RefreshCw, X, Sparkles, Building2, Check, ExternalLink, Percent, Calculator, History, Search } from 'lucide-react';
+import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, ShieldCheck, RefreshCw, X, Building2, Check, Search, Phone, FileText } from 'lucide-react';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
@@ -17,8 +17,11 @@ interface POSBill {
   zone: string;
   orderId: string;
   customerName: string;
+  customerMobile?: string;
   items: POSItem[];
   subtotal: number;
+  discountPercent?: number;
+  discountAmount?: number;
   cgst: number;
   sgst: number;
   total: number;
@@ -26,9 +29,10 @@ interface POSBill {
   paymentMethod?: string;
   invoiceNumber?: string;
   paidAt?: string;
+  paidDate?: string;
 }
 
-const LOCAL_STORAGE_SETTLED_KEY = 'aura_pos_settled_bills_v2';
+const LOCAL_STORAGE_SETTLED_KEY = 'aura_pos_settled_bills_v5';
 
 // Helper to get stored settled tables from localStorage
 const getStoredSettledBills = (): Record<number, POSBill> => {
@@ -40,48 +44,7 @@ const getStoredSettledBills = (): Record<number, POSBill> => {
   }
 };
 
-// Fallback initial sample bills if floor is completely fresh
-const INITIAL_DEMO_BILLS: POSBill[] = [
-  {
-    tableId: 'demo-10',
-    tableNumber: 10,
-    tableName: 'Table 10 (Main Hall)',
-    zone: 'Main Hall',
-    orderId: 'ORD-2947',
-    customerName: 'AURA Guest Session #10',
-    items: [
-      { name: 'Wagyu Ribeye Steak (300g)', qty: 2, price: 4800 },
-      { name: 'Black Truffle Tagliolini', qty: 2, price: 3200 },
-      { name: 'AURA Gold Smoked Elixir', qty: 2, price: 1400 },
-      { name: 'Saffron & Gold Leaf Risotto', qty: 1, price: 2800 },
-      { name: 'Valrhona Chocolate Sphere', qty: 2, price: 1800 },
-    ],
-    subtotal: 23600,
-    cgst: 590,
-    sgst: 590,
-    total: 24780,
-    status: 'billing',
-  },
-  {
-    tableId: 'demo-14',
-    tableNumber: 14,
-    tableName: 'Table 14 (VIP Lounge)',
-    zone: 'VIP Lounge',
-    orderId: 'ORD-8492',
-    customerName: 'VIP Reservation Session',
-    items: [
-      { name: 'Truffle Dim Sum Platter', qty: 3, price: 1500 },
-      { name: 'Zafrani Murgh Malai Tikka', qty: 2, price: 1800 },
-      { name: 'Vintage Barolo Reserve 2018', qty: 1, price: 8500 },
-      { name: 'Artisanal Bread Basket', qty: 2, price: 450 },
-    ],
-    subtotal: 17500,
-    cgst: 437.5,
-    sgst: 437.5,
-    total: 18375,
-    status: 'billing',
-  },
-];
+
 
 export const CashierPOSPage: React.FC = () => {
   const { showToast } = useToast();
@@ -91,33 +54,52 @@ export const CashierPOSPage: React.FC = () => {
   const [filterTab, setFilterTab] = useState<'PENDING' | 'SETTLED_TODAY' | 'ALL'>('PENDING');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // POS Payment Options State
+  // POS Payment Options & Customer Meta
   const [splitCount, setSplitCount] = useState<number>(1);
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'CASH'>('UPI');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [cashTendered, setCashTendered] = useState<string>('');
+  const [customerMobileInput, setCustomerMobileInput] = useState<string>('');
 
-  // Persistent Settlement Tracking Map
+  // Persistent Settlement Map & Invoice Modal
   const [settledBillsMap, setSettledBillsMap] = useState<Record<number, POSBill>>(() => getStoredSettledBills());
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const [invoiceBill, setInvoiceBill] = useState<POSBill | null>(null);
 
-  // Sync settled map to localStorage whenever it changes
+  // Search & Shift Audit History Archive Modal
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
+  const [archivePaymentFilter, setArchivePaymentFilter] = useState<'ALL' | 'UPI' | 'CARD' | 'CASH'>('ALL');
+
+  // Handle ESC key to close modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsInvoiceOpen(false);
+        setIsArchiveOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Sync settled map to localStorage whenever it updates
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_STORAGE_SETTLED_KEY, JSON.stringify(settledBillsMap));
     } catch (e) {
-      console.error('Failed to persist settled bills to localStorage:', e);
+      console.error('Failed to persist settled bills:', e);
     }
   }, [settledBillsMap]);
 
-  // Fetch live tables & orders from backend
+  // Fetch live tables, active orders & DB settled bills
   const fetchLivePOSData = async (isManual = false) => {
     if (isManual) setIsLoading(true);
     try {
-      const [tableData, activeOrders] = await Promise.all([
-        tableService.getAllTables(),
+      const [tableData, activeOrders, dbSettledOrders] = await Promise.all([
+        tableService.getAllTables().catch(() => []),
         orderService.getActiveOrders().catch(() => []),
+        orderService.getSettledOrders().catch(() => []),
       ]);
 
       const orderMap = new Map();
@@ -125,20 +107,13 @@ export const CashierPOSPage: React.FC = () => {
         orderMap.set(String(ord.tableId), ord);
       });
 
-      const liveBills: POSBill[] = [];
-      const currentSettled = getStoredSettledBills();
+      const allBillsMap = new Map<number, POSBill>();
 
+      // 1. Populate live active database tables (status === 'billing' or 'occupied' with orders)
       tableData.forEach((table: any) => {
         const num = Number(table.tableNumber);
         const activeOrder = orderMap.get(String(num)) || orderMap.get(String(table._id));
 
-        // If table was already settled by cashier, attach settled state
-        if (currentSettled[num]) {
-          liveBills.push(currentSettled[num]);
-          return;
-        }
-
-        // Active billing tables
         if (table.status === 'billing' || (table.status === 'occupied' && activeOrder && activeOrder.totalAmount > 0)) {
           let zone = 'Main Hall';
           if (num > 12 && num <= 16) zone = 'VIP Lounge';
@@ -148,18 +123,19 @@ export const CashierPOSPage: React.FC = () => {
           const itemsList: POSItem[] = activeOrder?.items ? activeOrder.items.map((i: any) => ({
             name: i.name,
             qty: i.quantity,
-            price: i.unitPrice || (i.totalPrice ? Math.round(i.totalPrice / i.quantity) : 1200),
+            price: i.price || i.unitPrice || (i.totalPrice ? Math.round(i.totalPrice / i.quantity) : 1200),
           })) : [
             { name: 'AURA Gastronomy Chef Special', qty: 2, price: 2400 },
             { name: 'Artisanal Beverage Session', qty: 2, price: 950 },
           ];
 
-          const subtotal = activeOrder?.totalAmount || 6700;
+          const computedSubtotal = itemsList.reduce((sum, it) => sum + (it.qty * it.price), 0);
+          const subtotal = computedSubtotal > 0 ? computedSubtotal : (activeOrder?.totalAmount || 6700);
           const cgst = Math.round(subtotal * 0.025);
           const sgst = Math.round(subtotal * 0.025);
           const total = subtotal + cgst + sgst;
 
-          liveBills.push({
+          allBillsMap.set(num, {
             tableId: table._id || `temp-${num}`,
             tableNumber: num,
             tableName: `Table ${num} (${zone})`,
@@ -176,18 +152,73 @@ export const CashierPOSPage: React.FC = () => {
         }
       });
 
-      // Merge fallback initial bills if no tables are active at all, BUT respecting settled state!
-      if (liveBills.length === 0) {
-        INITIAL_DEMO_BILLS.forEach((demo) => {
-          if (currentSettled[demo.tableNumber]) {
-            liveBills.push(currentSettled[demo.tableNumber]);
-          } else {
-            liveBills.push(demo);
+      // 2. Apply settled status from DB (waiter & cashier settlements) + localStorage
+      const mergedSettledMap: Record<number, POSBill> = { ...getStoredSettledBills() };
+
+      if (Array.isArray(dbSettledOrders) && dbSettledOrders.length > 0) {
+        dbSettledOrders.forEach((dbOrd: any) => {
+          let num = Number(dbOrd.tableNumber || dbOrd.tableId);
+          if (isNaN(num) || num <= 0) {
+            const matched = String(dbOrd.tableId || '').match(/\d+/);
+            num = matched ? parseInt(matched[0], 10) : 0;
+          }
+
+          if (num > 0) {
+            let zone = 'Main Hall';
+            if (num > 12 && num <= 16) zone = 'VIP Lounge';
+            if (num > 16 && num <= 24) zone = 'Outdoor Garden';
+            if (num > 24) zone = 'Family Section';
+
+            const itemsList: POSItem[] = (dbOrd.items && dbOrd.items.length > 0) ? dbOrd.items.map((i: any) => ({
+              name: i.name,
+              qty: i.quantity || 1,
+              price: i.price || i.unitPrice || 0,
+            })) : [
+              { name: 'Gastronomy Course Item', qty: 1, price: dbOrd.total || 1500 }
+            ];
+
+            const subtotal = dbOrd.subtotal || itemsList.reduce((sum, it) => sum + (it.qty * it.price), 0);
+            const cgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
+            const sgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
+            const total = dbOrd.total || (subtotal + cgst + sgst);
+
+            const posBill: POSBill = {
+              tableId: `settled-${dbOrd.orderId || dbOrd._id}`,
+              tableNumber: num,
+              tableName: `Table ${num} (${zone})`,
+              zone,
+              orderId: dbOrd.orderId || `ORD-${String(dbOrd._id).slice(-4).toUpperCase()}`,
+              customerName: dbOrd.customerName || `Guest Session #${num}`,
+              customerMobile: dbOrd.customerPhone || '',
+              items: itemsList,
+              subtotal,
+              cgst,
+              sgst,
+              total,
+              status: 'settled',
+              invoiceNumber: dbOrd.invoiceNumber || `INV-${dbOrd.orderId || String(dbOrd._id).slice(-6).toUpperCase()}`,
+              paymentMethod: (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CARD') ? 'CARD' : (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CASH') ? 'CASH' : 'UPI',
+              paidAt: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              paidDate: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
+            };
+
+            mergedSettledMap[num] = posBill;
+            allBillsMap.set(num + 100000 + Math.floor(Math.random() * 1000), posBill); // Add to bills list
           }
         });
       }
 
-      setBills(liveBills);
+      setSettledBillsMap(mergedSettledMap);
+
+      Object.keys(mergedSettledMap).forEach((tableNumStr) => {
+        const num = Number(tableNumStr);
+        if (mergedSettledMap[num] && !allBillsMap.has(num)) {
+          allBillsMap.set(num, mergedSettledMap[num]);
+        }
+      });
+
+      const finalBillsList = Array.from(allBillsMap.values()).sort((a, b) => a.tableNumber - b.tableNumber);
+      setBills(finalBillsList);
 
       if (isManual) showToast('POS Terminal synchronized with floor state', 'info');
     } catch (error) {
@@ -199,24 +230,45 @@ export const CashierPOSPage: React.FC = () => {
 
   useEffect(() => {
     fetchLivePOSData();
-    const interval = setInterval(() => fetchLivePOSData(false), 5000);
+    const interval = setInterval(() => fetchLivePOSData(false), 3000); // Auto refresh every 3s
     return () => clearInterval(interval);
   }, []);
 
-  const currentBill = bills.find((b) => b.tableNumber === selectedTableNumber) || bills[0];
-  const isCurrentSettled = currentBill?.status === 'settled' || !!settledBillsMap[currentBill?.tableNumber];
+  // Derived Filtered List for Cashier POS Queue
+  const filteredBillsList = bills.filter((b) => {
+    const isSettled = b.status === 'settled' || !!settledBillsMap[b.tableNumber];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        b.tableName.toLowerCase().includes(q) ||
+        b.orderId.toLowerCase().includes(q) ||
+        (b.customerMobile && b.customerMobile.includes(q)) ||
+        (b.invoiceNumber && b.invoiceNumber.toLowerCase().includes(q));
+      if (!matchesSearch) return false;
+    }
+    if (filterTab === 'PENDING') return !isSettled;
+    if (filterTab === 'SETTLED_TODAY') return isSettled;
+    return true;
+  });
 
-  // Financial calculations
-  const discountAmount = Math.round((currentBill?.subtotal || 0) * (discountPercent / 100));
-  const netSubtotal = Math.max(0, (currentBill?.subtotal || 0) - discountAmount);
+  // Auto-select first visible bill if selected table is not in the filtered list
+  const currentBill = filteredBillsList.find((b) => b.tableNumber === selectedTableNumber) || filteredBillsList[0] || null;
+  const isCurrentSettled = currentBill ? (currentBill.status === 'settled' || !!settledBillsMap[currentBill.tableNumber]) : false;
+
+  // Strict Subtotal calculation from items list
+  const rawSubtotal = currentBill ? currentBill.items.reduce((sum, item) => sum + (item.qty * item.price), 0) : 0;
+  const discountAmount = Math.round(rawSubtotal * (discountPercent / 100));
+  const netSubtotal = Math.max(0, rawSubtotal - discountAmount);
   const netCgst = Math.round(netSubtotal * 0.025);
   const netSgst = Math.round(netSubtotal * 0.025);
   const finalGrandTotal = netSubtotal + netCgst + netSgst;
 
   const perPersonTotal = Math.round(finalGrandTotal / Math.max(1, splitCount));
-  const changeDue = Math.max(0, (parseFloat(cashTendered) || 0) - finalGrandTotal);
+  const tenderedVal = parseFloat(cashTendered) || 0;
+  const changeDue = Math.max(0, tenderedVal - finalGrandTotal);
+  const remainingCashBalance = Math.max(0, finalGrandTotal - tenderedVal);
 
-  // Settlement Handler — executes backend pay-table and permanently persists settled state
+  // Settlement Handler — executes backend pay-table and records settled invoice
   const handleSettlePayment = async () => {
     if (!currentBill || isCurrentSettled) return;
 
@@ -225,14 +277,22 @@ export const CashierPOSPage: React.FC = () => {
       const res = await orderService.settleTableBill(currentBill.tableNumber, paymentMethod).catch(() => null);
       const invNum = res?.data?.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
       const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateString = new Date().toLocaleDateString();
 
       const updatedBill: POSBill = {
         ...currentBill,
+        customerMobile: customerMobileInput.trim() || currentBill.customerMobile || 'N/A',
+        subtotal: rawSubtotal,
+        discountPercent,
+        discountAmount,
+        cgst: netCgst,
+        sgst: netSgst,
         total: finalGrandTotal,
         status: 'settled',
         paymentMethod,
         invoiceNumber: invNum,
         paidAt: timestamp,
+        paidDate: dateString,
       };
 
       // 1. Update persistent settled map
@@ -241,7 +301,7 @@ export const CashierPOSPage: React.FC = () => {
         [currentBill.tableNumber]: updatedBill,
       }));
 
-      // 2. Update bills in React state
+      // 2. Update bills list
       setBills((prev) => prev.map((b) => (b.tableNumber === currentBill.tableNumber ? updatedBill : b)));
 
       showToast(`Bill ₹${finalGrandTotal.toLocaleString('en-IN')} for Table ${currentBill.tableNumber} SETTLED via ${paymentMethod}!`, 'success');
@@ -261,28 +321,29 @@ export const CashierPOSPage: React.FC = () => {
     showToast('Printing Tax Invoice Receipt...', 'info');
   };
 
-  const handleResetSettledHistory = () => {
-    localStorage.removeItem(LOCAL_STORAGE_SETTLED_KEY);
-    setSettledBillsMap({});
-    fetchLivePOSData(true);
-    showToast('POS Settlement History reset', 'info');
-  };
-
-  // Filter bills list for left sidebar
-  const filteredBillsList = bills.filter((b) => {
-    const isSettled = b.status === 'settled' || !!settledBillsMap[b.tableNumber];
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch = b.tableName.toLowerCase().includes(q) || b.orderId.toLowerCase().includes(q);
-      if (!matchesSearch) return false;
-    }
-    if (filterTab === 'PENDING') return !isSettled;
-    if (filterTab === 'SETTLED_TODAY') return isSettled;
-    return true;
-  });
-
   const pendingCount = bills.filter((b) => b.status !== 'settled' && !settledBillsMap[b.tableNumber]).length;
   const settledCount = Object.keys(settledBillsMap).length;
+
+  // Shift Sales Audit Totals
+  const settledBillsList = Object.values(settledBillsMap);
+  const shiftTotalRevenue = settledBillsList.reduce((sum, b) => sum + (b.total || 0), 0);
+  const shiftUpiTotal = settledBillsList.filter((b) => b.paymentMethod === 'UPI').reduce((sum, b) => sum + (b.total || 0), 0);
+  const shiftCardTotal = settledBillsList.filter((b) => b.paymentMethod === 'CARD').reduce((sum, b) => sum + (b.total || 0), 0);
+  const shiftCashTotal = settledBillsList.filter((b) => b.paymentMethod === 'CASH').reduce((sum, b) => sum + (b.total || 0), 0);
+
+  // Filtered Archive List for Search Modal
+  const archiveFilteredBills = settledBillsList.filter((b) => {
+    if (archivePaymentFilter !== 'ALL' && b.paymentMethod !== archivePaymentFilter) return false;
+    if (!archiveSearchQuery.trim()) return true;
+    const q = archiveSearchQuery.toLowerCase();
+    return (
+      b.tableName.toLowerCase().includes(q) ||
+      b.orderId.toLowerCase().includes(q) ||
+      (b.invoiceNumber && b.invoiceNumber.toLowerCase().includes(q)) ||
+      (b.customerMobile && b.customerMobile.includes(q)) ||
+      (b.customerName && b.customerName.toLowerCase().includes(q))
+    );
+  });
 
   return (
     // Fixed Two-Column Height Layout
@@ -315,19 +376,19 @@ export const CashierPOSPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Search Box */}
+          {/* Quick Search Input */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-aura-slate" />
             <input
               type="text"
-              placeholder="Search table # or order ID..."
+              placeholder="Search table #, order ID, phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
             />
           </div>
 
-          {/* Filter Tabs */}
+          {/* Queue Filter Tabs */}
           <div className="grid grid-cols-3 gap-1 p-1 bg-aura-obsidian/80 rounded-xl border border-aura-border/50 text-[10px] font-bold text-center">
             <button
               onClick={() => setFilterTab('PENDING')}
@@ -375,7 +436,7 @@ export const CashierPOSPage: React.FC = () => {
           ) : (
             filteredBillsList.map((bill) => {
               const isSettled = bill.status === 'settled' || !!settledBillsMap[bill.tableNumber];
-              const isSelected = selectedTableNumber === bill.tableNumber;
+              const isSelected = currentBill?.tableNumber === bill.tableNumber;
 
               return (
                 <div
@@ -383,7 +444,9 @@ export const CashierPOSPage: React.FC = () => {
                   onClick={() => {
                     setSelectedTableNumber(bill.tableNumber);
                     setSplitCount(1);
+                    setDiscountPercent(0);
                     setCashTendered('');
+                    setCustomerMobileInput(bill.customerMobile || '');
                   }}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all space-y-2 relative overflow-hidden ${
                     isSelected
@@ -427,24 +490,27 @@ export const CashierPOSPage: React.FC = () => {
           )}
         </div>
 
-        {/* Footer Summary Bar */}
-        <div className="p-4 border-t border-aura-border/60 bg-aura-container/90 space-y-2 text-xs font-mono">
-          <div className="flex justify-between text-aura-slate">
-            <span>Pending Billing Queue:</span>
-            <span className="text-amber-400 font-bold">{pendingCount} Tables</span>
+        {/* Footer Summary & Audit Archive Trigger */}
+        <div className="p-4 border-t border-aura-border/60 bg-aura-container/90 space-y-3 text-xs font-mono">
+          <div className="space-y-1">
+            <div className="flex justify-between text-aura-slate text-[11px]">
+              <span>Shift Total Revenue:</span>
+              <span className="text-emerald-400 font-black text-xs">₹{shiftTotalRevenue.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex justify-between text-[10px] text-aura-slate">
+              <span>UPI: ₹{shiftUpiTotal.toLocaleString('en-IN')}</span>
+              <span>Card: ₹{shiftCardTotal.toLocaleString('en-IN')}</span>
+              <span>Cash: ₹{shiftCashTotal.toLocaleString('en-IN')}</span>
+            </div>
           </div>
-          <div className="flex justify-between text-aura-slate">
-            <span>Settled & Closed Today:</span>
-            <span className="text-emerald-400 font-bold">{settledCount} Sessions</span>
-          </div>
-          {settledCount > 0 && (
-            <button
-              onClick={handleResetSettledHistory}
-              className="w-full text-[9px] text-aura-slate hover:text-rose-400 font-mono text-center pt-1 border-t border-aura-border/40 block transition-colors cursor-pointer"
-            >
-              Reset Session History
-            </button>
-          )}
+
+          <button
+            onClick={() => setIsArchiveOpen(true)}
+            className="w-full py-2 bg-aura-gold/15 hover:bg-aura-gold/25 border border-aura-gold/40 text-aura-gold text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-md"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Search Invoices Archive ({settledCount})</span>
+          </button>
         </div>
       </aside>
 
@@ -468,7 +534,9 @@ export const CashierPOSPage: React.FC = () => {
                 <h2 className="font-serif text-2xl font-black text-aura-ivory mt-1">
                   Table {currentBill.tableNumber} Itemized Receipt
                 </h2>
-                <p className="text-xs text-aura-slate mt-0.5">{currentBill.customerName}</p>
+                <p className="text-xs text-aura-slate mt-0.5">
+                  {currentBill.customerName} {currentBill.customerMobile && currentBill.customerMobile !== 'N/A' ? `• Ph: ${currentBill.customerMobile}` : ''}
+                </p>
               </div>
 
               {isCurrentSettled ? (
@@ -528,9 +596,26 @@ export const CashierPOSPage: React.FC = () => {
                     ))}
                   </div>
 
+                  {/* Customer Phone Number for Receipt & SMS */}
+                  {!isCurrentSettled && (
+                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-2 mt-4">
+                      <label className="text-[10px] font-mono text-aura-slate uppercase block font-bold flex items-center space-x-1.5">
+                        <Phone className="w-3.5 h-3.5 text-aura-gold" />
+                        <span>Customer Mobile Number (Optional for Tax Invoice / SMS):</span>
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="e.g. 9876543210"
+                        value={customerMobileInput}
+                        onChange={(e) => setCustomerMobileInput(e.target.value)}
+                        className="w-full p-2 bg-aura-container border border-aura-border rounded-xl text-xs text-aura-ivory font-mono focus:border-aura-gold outline-none"
+                      />
+                    </div>
+                  )}
+
                   {/* Split Bill N-Ways Calculator */}
                   {!isCurrentSettled && (
-                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-3 mt-4">
+                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-3">
                       <div className="flex items-center justify-between text-xs font-semibold text-aura-ivory">
                         <div className="flex items-center space-x-2">
                           <Split className="w-4 h-4 text-aura-gold" />
@@ -670,10 +755,19 @@ export const CashierPOSPage: React.FC = () => {
                               className="w-full p-2.5 bg-aura-container border border-aura-border rounded-xl text-aura-gold font-mono text-sm font-bold outline-none focus:border-aura-gold"
                             />
                           </div>
-                          {parseFloat(cashTendered) > 0 && (
-                            <div className="flex justify-between text-xs font-bold text-emerald-400 pt-1 border-t border-aura-border/40">
-                              <span>Return Change Due:</span>
-                              <span>₹{changeDue.toLocaleString('en-IN')}</span>
+                          {tenderedVal > 0 && (
+                            <div className="pt-1 border-t border-aura-border/40 font-bold">
+                              {tenderedVal >= finalGrandTotal ? (
+                                <div className="flex justify-between text-xs text-emerald-400">
+                                  <span>Return Change Due:</span>
+                                  <span>₹{changeDue.toLocaleString('en-IN')}</span>
+                                </div>
+                              ) : (
+                                <div className="flex justify-between text-xs text-rose-400">
+                                  <span>Remaining Cash Balance:</span>
+                                  <span>₹{remainingCashBalance.toLocaleString('en-IN')}</span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -683,7 +777,7 @@ export const CashierPOSPage: React.FC = () => {
                       <div className="border-t border-aura-border/60 pt-4 space-y-2 text-xs font-mono">
                         <div className="flex justify-between text-aura-slate">
                           <span>Subtotal</span>
-                          <span>₹{(currentBill.subtotal || 0).toLocaleString('en-IN')}</span>
+                          <span>₹{rawSubtotal.toLocaleString('en-IN')}</span>
                         </div>
 
                         {discountPercent > 0 && (
@@ -742,7 +836,7 @@ export const CashierPOSPage: React.FC = () => {
                             setInvoiceBill(currentBill);
                             setIsInvoiceOpen(true);
                           }}
-                          className="w-full py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg cursor-pointer"
+                          className="w-full py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-lg"
                         >
                           <Printer className="w-4 h-4" />
                           <span>Print GST Tax Invoice</span>
@@ -755,13 +849,141 @@ export const CashierPOSPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="py-20 text-center text-aura-slate space-y-3 bg-aura-container/40 rounded-3xl border border-aura-border/60 p-8 max-w-md mx-auto">
-            <Receipt className="w-12 h-12 text-aura-gold/40 mx-auto" />
-            <h2 className="font-serif text-xl font-bold text-aura-ivory">No Table Selected</h2>
-            <p className="text-xs">Select a table session from the left queue to proceed with settlement.</p>
+          <div className="py-24 text-center text-aura-slate space-y-3 bg-aura-container/40 rounded-3xl border border-aura-border/60 p-8 max-w-md mx-auto my-auto">
+            <Receipt className="w-12 h-12 text-aura-gold/40 mx-auto animate-pulse" />
+            <h2 className="font-serif text-xl font-bold text-aura-ivory">No Table Session Selected</h2>
+            <p className="text-xs text-aura-slate">Select a pending or settled table bill from the left queue to view details.</p>
           </div>
         )}
       </main>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          SEARCH & AUDIT INVOICES ARCHIVE MODAL
+      ───────────────────────────────────────────────────────────────── */}
+      {isArchiveOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsArchiveOpen(false); }}
+        >
+          <div className="bg-aura-container border border-aura-border/80 rounded-3xl max-w-3xl w-full shadow-2xl p-6 space-y-5 relative max-h-[85vh] flex flex-col font-sans">
+            <button
+              onClick={() => setIsArchiveOpen(false)}
+              className="absolute top-5 right-5 text-aura-slate hover:text-aura-ivory p-1 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div>
+              <div className="flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-aura-gold" />
+                <h2 className="font-serif font-black text-xl text-aura-ivory">Invoices &amp; Settlements Archive</h2>
+              </div>
+              <p className="text-xs text-aura-slate mt-0.5">Lookup completed payment records by table #, mobile number, or invoice code.</p>
+            </div>
+
+            {/* Shift Financial Overview Cards */}
+            <div className="grid grid-cols-4 gap-3 bg-aura-obsidian/70 p-3 rounded-2xl border border-aura-border/50 text-xs font-mono">
+              <div className="p-2 bg-aura-container rounded-xl border border-aura-border">
+                <span className="text-[10px] text-aura-slate block">Total Revenue</span>
+                <span className="text-emerald-400 font-bold text-sm">₹{shiftTotalRevenue.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="p-2 bg-aura-container rounded-xl border border-aura-border">
+                <span className="text-[10px] text-aura-slate block">UPI QR</span>
+                <span className="text-amber-400 font-bold">₹{shiftUpiTotal.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="p-2 bg-aura-container rounded-xl border border-aura-border">
+                <span className="text-[10px] text-aura-slate block">Card POS</span>
+                <span className="text-blue-400 font-bold">₹{shiftCardTotal.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="p-2 bg-aura-container rounded-xl border border-aura-border">
+                <span className="text-[10px] text-aura-slate block">Cash</span>
+                <span className="text-purple-400 font-bold">₹{shiftCashTotal.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            {/* Search Input & Payment Mode Filter */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-aura-slate" />
+                <input
+                  type="text"
+                  placeholder="Search by invoice #, table #, mobile number, order ID..."
+                  value={archiveSearchQuery}
+                  onChange={(e) => setArchiveSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+                />
+              </div>
+
+              <div className="flex space-x-1 bg-aura-obsidian p-1 rounded-xl border border-aura-border text-[10px] font-bold">
+                {(['ALL', 'UPI', 'CARD', 'CASH'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setArchivePaymentFilter(mode)}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      archivePaymentFilter === mode
+                        ? 'bg-aura-gold text-aura-obsidian font-black shadow-md'
+                        : 'text-aura-slate hover:text-aura-ivory'
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Settled Invoices Results List */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              {archiveFilteredBills.length === 0 ? (
+                <div className="py-12 text-center text-aura-slate space-y-2 bg-aura-obsidian/40 border border-aura-border/40 rounded-2xl">
+                  <Search className="w-8 h-8 mx-auto text-aura-slate/50" />
+                  <p className="text-xs font-bold text-aura-ivory">No Matching Invoices Found</p>
+                  <p className="text-[10px]">Try entering a table number (e.g. 10), phone number, or invoice code.</p>
+                </div>
+              ) : (
+                archiveFilteredBills.map((inv) => (
+                  <div
+                    key={inv.tableNumber}
+                    className="p-3 bg-aura-obsidian/80 border border-aura-border/60 hover:border-aura-gold/50 rounded-2xl flex items-center justify-between gap-4 transition-all font-mono text-xs"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-aura-ivory text-sm">{inv.tableName}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-bold">
+                          {inv.invoiceNumber || 'INV-PAID'}
+                        </span>
+                        <span className="text-[10px] text-aura-slate">({inv.paymentMethod || 'UPI'})</span>
+                      </div>
+
+                      <div className="flex items-center space-x-4 text-[10px] text-aura-slate">
+                        <span>Paid: {inv.paidAt || 'Today'}</span>
+                        {inv.customerMobile && <span>Ph: {inv.customerMobile}</span>}
+                        <span>{inv.items.length} Recipe Item(s)</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <span className="text-emerald-400 font-black text-sm">
+                        ₹{(inv.total || inv.subtotal).toLocaleString('en-IN')}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setInvoiceBill(inv);
+                          setIsInvoiceOpen(true);
+                        }}
+                        className="px-3 py-1.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-[10px] uppercase rounded-xl transition-all cursor-pointer flex items-center space-x-1 shadow-md"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>Receipt</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─────────────────────────────────────────────────────────────────
           PRINTABLE GST TAX INVOICE MODAL
@@ -771,10 +993,10 @@ export const CashierPOSPage: React.FC = () => {
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setIsInvoiceOpen(false); }}
         >
-          <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full shadow-2xl p-6 space-y-5 relative font-mono text-xs">
+          <div className="printable-invoice bg-white text-gray-900 rounded-3xl max-w-md w-full shadow-2xl p-6 space-y-5 relative font-mono text-xs">
             <button
               onClick={() => setIsInvoiceOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
+              className="no-print absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -799,6 +1021,12 @@ export const CashierPOSPage: React.FC = () => {
                 <span className="text-gray-500">Table Session:</span>
                 <span className="font-bold">{invoiceBill.tableName}</span>
               </div>
+              {invoiceBill.customerMobile && invoiceBill.customerMobile !== 'N/A' && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Customer Mobile:</span>
+                  <span className="font-bold">{invoiceBill.customerMobile}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-500">Date &amp; Time:</span>
                 <span>{invoiceBill.paidAt ? `${new Date().toLocaleDateString()} at ${invoiceBill.paidAt}` : new Date().toLocaleString()}</span>
@@ -834,6 +1062,12 @@ export const CashierPOSPage: React.FC = () => {
                 <span>Subtotal</span>
                 <span>₹{invoiceBill.subtotal.toLocaleString('en-IN')}</span>
               </div>
+              {invoiceBill.discountAmount !== undefined && invoiceBill.discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-bold">
+                  <span>Executive Discount ({invoiceBill.discountPercent}%)</span>
+                  <span>- ₹{invoiceBill.discountAmount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-600">
                 <span>CGST (2.5%)</span>
                 <span>₹{invoiceBill.cgst.toLocaleString('en-IN')}</span>
@@ -854,7 +1088,7 @@ export const CashierPOSPage: React.FC = () => {
                 ✓ PAID IN FULL — THANK YOU FOR DINING WITH AURA
               </div>
 
-              <div className="flex space-x-2 pt-2">
+              <div className="no-print flex space-x-2 pt-2">
                 <button
                   onClick={handlePrintInvoice}
                   className="flex-1 py-2.5 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"

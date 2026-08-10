@@ -39,3 +39,38 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #D4AF37;
 }
+
+/* Print Media Styles — Thermal & GST Tax Receipts Only */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  body * {
+    visibility: hidden !important;
+  }
+
+  .printable-invoice,
+  .printable-invoice * {
+    visibility: visible !important;
+  }
+
+  .printable-invoice {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

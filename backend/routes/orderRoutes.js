@@ -30,23 +30,30 @@ router.post('/', async (req, res) => {
       status: 'received'
     });
 
-    // Link to session if sessionId is provided
-    if (sessionId) {
-      const session = await TableSession.findOne({ sessionId });
-      if (session) {
+    // Automatically update physical table status to 'occupied' and link to active session
+    const targetTableNum = String(tableId || '5');
+    const physicalTable = await Table.findOne({
+      $or: [{ tableNumber: targetTableNum }, { _id: targetTableNum.match(/^[0-9a-fA-F]{24}$/) ? targetTableNum : null }]
+    });
+
+    if (physicalTable) {
+      if (physicalTable.status === 'available') {
+        physicalTable.status = 'occupied';
+      }
+      
+      let session = await TableSession.findOne({ tableId: physicalTable._id, status: 'active' });
+      if (!session) {
+        session = await TableSession.create({
+          tableId: physicalTable._id,
+          sessionId: `SESS-${Date.now().toString().slice(-6)}`,
+          status: 'active',
+          orders: [order._id]
+        });
+      } else {
         session.orders.push(order._id);
         await session.save();
       }
-    } else {
-      // Fallback: try to find an active session for the physical table
-      const physicalTable = await Table.findOne({ tableNumber: tableId });
-      if (physicalTable) {
-        const session = await TableSession.findOne({ tableId: physicalTable._id, status: 'active' });
-        if (session) {
-          session.orders.push(order._id);
-          await session.save();
-        }
-      }
+      await physicalTable.save();
     }
 
     res.status(201).json({ data: order });
@@ -64,10 +71,18 @@ router.get('/phone/:phone', async (req, res) => {
   }
 });
 
-// GET all orders for a specific table
+// GET active orders for a specific table (excluding past settled orders)
 router.get('/table/:tableId', async (req, res) => {
   try {
-    const orders = await Order.find({ tableId: req.params.tableId }).sort({ createdAt: -1 });
+    const { includeCompleted } = req.query;
+    const filter = { tableId: String(req.params.tableId) };
+    
+    if (includeCompleted !== 'true') {
+      filter.status = { $in: ['received', 'preparing', 'ready', 'served'] };
+      filter.paymentStatus = { $ne: 'PAID' };
+    }
+
+    const orders = await Order.find(filter).sort({ createdAt: -1 });
     res.json({ data: orders });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -81,6 +96,18 @@ router.get('/active/all', async (req, res) => {
       status: { $in: ['received', 'preparing', 'ready', 'served'] }
     }).sort({ createdAt: 1 }); // Oldest first
     res.json({ data: activeOrders });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET all settled/paid orders for Cashier POS & History Archive
+router.get('/settled/all', async (req, res) => {
+  try {
+    const settledOrders = await Order.find({
+      $or: [{ paymentStatus: 'PAID' }, { status: 'completed' }]
+    }).sort({ paidAt: -1, updatedAt: -1 });
+    res.json({ data: settledOrders });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

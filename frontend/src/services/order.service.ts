@@ -54,5 +54,10 @@ export const orderService = {
   async settleTableBill(tableId: string | number, paymentMethod: string = 'UPI_QR') {
     const response = await apiClient.post('/orders/pay-table', { tableId: String(tableId), paymentMethod });
     return response.data;
+  },
+
+  async getSettledOrders() {
+    const response = await apiClient.get('/orders/settled/all');
+    return response.data.data;
   }
 };

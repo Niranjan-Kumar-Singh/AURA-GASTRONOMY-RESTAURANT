@@ -98,18 +98,20 @@ export const WaiterDashboardPage: React.FC = () => {
         const existingTable = tableData.find((t: any) => Number(t.tableNumber) === num);
         const statusVal = (existingTable?.status || 'available') as 'available' | 'occupied' | 'billing' | 'cleaning';
 
-        const isTableActive = statusVal === 'occupied' || statusVal === 'billing';
-        const activeOrder = isTableActive ? (orderMap.get(String(num)) || (existingTable ? orderMap.get(String(existingTable._id)) : null)) : null;
+        const activeOrder = orderMap.get(String(num)) || (existingTable ? orderMap.get(String(existingTable._id)) : null);
+        const hasActiveOrder = !!activeOrder && (activeOrder.items?.length > 0 || activeOrder.totalAmount > 0);
+        const isTableActive = statusVal === 'occupied' || statusVal === 'billing' || hasActiveOrder;
+        const computedStatus = (hasActiveOrder && statusVal === 'available') ? 'occupied' : statusVal;
 
         return {
           _id: existingTable?._id || `temp-table-${num}`,
           tableNumber: num,
           zone,
           capacity: existingTable?.capacity || (num % 4 === 0 ? 6 : num % 2 === 0 ? 4 : 2),
-          status: ['available', 'occupied', 'billing', 'cleaning'].includes(statusVal) ? statusVal : 'available',
-          guestCount: isTableActive ? (existingTable?.guestCount || 0) : 0,
+          status: ['available', 'occupied', 'billing', 'cleaning'].includes(computedStatus) ? computedStatus : 'available',
+          guestCount: isTableActive ? (existingTable?.guestCount || 2) : 0,
           activeOrderId: isTableActive ? (activeOrder ? activeOrder.orderId : existingTable?.activeOrderId) : undefined,
-          orderTotal: isTableActive ? (activeOrder ? activeOrder.totalAmount : (existingTable?.orderTotal || 0)) : 0,
+          orderTotal: isTableActive ? (activeOrder ? (activeOrder.totalAmount || activeOrder.total) : (existingTable?.orderTotal || 0)) : 0,
           orderStatus: isTableActive ? (activeOrder ? activeOrder.status : undefined) : undefined,
           items: isTableActive ? (activeOrder ? activeOrder.items : []) : [],
         };

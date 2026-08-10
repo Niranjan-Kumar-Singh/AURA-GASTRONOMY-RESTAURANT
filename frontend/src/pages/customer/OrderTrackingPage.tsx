@@ -23,7 +23,10 @@ interface OrderData {
   tax: number;
   discount: number;
   total: number;
-  status: 'received' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+  status: 'received' | 'preparing' | 'ready' | 'completed' | 'served' | 'cancelled';
+  paymentStatus?: string;
+  paymentMethod?: string;
+  invoiceNumber?: string;
   createdAt: string;
 }
 
@@ -43,12 +46,16 @@ export const OrderTrackingPage: React.FC = () => {
     }
   }, []);
 
-  // Fetch all orders for this table
+  // Fetch active orders for this table's current session
   const fetchTableOrders = async () => {
     try {
       const data = await orderService.getOrdersByTable(tableId);
       if (Array.isArray(data)) {
-        setOrders(data);
+        // Filter active session orders (unpaid or newly placed)
+        const activeSessionOrders = data.filter(
+          (ord: OrderData) => ord.status !== 'cancelled' && ord.paymentStatus !== 'PAID'
+        );
+        setOrders(activeSessionOrders);
       }
     } catch (err) {
       console.error('Failed to fetch table orders:', err);
@@ -59,8 +66,8 @@ export const OrderTrackingPage: React.FC = () => {
 
   useEffect(() => {
     fetchTableOrders();
-    // Auto-poll for status updates every 6 seconds
-    const interval = setInterval(fetchTableOrders, 6000);
+    // Auto-poll for status updates every 5 seconds
+    const interval = setInterval(fetchTableOrders, 5000);
     return () => clearInterval(interval);
   }, [tableId, orderId]);
 
@@ -85,6 +92,7 @@ export const OrderTrackingPage: React.FC = () => {
       case 'preparing': return 1;
       case 'ready': return 2;
       case 'completed': return 3;
+      case 'served': return 3;
       default: return 0;
     }
   };
@@ -98,17 +106,18 @@ export const OrderTrackingPage: React.FC = () => {
       case 'ready':
         return { label: 'Ready to Serve', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' };
       case 'completed':
+      case 'served':
         return { label: 'Served', color: 'bg-aura-gold/10 text-aura-gold border-aura-gold/30' };
       default:
         return { label: status, color: 'bg-aura-slate/10 text-aura-slate border-aura-slate/30' };
     }
   };
 
-  // Compute Grand Total for all orders placed at this table
+  // Compute Grand Total for active orders in current dining session
   const grandSessionTotal = orders.reduce((sum, ord) => sum + (ord.total || 0), 0);
   const latestOrder = orders.length > 0 ? orders[0] : null;
 
-  // Calculate Countdown & Elapsed Time for the Latest Order
+  // Calculate Countdown & Elapsed Time for the Latest Active Order
   const getOrderTimerMetrics = (createdAtStr?: string, targetPrepMinutes = 15) => {
     if (!createdAtStr) return { remainingStr: '15:00', elapsedStr: '00:00', isOverdue: false };
     
@@ -151,7 +160,7 @@ export const OrderTrackingPage: React.FC = () => {
             TABLE {tableId} SESSION
           </h1>
           <p className="text-[10px] text-aura-slate uppercase font-mono">
-            {orders.length} {orders.length === 1 ? 'Order' : 'Orders'} Fired
+            {orders.length} Active {orders.length === 1 ? 'Order' : 'Orders'}
           </p>
         </div>
       </header>
@@ -164,16 +173,23 @@ export const OrderTrackingPage: React.FC = () => {
             <p className="font-serif text-base text-aura-ivory">Fetching Live Kitchen Status...</p>
           </div>
         ) : orders.length === 0 ? (
-          /* Empty Orders Fallback */
-          <div className="py-16 text-center space-y-4 bg-aura-container/40 rounded-3xl border border-aura-border p-8">
-            <ShoppingBag className="w-12 h-12 text-aura-slate/40 mx-auto" />
-            <h2 className="font-serif text-xl font-bold text-aura-ivory">No Orders Placed Yet</h2>
-            <p className="text-xs text-aura-slate max-w-xs mx-auto">Browse the menu to place your first order for Table {tableId}.</p>
+          /* Empty Active Orders State — Previous Bill Paid & Settled */
+          <div className="py-16 text-center space-y-5 bg-aura-container/40 rounded-3xl border border-aura-border p-8 max-w-md mx-auto shadow-2xl">
+            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-emerald-400 shadow-inner">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="font-serif text-xl font-bold text-aura-ivory">Previous Bill Paid &amp; Settled</h2>
+              <p className="text-xs text-aura-slate max-w-xs mx-auto mt-1">
+                Your previous session at Table {tableId} has been settled. Place a new order anytime!
+              </p>
+            </div>
             <button
               onClick={() => navigate(`/table/${tableId}/menu`)}
-              className="px-6 py-3 bg-aura-gold text-aura-obsidian font-bold text-xs rounded-xl shadow-lg"
+              className="px-6 py-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-2xl shadow-xl transition-all flex items-center justify-center space-x-2 mx-auto cursor-pointer"
             >
-              Browse Menu
+              <Plus className="w-4 h-4" />
+              <span>Browse Menu &amp; Place Order</span>
             </button>
           </div>
         ) : (
@@ -201,10 +217,13 @@ export const OrderTrackingPage: React.FC = () => {
                         <span className="text-[9px] text-emerald-400 font-bold uppercase block font-mono">Kitchen Status</span>
                         <span className="font-mono text-sm font-extrabold text-emerald-400 animate-pulse">READY NOW</span>
                       </div>
-                    ) : latestOrder.status === 'completed' ? (
+                    ) : (latestOrder.status === 'completed' || latestOrder.status === 'served') ? (
                       <div>
-                        <span className="text-[9px] text-aura-gold font-bold uppercase block font-mono">Kitchen Status</span>
-                        <span className="font-mono text-sm font-extrabold text-aura-gold">SERVED</span>
+                        <span className="text-[9px] text-aura-gold font-bold uppercase block font-mono flex items-center justify-end space-x-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-aura-gold mr-1" />
+                          <span>Status</span>
+                        </span>
+                        <span className="font-mono text-sm font-extrabold text-aura-gold">DELIVERED &amp; SERVED</span>
                       </div>
                     ) : (
                       <div>
@@ -272,15 +291,15 @@ export const OrderTrackingPage: React.FC = () => {
               </div>
             )}
 
-            {/* List of Orders Cards for Table Session */}
+            {/* List of Active Orders Cards for Table Session */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <h3 className="font-serif text-lg font-bold text-aura-ivory flex items-center space-x-2">
                   <Utensils className="w-5 h-5 text-aura-gold" />
-                  <span>Orders Fired For Table {tableId}</span>
+                  <span>Active Session Orders (Table {tableId})</span>
                 </h3>
                 <span className="text-xs text-aura-slate font-mono">
-                  {orders.length} {orders.length === 1 ? 'Card' : 'Cards'}
+                  {orders.length} {orders.length === 1 ? 'Order' : 'Orders'}
                 </span>
               </div>
 
@@ -334,7 +353,7 @@ export const OrderTrackingPage: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Subtotal & Total for this Order */}
+                    {/* Subtotal for this Order */}
                     <div className="border-t border-aura-border/60 pt-3 flex items-center justify-between text-xs">
                       <span className="text-aura-slate font-medium">Order #{ord.orderId} Subtotal</span>
                       <span className="font-mono font-bold text-aura-ivory">₹{ord.total ? ord.total.toFixed(2) : '0.00'}</span>
@@ -344,44 +363,19 @@ export const OrderTrackingPage: React.FC = () => {
               })}
             </div>
 
-            {/* Cumulative Grand Total Card & Paid Tax Invoice for the Entire Table Session */}
+            {/* Cumulative Grand Total Card for Active Session */}
             <div className="bg-gradient-to-r from-aura-obsidian via-aura-container to-aura-obsidian border-2 border-aura-gold/50 rounded-3xl p-6 space-y-4 shadow-2xl">
               <div className="flex items-center justify-between border-b border-aura-border/60 pb-3">
                 <div className="flex items-center space-x-2">
                   <Receipt className="w-5 h-5 text-aura-gold" />
                   <h3 className="font-serif text-lg font-bold text-aura-ivory">
-                    Cumulative Table {tableId} Session Bill
+                    Active Table {tableId} Session Bill
                   </h3>
                 </div>
-                {orders.some((o: any) => o.paymentStatus === 'PAID') ? (
-                  <span className="text-xs font-mono font-bold px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-400/50 flex items-center space-x-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>BILL PAID & SETTLED</span>
-                  </span>
-                ) : (
-                  <span className="text-xs font-mono font-bold px-3 py-1 bg-aura-gold/10 text-aura-gold rounded-full border border-aura-gold/30">
-                    {orders.length} Total Orders
-                  </span>
-                )}
+                <span className="text-xs font-mono font-bold px-3 py-1 bg-aura-gold/10 text-aura-gold rounded-full border border-aura-gold/30">
+                  {orders.length} Active Orders
+                </span>
               </div>
-
-              {/* Paid Invoice Header */}
-              {orders.some((o: any) => o.paymentStatus === 'PAID') && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-1 font-mono text-xs text-emerald-300">
-                  <div className="flex justify-between font-bold">
-                    <span>Tax Invoice #:</span>
-                    <span>{(orders.find((o: any) => o.invoiceNumber) as any)?.invoiceNumber || 'INV-PAID-SETTLED'}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] opacity-80">
-                    <span>Payment Method:</span>
-                    <span>{(orders.find((o: any) => o.paymentMethod) as any)?.paymentMethod || 'UPI QR'}</span>
-                  </div>
-                  <div className="flex justify-between text-[10px] opacity-70">
-                    <span>Status:</span>
-                    <span className="uppercase font-bold text-emerald-400">Payment Confirmed & Verified</span>
-                  </div>
-                </div>
-              )}
 
               <div className="space-y-2 text-xs">
                 {orders.map((ord) => (
@@ -392,7 +386,7 @@ export const OrderTrackingPage: React.FC = () => {
                 ))}
 
                 <div className="flex justify-between text-base font-bold text-aura-ivory pt-3 border-t border-aura-border">
-                  <span>Grand Session Bill</span>
+                  <span>Current Active Session Total</span>
                   <span className="font-mono text-xl font-black text-aura-gold">
                     ₹{grandSessionTotal.toFixed(2)}
                   </span>
@@ -403,7 +397,7 @@ export const OrderTrackingPage: React.FC = () => {
             {/* Add More Items CTA */}
             <button
               onClick={() => navigate(`/table/${tableId}/menu`)}
-              className="w-full py-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center space-x-2 shadow-xl shadow-aura-gold/20"
+              className="w-full py-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center space-x-2 shadow-xl shadow-aura-gold/20 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add More Dishes To Table {tableId}</span>

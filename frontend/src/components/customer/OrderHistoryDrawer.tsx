@@ -21,11 +21,17 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
   }, [isOpen]);
 
   const fetchOrders = async () => {
-    if (!user) return;
     setLoading(true);
     try {
-      const data = await orderService.getOrdersByPhone(user.phone);
-      setOrders(data);
+      if (user?.phone) {
+        const data = await orderService.getOrdersByPhone(user.phone);
+        setOrders(data);
+      } else {
+        const tableIdMatch = window.location.pathname.match(/\/table\/(\d+)/);
+        const currentTable = tableIdMatch ? tableIdMatch[1] : (localStorage.getItem('aura_current_table_id') || '5');
+        const data = await orderService.getOrdersByTable(currentTable);
+        setOrders(data);
+      }
     } catch (error) {
       console.error('Failed to load orders', error);
     } finally {
@@ -48,7 +54,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
             </div>
             <div>
               <h2 className="font-serif text-xl font-bold text-aura-ivory">Order History</h2>
-              <p className="text-xs text-aura-slate">Your past dining sessions</p>
+              <p className="text-xs text-aura-slate">Your past dining sessions &amp; receipts</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 bg-aura-obsidian hover:bg-black rounded-full text-aura-ivory transition-colors">
@@ -63,14 +69,14 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
             <div className="text-center py-20 text-aura-slate text-sm">No past orders found.</div>
           ) : (
             orders.map((order) => (
-              <div key={order._id} className="p-5 rounded-2xl bg-aura-container border border-aura-border hover:border-aura-gold/40 transition-colors group cursor-pointer">
+              <div key={order._id || order.orderId} className="p-5 rounded-2xl bg-aura-container border border-aura-border hover:border-aura-gold/40 transition-colors group cursor-pointer">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <CalendarClock className="w-4 h-4 text-aura-gold" />
                     <span className="text-xs font-bold text-aura-ivory">{new Date(order.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold bg-emerald-400/10 px-2 py-1 rounded-full">
-                    {order.status}
+                  <span className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full ${order.paymentStatus === 'PAID' || order.status === 'completed' ? 'text-emerald-400 bg-emerald-400/10 border border-emerald-400/30' : 'text-amber-400 bg-amber-400/10 border border-amber-400/30'}`}>
+                    {order.paymentStatus === 'PAID' ? 'PAID & SETTLED' : order.status}
                   </span>
                 </div>
                 <div className="flex items-center space-x-3 mb-4">
@@ -78,12 +84,12 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                     <Utensils className="w-5 h-5 text-aura-slate" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-aura-ivory group-hover:text-aura-gold transition-colors">ORD-{order._id.substring(0, 4).toUpperCase()}</p>
-                    <p className="text-xs text-aura-slate line-clamp-1">{order.items.length} items</p>
+                    <p className="text-sm font-bold text-aura-ivory group-hover:text-aura-gold transition-colors">Order #{order.orderId || order._id?.substring(0, 6).toUpperCase()}</p>
+                    <p className="text-xs text-aura-slate line-clamp-1">{order.items?.length || 0} items</p>
                   </div>
                 </div>
                 <div className="pt-3 border-t border-aura-border flex items-center justify-between">
-                  <span className="font-mono font-bold text-aura-gold">₹{order.totalAmount}</span>
+                  <span className="font-mono font-bold text-aura-gold">₹{(order.total || order.totalAmount || 0).toFixed(2)}</span>
                   <div className="flex items-center space-x-1 text-xs text-aura-slate group-hover:text-aura-ivory transition-colors">
                     <span>View Receipt</span>
                     <ChevronRight className="w-4 h-4" />
