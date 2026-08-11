@@ -52,8 +52,8 @@ router.post('/login', async (req, res) => {
       $or: [{ email: loginId.toLowerCase() }, { phone: loginId }]
     });
 
-    // Auto-seed default staff accounts on first login attempt if DB doesn't have them
-    if (!user && loginId.includes('@aura.com')) {
+    // Auto-seed or sync default staff accounts on login attempt
+    if (loginId.includes('@aura.com')) {
       let defaultRole = 'admin';
       let name = 'Staff Member';
       if (loginId.startsWith('chef')) { defaultRole = 'kitchen'; name = 'Executive Chef'; }
@@ -62,14 +62,23 @@ router.post('/login', async (req, res) => {
       else if (loginId.startsWith('owner')) { defaultRole = 'owner'; name = 'Restaurant Owner'; }
       else if (loginId.startsWith('admin')) { defaultRole = 'admin'; name = 'System Administrator'; }
 
-      user = await User.create({
-        name,
-        email: loginId.toLowerCase(),
-        phone: `+447000${Math.floor(100000 + Math.random() * 900000)}`,
-        password: password,
-        role: defaultRole,
-        status: 'VIP'
-      });
+      if (!user) {
+        user = await User.create({
+          name,
+          email: loginId.toLowerCase(),
+          phone: `+447000${Math.floor(100000 + Math.random() * 900000)}`,
+          password: password,
+          role: defaultRole,
+          status: 'VIP'
+        });
+      } else {
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+          user.password = password;
+          user.role = defaultRole;
+          await user.save();
+        }
+      }
     }
 
     if (user && (await user.matchPassword(password))) {

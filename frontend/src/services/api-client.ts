@@ -1,8 +1,22 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/use-auth-store';
 
+const getApiBaseUrl = () => {
+  const metaEnv = (import.meta as any).env || {};
+  if (metaEnv.VITE_API_URL) {
+    return metaEnv.VITE_API_URL;
+  }
+  if (metaEnv.VITE_API_BASE_URL) {
+    return metaEnv.VITE_API_BASE_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return '/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
