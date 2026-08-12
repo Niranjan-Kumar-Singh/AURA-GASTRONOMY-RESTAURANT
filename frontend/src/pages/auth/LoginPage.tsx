@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
 import { useAuthStore } from '../../store/use-auth-store';
-import { ShieldCheck, Utensils, Eye, EyeOff, Lock, User as UserIcon, ArrowRight, ArrowLeft, ChefHat, UserCheck, CreditCard, LayoutDashboard } from 'lucide-react';
+import { ShieldCheck, Utensils, Eye, EyeOff, Lock, User as UserIcon, ArrowRight, ArrowLeft, ChefHat, UserCheck, CreditCard, LayoutDashboard, Award } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [identifier, setIdentifier] = useState('chef@aura.com');
@@ -70,7 +70,8 @@ export const LoginPage: React.FC = () => {
     { role: 'CHEF', title: 'Head Chef KDS', email: 'chef@aura.com', pass: 'chef123', icon: <ChefHat className="w-4 h-4 text-amber-400" /> },
     { role: 'WAITER', title: 'Waiter Dispatch', email: 'waiter@aura.com', pass: 'waiter123', icon: <UserCheck className="w-4 h-4 text-emerald-400" /> },
     { role: 'CASHIER', title: 'Cashier POS', email: 'cashier@aura.com', pass: 'cashier123', icon: <CreditCard className="w-4 h-4 text-sky-400" /> },
-    { role: 'ADMIN', title: 'CEO Admin', email: 'admin@aura.com', pass: 'admin123', icon: <LayoutDashboard className="w-4 h-4 text-aura-gold" /> },
+    { role: 'OWNER', title: 'Owner Suite', email: 'owner@aura.com', pass: 'owner123', icon: <Award className="w-4 h-4 text-purple-400" /> },
+    { role: 'ADMIN', title: 'System Admin', email: 'admin@aura.com', pass: 'admin123', icon: <LayoutDashboard className="w-4 h-4 text-aura-gold" /> },
   ];
 
   return (
