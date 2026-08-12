@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, ArrowUpRight } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
@@ -10,6 +10,8 @@ interface StatCardProps {
   icon: LucideIcon;
   iconColor?: string;
   badge?: string;
+  onClick?: () => void;
+  clickHint?: string;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -20,12 +22,26 @@ export const StatCard: React.FC<StatCardProps> = ({
   isPositive = true,
   icon: Icon,
   iconColor = 'text-aura-gold',
-  badge
+  badge,
+  onClick,
+  clickHint
 }) => {
   return (
-    <div className="bg-aura-container/80 backdrop-blur-xl border border-aura-border/60 p-5 rounded-2xl space-y-3 shadow-xl hover:border-aura-gold/40 transition-all duration-300 relative overflow-hidden group">
+    <div
+      onClick={onClick}
+      className={`bg-aura-container/80 backdrop-blur-xl border p-5 rounded-2xl space-y-3 shadow-xl transition-all duration-300 relative overflow-hidden group ${
+        onClick
+          ? 'cursor-pointer border-aura-border/80 hover:border-aura-gold hover:shadow-2xl hover:scale-[1.015] active:scale-[0.99]'
+          : 'border-aura-border/60 hover:border-aura-gold/40'
+      }`}
+    >
       <div className="flex justify-between items-start">
-        <span className="text-[11px] font-semibold text-aura-slate uppercase tracking-wider">{title}</span>
+        <div className="flex items-center space-x-1.5">
+          <span className="text-[11px] font-semibold text-aura-slate uppercase tracking-wider">{title}</span>
+          {onClick && (
+            <ArrowUpRight className="w-3 h-3 text-aura-gold opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
+        </div>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-aura-obsidian border border-aura-border ${iconColor} group-hover:scale-110 transition-transform`}>
           <Icon className="w-4 h-4" />
         </div>
@@ -47,9 +63,16 @@ export const StatCard: React.FC<StatCardProps> = ({
           </p>
         )}
 
-        {subtitle && (
-          <p className="text-[10px] text-aura-slate font-medium">{subtitle}</p>
-        )}
+        <div className="flex items-center justify-between">
+          {subtitle && (
+            <p className="text-[10px] text-aura-slate font-medium">{subtitle}</p>
+          )}
+          {clickHint && (
+            <span className="text-[9px] text-aura-gold/80 font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+              {clickHint} →
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

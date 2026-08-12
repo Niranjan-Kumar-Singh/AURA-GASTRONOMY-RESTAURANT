@@ -77,7 +77,13 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           alt={item.name}
           className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-aura-container via-transparent to-black/40" />
+        {item.isAvailable === false && (
+          <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px] flex items-center justify-center z-10">
+            <span className="px-3 py-1 bg-rose-500 text-white text-[10px] font-black tracking-widest uppercase rounded-full shadow-lg border border-rose-400">
+              OUT OF STOCK
+            </span>
+          </div>
+        )}
 
         {/* Veg / Non-Veg Indicator */}
         <div className="absolute top-3 left-3 flex items-center space-x-1.5 z-10">
@@ -193,15 +199,22 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           )}
         </div>
 
-        {/* Quantity Stepper / Add Button */}
+        {/* Quantity Stepper / Add Button / Out of Stock */}
         <div className="pt-3">
-          {quantity === 0 ? (
+          {item.isAvailable === false ? (
+            <button
+              disabled
+              className="w-full py-2.5 px-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold uppercase tracking-wider rounded-2xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed opacity-80"
+            >
+              <span>OUT OF STOCK</span>
+            </button>
+          ) : quantity === 0 ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onAdd(item);
               }}
-              className="w-full py-2.5 px-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black uppercase tracking-wider rounded-2xl text-xs transition-all flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(212,175,55,0.2)] active:scale-95"
+              className="w-full py-2.5 px-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black uppercase tracking-wider rounded-2xl text-xs transition-all flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(212,175,55,0.2)] active:scale-95 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>ADD TO CART</span>

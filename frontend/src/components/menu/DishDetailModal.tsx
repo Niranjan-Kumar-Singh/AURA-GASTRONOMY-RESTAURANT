@@ -222,7 +222,14 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
 
         {/* Modal Footer (Quantity Stepper & Add CTA) */}
         <div className="p-4 bg-aura-obsidian border-t border-aura-border flex items-center justify-center">
-          {isUpdating ? (
+          {item.isAvailable === false ? (
+            <button
+              disabled
+              className="w-full max-w-sm py-4 px-6 bg-rose-500/10 border border-rose-500/40 text-rose-400 font-bold rounded-full text-xs uppercase tracking-widest cursor-not-allowed opacity-90 flex items-center justify-center space-x-2"
+            >
+              <span>CURRENTLY OUT OF STOCK</span>
+            </button>
+          ) : isUpdating ? (
             <div className="w-full max-w-sm flex items-center justify-between bg-aura-gold/20 backdrop-blur-md rounded-full p-1.5 border border-aura-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.3)] animate-in fade-in zoom-in duration-200">
               <button
                 onClick={handleDecrement}

@@ -42,7 +42,10 @@ const orderSchema = new mongoose.Schema({
     default: 'CASH'
   },
   paidAt: { type: Date },
-  invoiceNumber: { type: String }
+  invoiceNumber: { type: String },
+  refundReason: { type: String },
+  refundedAt: { type: Date },
+  refundedBy: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

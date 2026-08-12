@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, ShieldCheck, RefreshCw, X, Building2, Check, Search, Phone, FileText } from 'lucide-react';
+import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, ShieldCheck, RefreshCw, X, Building2, Check, Search, Phone, FileText, Eye } from 'lucide-react';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
@@ -91,6 +91,21 @@ export const CashierPOSPage: React.FC = () => {
       console.error('Failed to persist settled bills:', e);
     }
   }, [settledBillsMap]);
+
+  // Handle Bill Refund Action
+  const handleRefundBill = async (bill: POSBill) => {
+    const reason = prompt(`Enter reason for refunding Invoice ${bill.invoiceNumber || bill.orderId}:`, 'Customer Requested Refund');
+    if (reason === null) return;
+
+    try {
+      await orderService.refundOrder(bill.orderId, reason);
+      showToast(`Refund processed for ${bill.invoiceNumber || bill.orderId} (₹${bill.total.toLocaleString('en-IN')})`, 'success');
+      setIsInvoiceOpen(false);
+      fetchLivePOSData(true);
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'Failed to process refund', 'error');
+    }
+  };
 
   // Cache for settled orders map across polling ticks
   const [settledCache, setSettledCache] = useState<Map<string, POSBill>>(new Map());
@@ -1070,8 +1085,8 @@ export const CashierPOSPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3">
-                      <span className="text-emerald-400 font-black text-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-emerald-400 font-black text-sm mr-2">
                         ₹{(inv.total || inv.subtotal).toLocaleString('en-IN')}
                       </span>
                       <button
@@ -1081,8 +1096,15 @@ export const CashierPOSPage: React.FC = () => {
                         }}
                         className="px-3 py-1.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-[10px] uppercase rounded-xl transition-all cursor-pointer flex items-center space-x-1 shadow-md"
                       >
-                        <Printer className="w-3.5 h-3.5" />
-                        <span>Receipt</span>
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View Bill</span>
+                      </button>
+                      <button
+                        onClick={() => handleRefundBill(inv)}
+                        className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[10px] uppercase rounded-xl transition-all cursor-pointer flex items-center space-x-1"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Refund</span>
                       </button>
                     </div>
                   </div>

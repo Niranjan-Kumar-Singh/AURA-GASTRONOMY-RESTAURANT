@@ -1,34 +1,35 @@
 const express = require('express');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const MenuItem = require('../models/MenuItem');
 
-// Gracefully handle MenuItem
-let MenuItem;
-try {
-  MenuItem = require('../models/MenuItem');
-} catch (e) {
-  MenuItem = null;
-}
 const router = express.Router();
 
 router.get('/metrics', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments({ role: 'CUSTOMER' });
     const totalStaff = await User.countDocuments({ role: { $ne: 'CUSTOMER' } });
-    const totalDishes = MenuItem ? await MenuItem.countDocuments() : 150; // fallback
+    const totalDishes = await MenuItem.countDocuments();
 
-    const ongoingOrdersCount = await Order.countDocuments({ status: { $in: ['received', 'preparing', 'ready'] } });
-    const completedOrdersCount = await Order.countDocuments({ status: 'completed' });
+    // Ongoing orders: active dining tickets not yet paid
+    const ongoingOrdersCount = await Order.countDocuments({
+      status: { $in: ['received', 'preparing', 'ready', 'served'] },
+      paymentStatus: { $ne: 'PAID' }
+    });
 
-    // Aggregate revenue
+    // Completed orders: settled bills
+    const completedOrdersCount = await Order.countDocuments({
+      $or: [{ status: 'completed' }, { paymentStatus: 'PAID' }]
+    });
+
+    // Aggregate exact revenue from settled bills
     const revenueResult = await Order.aggregate([
-      { $match: { status: 'completed' } },
+      { $match: { $or: [{ status: 'completed' }, { paymentStatus: 'PAID' }] } },
       { $group: { _id: null, totalRevenue: { $sum: "$total" } } }
     ]);
+
     const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
-    
-    // Fake profit margin of 35% for demo
-    const totalProfit = totalRevenue * 0.35;
+    const totalProfit = totalRevenue * 0.35; // 35% gross profit margin
 
     res.json({
       data: {

@@ -114,6 +114,41 @@ router.get('/settled/all', async (req, res) => {
   }
 });
 
+// POST refund an order
+router.post('/:orderId/refund', async (req, res) => {
+  try {
+    const { reason, refundedBy } = req.body;
+    const targetOrderId = req.params.orderId;
+
+    const order = await Order.findOneAndUpdate(
+      { $or: [{ orderId: targetOrderId }, { _id: targetOrderId.match(/^[0-9a-fA-F]{24}$/) ? targetOrderId : null }] },
+      {
+        paymentStatus: 'REFUNDED',
+        status: 'cancelled',
+        refundReason: reason || 'Customer Requested Refund',
+        refundedAt: new Date(),
+        refundedBy: refundedBy || 'Admin'
+      },
+      { new: true }
+    );
+
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    res.json({ data: order, message: `Order #${order.orderId} refunded successfully` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET all refunded orders
+router.get('/refunds/all', async (req, res) => {
+  try {
+    const refundedOrders = await Order.find({ paymentStatus: 'REFUNDED' }).sort({ refundedAt: -1, updatedAt: -1 });
+    res.json({ data: refundedOrders });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // PUT update order status
 router.put('/:orderId/status', async (req, res) => {
   try {

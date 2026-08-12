@@ -1,8 +1,26 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Category = require('../models/Category');
 const MenuItem = require('../models/MenuItem');
 
 const router = express.Router();
+
+// Helper to construct query matching numeric id, string id, OR Mongoose _id
+const getQueryById = (paramId) => {
+  const num = Number(paramId);
+  const isValidMongoId = mongoose.isValidObjectId(paramId);
+
+  const conditions = [];
+  if (!isNaN(num)) {
+    conditions.push({ id: num });
+  }
+  conditions.push({ id: String(paramId) });
+  if (isValidMongoId) {
+    conditions.push({ _id: paramId });
+  }
+
+  return { $or: conditions };
+};
 
 // GET all categories
 router.get('/categories', async (req, res) => {
@@ -39,9 +57,10 @@ router.post('/categories', async (req, res) => {
 // PUT update category
 router.put('/categories/:id', async (req, res) => {
   try {
+    const query = getQueryById(req.params.id);
     const category = await Category.findOneAndUpdate(
-      { id: Number(req.params.id) },
-      req.body,
+      query,
+      { $set: req.body },
       { new: true }
     );
     if (!category) return res.status(404).json({ message: 'Category not found' });
@@ -54,9 +73,8 @@ router.put('/categories/:id', async (req, res) => {
 // DELETE category
 router.delete('/categories/:id', async (req, res) => {
   try {
-    const catId = Number(req.params.id);
-    await Category.findOneAndDelete({ id: catId });
-    // Also optional: unassign or remove items
+    const query = getQueryById(req.params.id);
+    await Category.findOneAndDelete(query);
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -84,10 +102,11 @@ router.get('/menu-items', async (req, res) => {
   }
 });
 
-// GET menu item by numeric ID
+// GET menu item by numeric or Mongo _id
 router.get('/menu-items/:id', async (req, res) => {
   try {
-    const item = await MenuItem.findOne({ id: Number(req.params.id) });
+    const query = getQueryById(req.params.id);
+    const item = await MenuItem.findOne(query);
     if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json({ data: item });
   } catch (error) {
@@ -137,8 +156,9 @@ router.post('/menu-items', async (req, res) => {
 // PUT update menu item
 router.put('/menu-items/:id', async (req, res) => {
   try {
+    const query = getQueryById(req.params.id);
     const item = await MenuItem.findOneAndUpdate(
-      { id: Number(req.params.id) },
+      query,
       { $set: req.body },
       { new: true }
     );
@@ -152,7 +172,8 @@ router.put('/menu-items/:id', async (req, res) => {
 // DELETE menu item
 router.delete('/menu-items/:id', async (req, res) => {
   try {
-    await MenuItem.findOneAndDelete({ id: Number(req.params.id) });
+    const query = getQueryById(req.params.id);
+    await MenuItem.findOneAndDelete(query);
     res.json({ message: 'Menu item deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

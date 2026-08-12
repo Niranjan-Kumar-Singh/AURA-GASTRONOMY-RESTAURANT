@@ -59,5 +59,15 @@ export const orderService = {
   async getSettledOrders() {
     const response = await apiClient.get('/orders/settled/all');
     return response.data.data;
+  },
+
+  async refundOrder(orderId: string, reason?: string) {
+    const response = await apiClient.post(`/orders/${orderId}/refund`, { reason });
+    return response.data;
+  },
+
+  async getRefundedOrders() {
+    const response = await apiClient.get('/orders/refunds/all');
+    return response.data.data;
   }
 };
