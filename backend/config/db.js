@@ -13,7 +13,7 @@ const connectDB = async () => {
     return;
   }
   try {
-    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb+srv://niranjansingh1419_db_user:tEP6hsSej6ODcDEr@cluster0.mdn2dez.mongodb.net/aura_restaurant?retryWrites=true&w=majority&appName=Cluster0';
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/aura_restaurant';
     const conn = await mongoose.connect(mongoUri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
