@@ -3,6 +3,7 @@ import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, S
 import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface POSItem {
   name: string;
@@ -70,6 +71,9 @@ export const CashierPOSPage: React.FC = () => {
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
   const [archivePaymentFilter, setArchivePaymentFilter] = useState<'ALL' | 'UPI' | 'CARD' | 'CASH'>('ALL');
+
+  // Prevent background body scrolling when any modal is open
+  useBodyScrollLock(isInvoiceOpen || isArchiveOpen);
 
   // Handle ESC key to close modals
   useEffect(() => {
@@ -184,7 +188,7 @@ export const CashierPOSPage: React.FC = () => {
         }
       });
 
-      // 2. Map for Settled Bills (grouped by invoiceNumber/orderId for accurate session totals)
+      // 2. Map for Settled Bills (stored individually by invoiceKey / orderId)
       let settledBillsByInvoiceMap = new Map<string, POSBill>(settledCache);
 
       if (Array.isArray(dbSettledOrders)) {
@@ -202,70 +206,47 @@ export const CashierPOSPage: React.FC = () => {
             if (num > 16 && num <= 24) zone = 'Outdoor Garden';
             if (num > 24) zone = 'Family Section';
 
-            const invoiceKey = dbOrd.invoiceNumber || dbOrd.orderId || String(dbOrd._id);
+            const invoiceKey = String(dbOrd.orderId || dbOrd._id);
 
             const itemsList: POSItem[] = (dbOrd.items && dbOrd.items.length > 0) ? dbOrd.items.map((i: any) => ({
               name: i.name,
-              qty: i.quantity || 1,
+              qty: i.quantity || i.qty || 1,
               price: i.price || i.unitPrice || 0,
             })) : [];
 
-            const existingBill = freshSettledMap.get(invoiceKey);
+            const subtotal = dbOrd.subtotal || itemsList.reduce((sum, it) => sum + (it.qty * it.price), 0);
+            const cgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
+            const sgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
+            const total = dbOrd.total || (subtotal + cgst + sgst);
 
-            if (existingBill) {
-              const updatedItems = [...existingBill.items, ...itemsList];
-              const cumulativeSubtotal = dbOrd.subtotal ? (existingBill.subtotal + dbOrd.subtotal) : updatedItems.reduce((sum, it) => sum + (it.qty * it.price), 0);
-              const cgst = dbOrd.tax ? (existingBill.cgst + Math.round(dbOrd.tax / 2)) : Math.round(cumulativeSubtotal * 0.025);
-              const sgst = dbOrd.tax ? (existingBill.sgst + Math.round(dbOrd.tax / 2)) : Math.round(cumulativeSubtotal * 0.025);
-              const total = dbOrd.total ? (existingBill.total + dbOrd.total) : (cumulativeSubtotal + cgst + sgst);
-              const combinedOrderIds = existingBill.orderId.includes(dbOrd.orderId)
-                ? existingBill.orderId
-                : `${existingBill.orderId}, ${dbOrd.orderId}`;
+            const posBill: POSBill = {
+              tableId: `settled-${invoiceKey}`,
+              tableNumber: num,
+              tableName: `Table ${num} (${zone})`,
+              zone,
+              orderId: dbOrd.orderId || `ORD-${String(dbOrd._id).slice(-4).toUpperCase()}`,
+              customerName: dbOrd.customerName || `Guest Session #${num}`,
+              customerMobile: dbOrd.customerPhone || '',
+              items: itemsList,
+              subtotal,
+              cgst,
+              sgst,
+              total,
+              status: 'settled',
+              invoiceNumber: dbOrd.invoiceNumber || `INV-${dbOrd.orderId || String(dbOrd._id).slice(-6).toUpperCase()}`,
+              paymentMethod: (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CARD') ? 'CARD' : (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CASH') ? 'CASH' : 'UPI',
+              paidAt: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              paidDate: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
+            };
 
-              freshSettledMap.set(invoiceKey, {
-                ...existingBill,
-                orderId: combinedOrderIds,
-                items: updatedItems,
-                subtotal: cumulativeSubtotal,
-                cgst,
-                sgst,
-                total,
-              });
-            } else {
-              const subtotal = dbOrd.subtotal || itemsList.reduce((sum, it) => sum + (it.qty * it.price), 0);
-              const cgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
-              const sgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
-              const total = dbOrd.total || (subtotal + cgst + sgst);
-
-              const posBill: POSBill = {
-                tableId: `settled-${invoiceKey}`,
-                tableNumber: num,
-                tableName: `Table ${num} (${zone})`,
-                zone,
-                orderId: dbOrd.orderId || `ORD-${String(dbOrd._id).slice(-4).toUpperCase()}`,
-                customerName: dbOrd.customerName || `Guest Session #${num}`,
-                customerMobile: dbOrd.customerPhone || '',
-                items: itemsList,
-                subtotal,
-                cgst,
-                sgst,
-                total,
-                status: 'settled',
-                invoiceNumber: dbOrd.invoiceNumber || `INV-${dbOrd.orderId || String(dbOrd._id).slice(-6).toUpperCase()}`,
-                paymentMethod: (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CARD') ? 'CARD' : (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CASH') ? 'CASH' : 'UPI',
-                paidAt: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                paidDate: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
-              };
-
-              freshSettledMap.set(invoiceKey, posBill);
-            }
+            freshSettledMap.set(invoiceKey, posBill);
           }
         });
         settledBillsByInvoiceMap = freshSettledMap;
         setSettledCache(freshSettledMap);
       }
 
-      // Sync settled bills strictly from backend API, avoiding stale localStorage overrides for active tables
+      // Sync settled bills map by table number for active table lookup
       const mergedSettledMap: Record<number, POSBill> = {};
       settledBillsByInvoiceMap.forEach((bill) => {
         if (!activeBillsMap.has(bill.tableNumber)) {
@@ -282,11 +263,9 @@ export const CashierPOSPage: React.FC = () => {
         combinedBillsList.push(activeBill);
       });
 
-      // Add settled bills for tables without active unpaid sessions
+      // Add all individual settled bills
       settledBillsByInvoiceMap.forEach((settledBill) => {
-        if (!activeBillsMap.has(settledBill.tableNumber)) {
-          combinedBillsList.push(settledBill);
-        }
+        combinedBillsList.push(settledBill);
       });
 
       combinedBillsList.sort((a, b) => a.tableNumber - b.tableNumber);
@@ -329,14 +308,12 @@ export const CashierPOSPage: React.FC = () => {
     return true;
   });
 
-  // Find bill ONLY if a table is explicitly selected by cashier
+  // Find bill ONLY if a table or specific invoice is explicitly selected by cashier
   const currentBill = selectedBillId
-    ? (filteredBillsList.find((b) =>
-        String(b.orderId).includes(String(selectedBillId)) ||
-        String(b.tableId) === String(selectedBillId) ||
-        Number(b.tableNumber) === Number(selectedBillId) ||
-        (b.invoiceNumber && String(b.invoiceNumber).includes(String(selectedBillId)))
-      ) || null)
+    ? (filteredBillsList.find((b) => b.invoiceNumber === selectedBillId || b.orderId === selectedBillId || b.tableId === selectedBillId) ||
+       filteredBillsList.find((b) => String(b.invoiceNumber || '').toLowerCase().includes(String(selectedBillId).toLowerCase()) || String(b.orderId || '').toLowerCase().includes(String(selectedBillId).toLowerCase())) ||
+       filteredBillsList.find((b) => Number(b.tableNumber) === Number(selectedBillId)) ||
+       null)
     : null;
   const isCurrentSettled = currentBill ? (currentBill.status === 'settled' || !!settledBillsMap[currentBill.tableNumber]) : false;
 
@@ -366,8 +343,7 @@ export const CashierPOSPage: React.FC = () => {
 
       const updatedBill: POSBill = {
         ...currentBill,
-        customerMobile: customerMobileInput.trim() || currentBill.customerMobile || 'N/A',
-        subtotal: rawSubtotal,
+        subtotal: netSubtotal,
         discountPercent,
         discountAmount,
         cgst: netCgst,
@@ -380,22 +356,18 @@ export const CashierPOSPage: React.FC = () => {
         paidDate: dateString,
       };
 
-      // 1. Update persistent settled map
-      setSettledBillsMap((prev) => ({
-        ...prev,
-        [currentBill.tableNumber]: updatedBill,
-      }));
-
-      // 2. Update bills list
-      setBills((prev) => prev.map((b) => (b.tableNumber === currentBill.tableNumber ? updatedBill : b)));
+      setSettledCache((prev) => {
+        const next = new Map(prev);
+        next.set(invNum, updatedBill);
+        return next;
+      });
 
       showToast(`Bill ₹${finalGrandTotal.toLocaleString('en-IN')} for Table ${currentBill.tableNumber} SETTLED via ${paymentMethod}!`, 'success');
-
-      // 3. Open Tax Invoice Receipt Modal
       setInvoiceBill(updatedBill);
       setIsInvoiceOpen(true);
+      fetchLivePOSData(false);
     } catch (error) {
-      showToast(`Settlement process error for Table ${currentBill.tableNumber}`, 'error');
+      showToast('Failed to settle bill', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -407,10 +379,10 @@ export const CashierPOSPage: React.FC = () => {
   };
 
   const pendingCount = bills.filter((b) => b.status !== 'settled' && !settledBillsMap[b.tableNumber]).length;
-  const settledCount = Object.keys(settledBillsMap).length;
+  const settledCount = Array.from(settledCache.keys()).length;
 
-  // Shift Sales Audit Totals
-  const settledBillsList = Object.values(settledBillsMap);
+  // Shift Sales Audit Totals (Use all individual settled invoices)
+  const settledBillsList = Array.from(settledCache.values());
   const shiftTotalRevenue = settledBillsList.reduce((sum, b) => sum + (b.total || 0), 0);
   const shiftUpiTotal = settledBillsList.filter((b) => b.paymentMethod === 'UPI').reduce((sum, b) => sum + (b.total || 0), 0);
   const shiftCardTotal = settledBillsList.filter((b) => b.paymentMethod === 'CARD').reduce((sum, b) => sum + (b.total || 0), 0);
@@ -431,13 +403,13 @@ export const CashierPOSPage: React.FC = () => {
   });
 
   return (
-    // Fixed Two-Column Height Layout
-    <div className="flex h-full min-h-0 w-full font-sans text-aura-ivory overflow-hidden">
+    // Fixed Responsive Two-Column Height Layout
+    <div className="flex flex-col md:flex-row h-full min-h-0 w-full font-sans text-aura-ivory overflow-y-auto md:overflow-hidden">
 
       {/* ─────────────────────────────────────────────────────────────────
           LEFT PANEL — Pending & Settled Table Bills Queue Sidebar
       ───────────────────────────────────────────────────────────────── */}
-      <aside className="w-80 flex-shrink-0 h-full flex flex-col bg-aura-container border-r border-aura-border/80 overflow-hidden">
+      <aside className="w-full md:w-80 flex-shrink-0 h-auto md:h-full flex flex-col bg-aura-container border-b md:border-b-0 md:border-r border-aura-border/80">
 
         {/* POS Station Header */}
         <div className="p-5 border-b border-aura-border/60 space-y-3">

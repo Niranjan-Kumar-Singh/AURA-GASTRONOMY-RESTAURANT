@@ -8,6 +8,7 @@ import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2 } from 'lucid
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useTableStore } from '../../store/use-table-store';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onOrderPlaced,
   tableId = '14',
 }) => {
+  useBodyScrollLock(isOpen);
   const { showToast } = useToast();
   const { items, updateQuantity, removeItem, updateSpecialNotes, clearCart } = useCartStore();
   const user = useAuthStore(state => state.user);

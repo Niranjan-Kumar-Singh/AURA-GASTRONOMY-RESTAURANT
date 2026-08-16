@@ -48,25 +48,33 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Please provide email/phone and password' });
     }
 
+    const cleanId = String(loginId).trim().toLowerCase();
+
     let user = await User.findOne({
-      $or: [{ email: loginId.toLowerCase() }, { phone: loginId }]
+      $or: [{ email: cleanId }, { phone: loginId }]
     });
 
     // Auto-seed or sync default staff accounts on login attempt
-    if (loginId.includes('@aura.com')) {
+    if (cleanId.includes('aura.com') || cleanId.startsWith('chef') || cleanId.startsWith('waiter') || cleanId.startsWith('cashier') || cleanId.startsWith('owner') || cleanId.startsWith('admin')) {
       let defaultRole = 'admin';
       let name = 'Staff Member';
-      if (loginId.startsWith('chef')) { defaultRole = 'kitchen'; name = 'Executive Chef'; }
-      else if (loginId.startsWith('waiter')) { defaultRole = 'waiter'; name = 'Head Waiter'; }
-      else if (loginId.startsWith('cashier')) { defaultRole = 'cashier'; name = 'Senior Cashier'; }
-      else if (loginId.startsWith('owner')) { defaultRole = 'owner'; name = 'Restaurant Owner'; }
-      else if (loginId.startsWith('admin')) { defaultRole = 'admin'; name = 'System Administrator'; }
+      if (cleanId.includes('chef')) { defaultRole = 'kitchen'; name = 'Executive Chef'; }
+      else if (cleanId.includes('waiter')) { defaultRole = 'waiter'; name = 'Head Waiter'; }
+      else if (cleanId.includes('cashier')) { defaultRole = 'cashier'; name = 'Senior Cashier'; }
+      else if (cleanId.includes('owner')) { defaultRole = 'owner'; name = 'Restaurant Owner'; }
+      else if (cleanId.includes('admin')) { defaultRole = 'admin'; name = 'System Administrator'; }
+
+      const emailToUse = cleanId.includes('@') ? cleanId : `${cleanId}@aura.com`;
+
+      if (!user) {
+        user = await User.findOne({ email: emailToUse });
+      }
 
       if (!user) {
         user = await User.create({
           name,
-          email: loginId.toLowerCase(),
-          phone: `+447000${Math.floor(100000 + Math.random() * 900000)}`,
+          email: emailToUse,
+          phone: `+91987${Math.floor(1000000 + Math.random() * 9000000)}`,
           password: password,
           role: defaultRole,
           status: 'VIP'

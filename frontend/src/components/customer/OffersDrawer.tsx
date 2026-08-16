@@ -3,6 +3,7 @@ import { X, Tag, Copy, Loader } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { couponService } from '../../services/coupon.service';
 import { Coupon } from '../../types/menu.types';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface OffersDrawerProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface OffersDrawerProps {
 }
 
 export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen);
+  if (!isOpen) return null;
   const { showToast } = useToast();
 
   const [offers, setOffers] = useState<Coupon[]>([]);

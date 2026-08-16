@@ -102,12 +102,22 @@ async function executeToolCall(rawArgs) {
   return { collection: args.collection, count: results.length, results };
 }
 
-const SYSTEM_PROMPT = `You are AURA's friendly virtual assistant for AURA Fine Dining, a luxury French-Indian bistro in Indiranagar, Bengaluru.
-Rules:
-- For ANY question about dishes, menu, pricing, dietary options, allergens, spice levels, chef specials, best sellers, coupons/offers, or anything stored in the database, you MUST call the search_menu_database tool to fetch real data before answering. Never invent prices or dishes.
-- Build your answer ONLY from the data the tool returns. If a search returns nothing, say so politely and suggest what is available.
-- Answer concisely (3-6 sentences), in a warm, conversational waiter tone. Use plain text with line breaks only; NO markdown symbols (*, #, **).
-- If the user asks about hours, parking, reservations, policies or to call a waiter, answer briefly from general knowledge: open 11 AM-11:30 PM daily, complimentary valet parking, reservations via the host or menu page, and suggest tapping the "Call Waiter" button for human help.`;
+const SYSTEM_PROMPT = `You are AURA's Virtual Concierge & Sommelier, representing AURA Fine Dining in Indiranagar, Bengaluru.
+Your goal is to assist guests with maximum elegance, accuracy, and warmth.
+
+Key Restaurant Facts:
+- Location: 100 Feet Road, Indiranagar, Bengaluru.
+- Hours: 11:00 AM – 11:30 PM daily.
+- Parking: Complimentary valet parking for all guests.
+- Table Sessions & Reservations: Walk-ins welcome; reservations available via host or the menu page.
+- Active Coupons: WELCOME100 (₹100 Off), AURAVIP (15% Off).
+
+Core Instructions:
+1. For ANY question about dishes, prices, dietary options (Vegetarian, Non-Veg, Jain, Gluten-Free), allergens, spice levels, chef recommendations, or active offers, ALWAYS consult real database records via search_menu_database.
+2. Provide exact prices in Indian Rupees (₹). Never invent prices or dishes.
+3. Keep responses warm, courteous, 5-star hospitality, and concise (3-5 bullet points or short sentences).
+4. Do NOT use markdown symbols like asterisks (**bold**) or hashes (#). Use clean, plain readable text.
+5. If a guest asks for staff or a waiter, inform them to tap the golden "Call Waiter" button on their screen.`;
 
 async function askLLM(userMessage) {
   const groq = getGroqClient();
@@ -115,9 +125,33 @@ async function askLLM(userMessage) {
     throw new Error('GROQ_API_KEY environment variable is not configured');
   }
 
+  // Pre-fetch matching dishes if specific menu keywords are present
+  let preloadedDishes = [];
+  try {
+    const words = userMessage.toLowerCase().split(/\W+/).filter((w) => w.length > 3);
+    if (words.length > 0) {
+      preloadedDishes = await MenuItem.find({
+        $or: [
+          { name: { $regex: words.join('|'), $options: 'i' } },
+          { description: { $regex: words.join('|'), $options: 'i' } },
+        ],
+      })
+        .select(MENU_ITEM_PROJECTION)
+        .limit(4)
+        .lean();
+    }
+  } catch (e) {
+    // Ignore pre-fetch errors
+  }
+
+  let userContextPrompt = userMessage;
+  if (preloadedDishes.length > 0) {
+    userContextPrompt += `\n\n[Live Menu Database Match]: ${JSON.stringify(preloadedDishes)}`;
+  }
+
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: userMessage },
+    { role: 'user', content: userContextPrompt },
   ];
 
   for (let i = 0; i < 3; i++) {
@@ -126,7 +160,7 @@ async function askLLM(userMessage) {
       messages,
       tools: [TOOL],
       tool_choice: 'auto',
-      temperature: 0.5,
+      temperature: 0.4,
     });
 
     const msg = completion.choices[0].message;
@@ -153,7 +187,10 @@ async function askLLM(userMessage) {
       continue;
     }
 
-    return msg.content || "I couldn't find an answer for that. Please try rephrasing.";
+    let cleanReply = msg.content || "I couldn't find an answer for that. Please try rephrasing.";
+    // Strip markdown formatting symbols (*, #, `) for clean text UI
+    cleanReply = cleanReply.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '').replace(/`/g, '');
+    return cleanReply;
   }
 
   return "I couldn't finish answering that. Please try rephrasing your question.";

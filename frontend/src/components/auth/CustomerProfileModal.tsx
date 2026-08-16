@@ -3,6 +3,7 @@ import { X, User, Phone, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
 import { authService } from '../../services/auth.service';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface CustomerProfileModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface CustomerProfileModalProps {
 }
 
 export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen);
   if (!isOpen) return null;
 
   const { showToast } = useToast();

@@ -175,23 +175,23 @@ export const MenuPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-aura-obsidian text-aura-ivory font-sans selection:bg-aura-gold selection:text-aura-obsidian">
       {/* Sticky Top Navigation Header */}
-      <header className="sticky top-0 z-30 bg-aura-obsidian/95 backdrop-blur-md border-b border-aura-border/60 px-4 py-3 flex items-center justify-between shadow-xl">
-        <div className="flex items-center space-x-3">
+      <header className="sticky top-0 z-30 bg-aura-obsidian/95 backdrop-blur-md border-b border-aura-border/60 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shadow-xl">
+        <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-aura-slate hover:text-aura-gold rounded-xl hover:bg-aura-container transition-colors"
+            className="p-1.5 sm:p-2 text-aura-slate hover:text-aura-gold rounded-xl hover:bg-aura-container transition-colors shrink-0"
             title="Open Side Menu"
           >
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-aura-gold/10 border border-aura-gold/30 rounded-xl flex items-center justify-center shadow-md">
+          <div className="flex items-center space-x-2 min-w-0">
+            <div className="w-8 h-8 bg-aura-gold/10 border border-aura-gold/30 rounded-xl flex items-center justify-center shadow-md shrink-0">
               <Utensils className="w-4 h-4 text-aura-gold" />
             </div>
-            <div>
-              <h1 className="font-serif text-sm font-bold text-aura-ivory tracking-wide">AURA GASTRONOMY</h1>
-              <p className="text-[9px] text-aura-slate tracking-wider uppercase">Table {tableId} • {zoneName}</p>
+            <div className="min-w-0">
+              <h1 className="font-serif text-xs sm:text-sm font-bold text-aura-ivory tracking-wide truncate max-w-[130px] sm:max-w-none">AURA GASTRONOMY</h1>
+              <p className="text-[8px] sm:text-[9px] text-aura-slate tracking-wider uppercase truncate max-w-[130px] sm:max-w-none">Table {tableId} • {zoneName}</p>
             </div>
           </div>
         </div>
@@ -370,9 +370,29 @@ export const MenuPage: React.FC = () => {
           setIsCartOpen(false);
           setActiveOrderId(orderId);
           clearCart();
-          navigate(`/table/${tableId}/order/${orderId}`);
         }}
       />
+
+      {/* Mobile Sticky Floating Cart Bar (1-Tap Checkout on Mobile Screens) */}
+      {getItemCount() > 0 && (
+        <div className="fixed bottom-4 left-4 right-4 z-40 sm:hidden">
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="w-full bg-gradient-to-r from-aura-gold via-amber-400 to-aura-gold text-aura-obsidian font-bold py-3.5 px-5 rounded-2xl shadow-2xl flex items-center justify-between border border-aura-gold/50 active:scale-95 transition-all"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-aura-obsidian/20 rounded-xl flex items-center justify-center font-extrabold text-xs">
+                {getItemCount()}
+              </div>
+              <span className="font-serif text-sm tracking-wide uppercase">View Active Cart</span>
+            </div>
+            <div className="flex items-center space-x-2 font-mono text-sm font-extrabold">
+              <span>₹{getGrandTotal().toLocaleString('en-IN')}</span>
+              <ShoppingBag className="w-4 h-4 text-aura-obsidian" />
+            </div>
+          </button>
+        </div>
+      )}
 
       <CustomerSidebar
         isOpen={isSidebarOpen}

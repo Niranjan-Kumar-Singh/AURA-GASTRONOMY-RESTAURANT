@@ -3,6 +3,7 @@ import { Utensils, Bell, CheckCircle2, Clock, Users, ArrowRight, RefreshCw, Aler
 import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface TableState {
   _id: string;
@@ -40,6 +41,9 @@ export const WaiterDashboardPage: React.FC = () => {
   const [tables, setTables] = useState<TableState[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableState | null>(null);
+
+  // Lock background body scroll when table modal is open
+  useBodyScrollLock(selectedTable !== null);
 
   // Payment state
   const [seatGuestCount, setSeatGuestCount] = useState<number>(2);

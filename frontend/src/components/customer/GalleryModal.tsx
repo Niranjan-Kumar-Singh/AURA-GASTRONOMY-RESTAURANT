@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, Loader } from 'lucide-react';
 import { contentService } from '../../services/content.service';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface GalleryModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface GalleryModalProps {
 }
 
 export const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen);
+  if (!isOpen) return null;
 
   const [images, setImages] = useState<{imageUrl: string, title: string, description: string, category: string}[]>([]);
   const [loading, setLoading] = useState(false);

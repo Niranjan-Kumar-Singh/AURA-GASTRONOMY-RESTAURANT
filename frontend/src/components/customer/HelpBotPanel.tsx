@@ -80,16 +80,16 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({ tableId, onClose }) 
   };
 
   return (
-    <div className="fixed bottom-56 right-4 z-50 w-80 max-w-[calc(100vw-2rem)] flex flex-col bg-aura-container border border-aura-gold/30 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed bottom-56 right-4 z-50 w-88 sm:w-96 max-w-[calc(100vw-2rem)] flex flex-col bg-aura-container border border-aura-gold/40 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-aura-obsidian border-b border-aura-gold/20">
+      <div className="flex items-center justify-between px-4 py-3.5 bg-aura-obsidian border-b border-aura-gold/20">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-aura-gold/10 border border-aura-gold/30 rounded-xl">
             <Sparkles className="w-5 h-5 text-aura-gold" />
           </div>
           <div>
-            <h3 className="font-serif text-sm font-bold text-aura-ivory">AURA Assistant</h3>
-            <p className="text-[10px] text-aura-slate uppercase tracking-wider">Table {tableId}</p>
+            <h3 className="font-serif text-sm font-bold text-aura-ivory">AURA Virtual Concierge</h3>
+            <p className="text-[10px] text-aura-gold font-mono font-bold uppercase">Table {tableId} • 5-Star AI Sommelier</p>
           </div>
         </div>
         <button
@@ -102,7 +102,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({ tableId, onClose }) 
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 max-h-72">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5 max-h-80 sm:max-h-96 custom-scrollbar">
         {messages.map((msg) =>
           msg.isTyping ? (
             <div key={msg.id} className="flex items-center space-x-1.5 py-1.5 px-3 bg-aura-obsidian border border-aura-border/60 rounded-2xl rounded-bl-sm w-16">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, HelpCircle, ChevronDown, ChevronUp, Loader } from 'lucide-react';
 import { contentService } from '../../services/content.service';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface FaqModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface FaqModalProps {
 }
 
 export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen);
+  if (!isOpen) return null;
 
   const [faqs, setFaqs] = useState<{question: string, answer: string, category: string}[]>([]);
   const [loading, setLoading] = useState(false);

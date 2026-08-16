@@ -8,6 +8,7 @@ import { menuService } from '../../services/menu.service';
 import { orderService } from '../../services/order.service';
 import { MenuItem, Category } from '../../types/menu.types';
 import { useToast } from '../../components/feedback/ToastContainer';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import {
   DollarSign, ShoppingBag, LayoutGrid, ChefHat, TrendingUp, RefreshCw, Layers, ShieldCheck,
   Calendar, Users, Play, Pause, AlertTriangle, Sparkles, Clock, Heart, Award, Utensils, Receipt, CheckCircle2,
@@ -281,6 +282,9 @@ export const AdminDashboardPage: React.FC = () => {
   // Detail Drill-Down Modal State
   const [activeDetailModal, setActiveDetailModal] = useState<'REVENUE' | 'ONGOING' | 'COMPLETED' | 'RESERVATIONS' | 'REFUNDS' | null>(null);
   const [viewBillOrder, setViewBillOrder] = useState<any | null>(null);
+
+  // Lock background body scroll when any modal is open
+  useBodyScrollLock(isDishModalOpen || isCategoryModalOpen || activeDetailModal !== null || viewBillOrder !== null);
 
   // Real MongoDB Orders State
   const [realActiveOrders, setRealActiveOrders] = useState<any[]>([]);

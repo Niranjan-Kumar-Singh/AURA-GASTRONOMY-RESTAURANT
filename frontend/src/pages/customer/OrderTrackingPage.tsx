@@ -198,41 +198,41 @@ export const OrderTrackingPage: React.FC = () => {
             {/* Live Progress Banner for the Latest Active Order */}
             {latestOrder && (
               <div className="bg-aura-container border border-aura-gold/40 rounded-3xl p-6 relative overflow-hidden shadow-2xl space-y-5">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl flex items-center justify-center">
-                      <Flame className="w-6 h-6 text-aura-gold animate-pulse" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl flex items-center justify-center shrink-0">
+                      <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-aura-gold animate-pulse" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-aura-gold uppercase tracking-widest font-mono">Live Order Tracker</span>
-                      <h2 className="font-serif text-lg sm:text-xl font-bold text-aura-ivory">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-aura-gold uppercase tracking-widest font-mono">Live Order Tracker</span>
+                      <h2 className="font-serif text-base sm:text-xl font-bold text-aura-ivory">
                         Order #{latestOrder.orderId}
                       </h2>
                     </div>
                   </div>
 
                   {/* Countdown Timer Badge */}
-                  <div className="text-right bg-aura-obsidian/90 border border-aura-border/80 px-4 py-2 rounded-2xl shadow-md">
+                  <div className="self-start sm:self-auto text-left sm:text-right bg-aura-obsidian/90 border border-aura-border/80 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl shadow-md">
                     {latestOrder.status === 'ready' ? (
                       <div>
                         <span className="text-[9px] text-emerald-400 font-bold uppercase block font-mono">Kitchen Status</span>
-                        <span className="font-mono text-sm font-extrabold text-emerald-400 animate-pulse">READY NOW</span>
+                        <span className="font-mono text-xs sm:text-sm font-extrabold text-emerald-400 animate-pulse">READY NOW</span>
                       </div>
                     ) : (latestOrder.status === 'completed' || latestOrder.status === 'served') ? (
                       <div>
-                        <span className="text-[9px] text-aura-gold font-bold uppercase block font-mono flex items-center justify-end space-x-1">
+                        <span className="text-[9px] text-aura-gold font-bold uppercase block font-mono flex items-center sm:justify-end space-x-1">
                           <CheckCircle2 className="w-3.5 h-3.5 text-aura-gold mr-1" />
                           <span>Status</span>
                         </span>
-                        <span className="font-mono text-sm font-extrabold text-aura-gold">DELIVERED &amp; SERVED</span>
+                        <span className="font-mono text-xs sm:text-sm font-extrabold text-aura-gold">DELIVERED &amp; SERVED</span>
                       </div>
                     ) : (
                       <div>
-                        <span className="text-[9px] text-aura-slate uppercase block font-mono flex items-center justify-end space-x-1">
+                        <span className="text-[9px] text-aura-slate uppercase block font-mono flex items-center sm:justify-end space-x-1">
                           <Timer className="w-3 h-3 text-amber-400 mr-1" />
                           <span>Est. Remaining</span>
                         </span>
-                        <span className="font-mono text-base font-extrabold text-aura-gold tracking-wider">
+                        <span className="font-mono text-sm sm:text-base font-extrabold text-aura-gold tracking-wider">
                           {timerMetrics.remainingStr}
                         </span>
                         <span className="text-[9px] text-aura-slate/80 block font-mono">
@@ -260,15 +260,15 @@ export const OrderTrackingPage: React.FC = () => {
                       return (
                         <div key={step.key} className="relative z-10 flex flex-col items-center">
                           <div
-                            className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
+                            className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border-2 transition-all ${
                               isPassed
                                 ? 'bg-aura-gold text-aura-obsidian border-aura-gold font-bold'
                                 : 'bg-aura-obsidian text-aura-slate border-aura-border'
                             } ${isCurrent ? 'ring-4 ring-aura-gold/30 scale-110' : ''}`}
                           >
-                            {isPassed ? <CheckCircle2 className="w-5 h-5 font-bold" /> : <Clock className="w-4 h-4" />}
+                            {isPassed ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 font-bold" /> : <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                           </div>
-                          <span className={`text-[10px] mt-2 font-bold uppercase tracking-wider ${isPassed ? 'text-aura-ivory' : 'text-aura-slate'}`}>
+                          <span className={`text-[8px] sm:text-[10px] mt-1.5 font-bold uppercase tracking-wider text-center max-w-[65px] sm:max-w-none truncate ${isPassed ? 'text-aura-ivory' : 'text-aura-slate'}`}>
                             {step.label}
                           </span>
                         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, History, Utensils, CalendarClock, ChevronRight, Loader } from 'lucide-react';
 import { orderService } from '../../services/order.service';
 import { useAuthStore } from '../../store/use-auth-store';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface OrderHistoryDrawerProps {
   isOpen: boolean;
@@ -9,6 +10,9 @@ interface OrderHistoryDrawerProps {
 }
 
 const getOrderBadge = (order: any) => {
+  if (order.paymentStatus === 'REFUNDED') {
+    return { label: 'REFUNDED & VOID', style: 'text-rose-400 bg-rose-400/10 border-rose-400/30' };
+  }
   if (order.paymentStatus === 'PAID') {
     return { label: 'PAID & SETTLED', style: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30' };
   }
@@ -26,6 +30,7 @@ const getOrderBadge = (order: any) => {
 };
 
 export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);

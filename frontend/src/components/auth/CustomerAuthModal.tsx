@@ -3,6 +3,7 @@ import { X, User, Phone, Lock } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
 import { authService } from '../../services/auth.service';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface CustomerAuthModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CustomerAuthModalProps {
 }
 
 export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, onClose, tableId }) => {
+  useBodyScrollLock(isOpen);
   if (!isOpen) return null;
 
   const { showToast } = useToast();

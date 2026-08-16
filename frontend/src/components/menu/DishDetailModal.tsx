@@ -3,6 +3,7 @@ import { MenuItem, CustomizationOption } from '../../types/menu.types';
 import { X, Star, Clock, Plus, Minus, Sparkles } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useCartStore } from '../../store/use-cart-store';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface DishDetailModalProps {
   item: MenuItem | null;
@@ -17,6 +18,7 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
   onClose,
   onAddToCart,
 }) => {
+  useBodyScrollLock(isOpen);
   const { showToast } = useToast();
   const { items, addItem, updateQuantity, updateSpecialNotes } = useCartStore();
   

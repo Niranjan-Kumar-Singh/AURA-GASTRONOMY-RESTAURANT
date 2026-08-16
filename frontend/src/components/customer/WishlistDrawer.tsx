@@ -4,6 +4,7 @@ import { contentService } from '../../services/content.service';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useCartStore } from '../../store/use-cart-store';
 import { MenuItem } from '../../types/menu.types';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface WishlistDrawerProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface WishlistDrawerProps {
 }
 
 export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen);
+  if (!isOpen) return null;
 
   const [wishlist, setWishlist] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);

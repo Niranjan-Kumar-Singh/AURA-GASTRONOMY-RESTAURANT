@@ -3,6 +3,7 @@ import { X, Calendar, Clock, Users, Loader } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { contentService } from '../../services/content.service';
 import { useAuthStore } from '../../store/use-auth-store';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface ReservationsModalProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface ReservationsModalProps {
 }
 
 export const ReservationsModal: React.FC<ReservationsModalProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen);
+  if (!isOpen) return null;
   const { showToast } = useToast();
 
   const [date, setDate] = useState('');

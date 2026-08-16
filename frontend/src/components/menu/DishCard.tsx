@@ -171,8 +171,8 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
         </div>
 
         {/* Metadata Rail (Rating, Calories, Prep Time, Spice Meter) */}
-        <div className="pt-2 border-t border-aura-border/40 flex items-center justify-between text-[11px] text-aura-slate">
-          <div className="flex items-center space-x-3">
+        <div className="pt-2 border-t border-aura-border/40 flex items-center justify-between text-[10px] sm:text-[11px] text-aura-slate">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <div className="flex items-center space-x-1 text-amber-400 font-bold">
               <Star className="w-3.5 h-3.5 fill-amber-400" />
               <span>{item.rating || 4.9}</span>
