@@ -11,6 +11,7 @@ import { CustomerSearchBar } from '../../components/customer/CustomerSearchBar';
 import { FilterChips, ActiveFilter } from '../../components/customer/FilterChips';
 import { RecommendationSection } from '../../components/customer/RecommendationSection';
 import { CallWaiterButton } from '../../components/customer/CallWaiterButton';
+import { HelpBotLauncher } from '../../components/customer/HelpBotLauncher';
 import { CustomerSidebar } from '../../components/customer/CustomerSidebar';
 import { CustomerAuthModal } from '../../components/auth/CustomerAuthModal';
 import { CustomerProfileModal } from '../../components/auth/CustomerProfileModal';
@@ -331,6 +332,9 @@ export const MenuPage: React.FC = () => {
 
       {/* Floating Call Waiter Button */}
       <CallWaiterButton tableId={tableId} />
+
+      {/* Floating Help Bot for Users */}
+      <HelpBotLauncher tableId={tableId} />
 
       {/* Floating Active Cart Bar */}
       {getItemCount() > 0 && (
