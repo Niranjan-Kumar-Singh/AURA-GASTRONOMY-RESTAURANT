@@ -4,7 +4,10 @@ const Category = require('../models/Category');
 const Coupon = require('../models/Coupon');
 const Faq = require('../models/Faq');
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const getGroqClient = () => {
+  if (!process.env.GROQ_API_KEY) return null;
+  return new Groq({ apiKey: process.env.GROQ_API_KEY });
+};
 const MODEL = 'llama-3.3-70b-versatile';
 
 // Static slow-changing facts (hours, parking, policies). Live menu/coupon data is fetched via the LLM's DB tool.
@@ -107,6 +110,11 @@ Rules:
 - If the user asks about hours, parking, reservations, policies or to call a waiter, answer briefly from general knowledge: open 11 AM-11:30 PM daily, complimentary valet parking, reservations via the host or menu page, and suggest tapping the "Call Waiter" button for human help.`;
 
 async function askLLM(userMessage) {
+  const groq = getGroqClient();
+  if (!groq) {
+    throw new Error('GROQ_API_KEY environment variable is not configured');
+  }
+
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: userMessage },
