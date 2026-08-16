@@ -1,9 +1,13 @@
+const Groq = require('groq-sdk');
 const MenuItem = require('../models/MenuItem');
 const Category = require('../models/Category');
 const Coupon = require('../models/Coupon');
 const Faq = require('../models/Faq');
 
-// Static slow-changing facts (hours, parking, policies). Live menu/coupon data comes from MongoDB.
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const MODEL = 'llama-3.3-70b-versatile';
+
+// Static slow-changing facts (hours, parking, policies). Live menu/coupon data is fetched via the LLM's DB tool.
 const STATIC_KNOWLEDGE = {
   hours: 'AURA Fine Dining is open Monday to Sunday, 11:00 AM – 11:30 PM.',
   location: 'We are located at 100 Feet Road, Indiranagar, Bengaluru, Karnataka – 560038.',
@@ -23,152 +27,159 @@ const INITIAL_QUICK_OPTIONS = [
   { label: 'Talk to a Waiter', query: 'I want to talk to a human waiter' },
 ];
 
-const formatItems = (items) => items.map((it) => `• ${it.name} — ₹${it.price}`).join('\n');
-
-const findDishesByWords = async (normalizedMessage) => {
-  const words = normalizedMessage.split(/\W+/).filter((w) => w.length > 2);
-  if (words.length === 0) return [];
-
-  const items = await MenuItem.find({ isAvailable: true }).lean();
-  return items.filter((it) => {
-    const nameWords = it.name.toLowerCase().split(/\W+/);
-    return nameWords.some((nw) => nw.length > 2 && words.includes(nw));
-  }).slice(0, 3);
+const TOOL = {
+  type: 'function',
+  function: {
+    name: 'search_menu_database',
+    description:
+      'Search AURA restaurant database collections (menu_items, categories, coupons, faqs) and return matching records. Use for any question about dishes, prices, dietary options (vegetarian/Jain/gluten-free), allergens, spice levels, chef specials, best sellers, or active offers. The filter is a MongoDB query document.',
+    parameters: {
+      type: 'object',
+      properties: {
+        collection: { type: 'string', enum: ['menu_items', 'categories', 'coupons', 'faqs'] },
+        filter: { type: 'object', description: 'MongoDB filter query, e.g. {"isVegetarian": true} or {"isBestSeller": true}. Empty object returns any records.' },
+        sort: { type: 'object', description: 'MongoDB sort, e.g. {"price": 1} for cheapest first.', default: {} },
+        limit: { type: 'integer', description: 'Max records to return (1-10).', default: 5 },
+      },
+      required: ['collection', 'filter'],
+    },
+  },
 };
 
-const dishReply = (dishes) => {
-  const lines = dishes.map((it) => {
-    const tags = [
-      it.isVegetarian ? 'Vegetarian' : it.isNonVeg ? 'Non-Vegetarian' : null,
-      it.isJain ? 'Jain' : null,
-      it.isGlutenFree ? 'Gluten-Free' : null,
-      it.spiceLevel > 0 ? `${'🌶'.repeat(Math.min(it.spiceLevel, 3))} Spice level ${it.spiceLevel}` : null,
-    ].filter(Boolean);
-    const allergenNote = it.allergens && it.allergens.length ? ` Contains: ${it.allergens.join(', ')}.` : '';
-    return `• ${it.name} — ₹${it.price}\n  ${it.description}${allergenNote}${tags.length ? ` Tags: ${tags.join(', ')}.` : ''}`;
-  });
-  return `Here are details for the dish(es) you asked about:\n\n${lines.join('\n\n')}`;
+const COLLECTIONS = {
+  menu_items: MenuItem,
+  categories: Category,
+  coupons: Coupon,
+  faqs: Faq,
 };
 
-const INTENTS = [
+const MENU_ITEM_PROJECTION = {
+  id: 1, name: 1, categoryId: 1, price: 1, description: 1, isVegetarian: 1, isNonVeg: 1, isJain: 1,
+  isGlutenFree: 1, isChefSpecial: 1, isBestSeller: 1, isAvailable: 1, spiceLevel: 1,
+  preparationTimeMinutes: 1, allergens: 1, rating: 1, reviewCount: 1,
+};
+
+const ALLOWED_OPS = new Set(['$in', '$nin', '$gt', '$gte', '$lt', '$lte', '$ne', '$eq', '$regex', '$options', '$exists', '$and', '$or']);
+
+// Strip prototype-pollution keys and disallowed operators from LLM-generated filters.
+function sanitize(value) {
+  if (value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map(sanitize);
+  const out = {};
+  for (const [key, val] of Object.entries(value)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    if (key.startsWith('$') && !ALLOWED_OPS.has(key)) continue;
+    out[key] = sanitize(val);
+  }
+  return out;
+}
+
+async function executeToolCall(rawArgs) {
+  let args;
+  try {
+    args = typeof rawArgs === 'string' ? JSON.parse(rawArgs) : rawArgs;
+  } catch {
+    return { error: 'Invalid tool arguments JSON.' };
+  }
+
+  const model = COLLECTIONS[args.collection];
+  if (!model) {
+    return { error: `Unknown collection "${args.collection}". Use one of: ${Object.keys(COLLECTIONS).join(', ')}.` };
+  }
+
+  const filter = sanitize(args.filter || {});
+  const sort = sanitize(args.sort) || {};
+  const limit = Math.min(Math.max(parseInt(args.limit, 10) || 5, 1), 10);
+
+  let query = model.find(filter);
+  if (args.collection === 'menu_items') query = query.select(MENU_ITEM_PROJECTION);
+  if (Object.keys(sort).length > 0) query = query.sort(sort);
+  const results = await query.limit(limit).lean();
+
+  return { collection: args.collection, count: results.length, results };
+}
+
+const SYSTEM_PROMPT = `You are AURA's friendly virtual assistant for AURA Fine Dining, a luxury French-Indian bistro in Indiranagar, Bengaluru.
+Rules:
+- For ANY question about dishes, menu, pricing, dietary options, allergens, spice levels, chef specials, best sellers, coupons/offers, or anything stored in the database, you MUST call the search_menu_database tool to fetch real data before answering. Never invent prices or dishes.
+- Build your answer ONLY from the data the tool returns. If a search returns nothing, say so politely and suggest what is available.
+- Answer concisely (3-6 sentences), in a warm, conversational waiter tone. Use plain text with line breaks only; NO markdown symbols (*, #, **).
+- If the user asks about hours, parking, reservations, policies or to call a waiter, answer briefly from general knowledge: open 11 AM-11:30 PM daily, complimentary valet parking, reservations via the host or menu page, and suggest tapping the "Call Waiter" button for human help.`;
+
+async function askLLM(userMessage) {
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'user', content: userMessage },
+  ];
+
+  for (let i = 0; i < 3; i++) {
+    const completion = await groq.chat.completions.create({
+      model: MODEL,
+      messages,
+      tools: [TOOL],
+      tool_choice: 'auto',
+      temperature: 0.5,
+    });
+
+    const msg = completion.choices[0].message;
+
+    if (msg.tool_calls && msg.tool_calls.length > 0) {
+      messages.push({
+        role: 'assistant',
+        content: msg.content || '',
+        tool_calls: msg.tool_calls.map((tc) => ({
+          id: tc.id,
+          type: 'function',
+          function: { name: tc.function.name, arguments: tc.function.arguments },
+        })),
+      });
+      for (const tc of msg.tool_calls) {
+        let result;
+        try {
+          result = await executeToolCall(tc.function.arguments);
+        } catch (e) {
+          result = { error: e.message };
+        }
+        messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result).slice(0, 6000) });
+      }
+      continue;
+    }
+
+    return msg.content || "I couldn't find an answer for that. Please try rephrasing.";
+  }
+
+  return "I couldn't finish answering that. Please try rephrasing your question.";
+}
+
+const quickOptionsWithout = (...labels) =>
+  INITIAL_QUICK_OPTIONS.filter((o) => !labels.includes(o.label));
+
+// Rule-based FAQ intents: static knowledge + Faq collection. No LLM needed.
+const FAQ_INTENTS = [
   {
     key: 'waiter',
     keywords: ['waiter', 'human', 'talk to staff', 'call someone'],
     handler: () => ({
       reply: 'Of course! Tap the golden "Call Waiter" button at the bottom-right of your screen and a member of our team will be right with you.',
-      quickOptions: INITIAL_QUICK_OPTIONS,
+      quickOptions: quickOptionsWithout('Talk to a Waiter'),
     }),
-  },
-  {
-    key: 'specials',
-    keywords: ['special', 'chef recommend', 'chef\'s', 'recommend', 'bestseller', 'best seller', 'popular', 'today'],
-    handler: async () => {
-      const [chefSpecials, popular] = await Promise.all([
-        MenuItem.find({ isChefSpecial: true, isAvailable: true }).limit(5).lean(),
-        MenuItem.find({ isBestSeller: true, isAvailable: true }).limit(5).lean(),
-      ]);
-      const sections = [];
-      if (chefSpecials.length) sections.push(`*Chef's Signature Recommendations*\n${formatItems(chefSpecials)}`);
-      if (popular.length) sections.push(`*Most Popular with Guests*\n${formatItems(popular)}`);
-      return {
-        reply: sections.length
-          ? sections.join('\n\n')
-          : "I couldn't find any featured specials right now. Please check the menu page for the latest dishes.",
-        quickOptions: INITIAL_QUICK_OPTIONS,
-      };
-    },
-  },
-  {
-    key: 'coupons',
-    keywords: ['coupon', 'discount', 'offer', 'promo', 'deal'],
-    handler: async () => {
-      const coupons = await Coupon.find({ isActive: true }).lean();
-      if (!coupons.length) {
-        return { reply: 'There are no active offers right now, but please check back soon!', quickOptions: INITIAL_QUICK_OPTIONS };
-      }
-      const lines = coupons.map((c) => `• ${c.title} (Code: ${c.code}) — ${c.description}`);
-      return {
-        reply: `Here are our active offers:\n\n${lines.join('\n')}`,
-        quickOptions: [{ label: 'Best Value Dishes', query: 'Show me affordable dishes' }],
-      };
-    },
-  },
-  {
-    key: 'dietary',
-    keywords: ['vegetarian', 'veg', 'jain', 'gluten', 'vegan', 'allergen', 'diet'],
-    handler: async () => {
-      const [veg, jain, glutenFree] = await Promise.all([
-        MenuItem.find({ isVegetarian: true, isAvailable: true }).limit(6).lean(),
-        MenuItem.find({ isJain: true, isAvailable: true }).limit(6).lean(),
-        MenuItem.find({ isGlutenFree: true, isAvailable: true }).limit(6).lean(),
-      ]);
-      const sections = [];
-      if (veg.length) sections.push(`*Vegetarian*\n${formatItems(veg)}`);
-      if (jain.length) sections.push(`*Jain Options*\n${formatItems(jain)}`);
-      if (glutenFree.length) sections.push(`*Gluten-Free*\n${formatItems(glutenFree)}`);
-      return {
-        reply: `We have options across all dietary preferences:\n\n${sections.join('\n\n')}\n\nFor specific allergens, let the kitchen know in the order notes and our chefs will accommodate you.`,
-        quickOptions: INITIAL_QUICK_OPTIONS,
-      };
-    },
-  },
-  {
-    key: 'spice',
-    keywords: ['spicy', 'spice', 'mild', 'customiz', 'modification', 'less spicy'],
-    handler: () => ({
-      reply: 'Spice levels range from 0 (Mild) to 3 (Very Spicy) and are shown on each dish. Most dishes can be customized — e.g. extra butter, cooking preference, or spice adjustment — right from the dish detail page when you tap an item in the menu.',
-      quickOptions: [{ label: 'See Spiciest Dishes', query: 'Which dishes are spicy?' }],
-    }),
-  },
-  {
-    key: 'pricing',
-    keywords: ['price', 'pricing', 'cost', 'cheap', 'budget', 'afford', 'value', 'combo', 'under'],
-    handler: async () => {
-      const [budget, pricey] = await Promise.all([
-        MenuItem.find({ isAvailable: true }).sort({ price: 1 }).limit(5).lean(),
-        MenuItem.find({ isAvailable: true }).sort({ price: -1 }).limit(5).lean(),
-      ]);
-      const reply = [
-        budget.length ? `*Best Value Dishes (under ₹${budget[budget.length - 1].price + 1})\n${formatItems(budget)}` : null,
-        pricey.length ? `*Signature Premium Dishes*\n${formatItems(pricey)}` : null,
-      ].filter(Boolean).join('\n\n');
-      return {
-        reply: `${reply}\n\nPrices include all taxes as per restaurant policy. Ask me about offers for extra savings!`,
-        quickOptions: [{ label: 'Active Offers & Coupons', query: 'Show me coupons and discounts' }],
-      };
-    },
   },
   {
     key: 'reservations',
     keywords: ['reserve', 'booking', 'reservation', 'book a table'],
     handler: () => ({
       reply: STATIC_KNOWLEDGE.reservations,
-      quickOptions: INITIAL_QUICK_OPTIONS,
+      quickOptions: quickOptionsWithout('Reservations & Booking'),
     }),
   },
   {
     key: 'policies',
-    keywords: ['hour', 'timing', 'open', 'close', 'parking', 'location', 'policy', 'dress', 'wallet', 'valet'],
+    keywords: ['hour', 'timing', 'open', 'close', 'parking', 'location', 'policy', 'dress', 'valet'],
     handler: async () => {
       const faqs = await Faq.find({ isActive: true }).limit(5).lean();
       const lines = [STATIC_KNOWLEDGE.hours, STATIC_KNOWLEDGE.location, STATIC_KNOWLEDGE.parking, STATIC_KNOWLEDGE.dressing];
       faqs.forEach((f) => lines.push(`${f.question}: ${f.answer}`));
-      return {
-        reply: lines.join('\n\n'),
-        quickOptions: [{ label: 'Make a Reservation', query: 'How do I make a reservation?' }],
-      };
-    },
-  },
-  {
-    key: 'menu',
-    keywords: ['menu', 'cuisine', 'categories', 'what do you serve', 'food', 'dish', 'beverage', 'dessert'],
-    handler: async () => {
-      const categories = await Category.find().sort('displayOrder').lean();
-      const names = categories.map((c) => c.name);
-      return {
-        reply: `Our menu covers: ${names.join(', ')}.\n\nBrowse the menu page to see every dish with photos, prices, and customizations. Ask me about any specific dish and I'll share the details.`,
-        quickOptions: [{ label: "Today's Specials", query: "What are today's specials?" }],
-      };
+      return { reply: lines.join('\n\n'), quickOptions: quickOptionsWithout('Hours, Parking & Policies', 'Reservations & Booking') };
     },
   },
 ];
@@ -178,7 +189,8 @@ async function findMatchingFaq(normalizedMessage) {
   const words = normalizedMessage.split(/\W+/).filter((w) => w.length > 3);
   return faqs.find((f) => {
     const questionWords = f.question.toLowerCase().split(/\W+/);
-    return questionWords.some((qw) => qw.length > 3 && words.includes(qw));
+    const shared = questionWords.filter((qw) => qw.length > 3 && words.includes(qw));
+    return shared.length >= 2;
   });
 }
 
@@ -188,23 +200,33 @@ async function handleQuery(message) {
     return { reply: 'Please ask me a question or pick an option below.', quickOptions: INITIAL_QUICK_OPTIONS };
   }
 
-  const matchedDishes = await findDishesByWords(normalized);
-  if (matchedDishes.length > 0) {
-    return { reply: dishReply(matchedDishes), quickOptions: [{ label: 'Best Value Dishes', query: 'Show me affordable dishes' }] };
-  }
-
-  for (const intent of INTENTS) {
+  // 1. Rule-based FAQ intents first (hours, parking, policies, reservations, waiter).
+  for (const intent of FAQ_INTENTS) {
     if (intent.keywords.some((k) => normalized.includes(k))) {
       return intent.handler();
     }
   }
 
+  // 2. Rule-based FAQ keyword match from the stored Faq collection.
   const faq = await findMatchingFaq(normalized);
   if (faq) {
     return { reply: faq.answer, quickOptions: INITIAL_QUICK_OPTIONS };
   }
 
-  // ponytail: rule-based fallback; upgrade to LLM (Groq/LangChain) with this DB data as grounding if free-text coverage needs to grow.
+  // 3. Everything else: Groq LLM answers, using the DB tool to generate & run the query.
+  if (process.env.GROQ_API_KEY) {
+    try {
+      const reply = await askLLM(message);
+      return { reply, quickOptions: INITIAL_QUICK_OPTIONS };
+    } catch (error) {
+      console.error('Chatbot LLM error:', error.message);
+      return {
+        reply: "I'm having trouble reaching my assistant right now. Let me check with the chef or manager, or try one of the options below.",
+        quickOptions: INITIAL_QUICK_OPTIONS,
+      };
+    }
+  }
+
   return {
     reply: "I couldn't find an exact answer for that yet. Let me check with the chef or manager. Meanwhile, here's how I can help:",
     quickOptions: INITIAL_QUICK_OPTIONS,

@@ -38,7 +38,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({ tableId, onClose }) 
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = async (rawText: string) => {
+  const sendMessage = async (rawText: string, pickedLabel?: string) => {
     const text = rawText.trim();
     if (!text || isSending) return;
 
@@ -53,9 +53,10 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({ tableId, onClose }) 
 
     try {
       const res = await chatbotService.ask(text, tableId);
+      const quickOptions = res.quickOptions?.filter((o) => o.label !== pickedLabel);
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== typingId),
-        { id: makeId(), role: 'bot', text: res.reply, quickOptions: res.quickOptions },
+        { id: makeId(), role: 'bot', text: res.reply, quickOptions },
       ]);
     } catch {
       setMessages((prev) => [
@@ -119,7 +120,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({ tableId, onClose }) 
                   {msg.quickOptions.map((opt) => (
                     <button
                       key={opt.label}
-                      onClick={() => sendMessage(opt.query)}
+                      onClick={() => sendMessage(opt.query, opt.label)}
                       className="px-2.5 py-1.5 bg-aura-gold/10 border border-aura-gold/30 hover:border-aura-gold text-aura-gold text-[11px] font-bold rounded-full transition-colors cursor-pointer"
                     >
                       {opt.label}
