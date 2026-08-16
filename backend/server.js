@@ -9,6 +9,7 @@ const couponRoutes = require('./routes/couponRoutes');
 const contentRoutes = require('./routes/contentRoutes');
 const tableRoutes = require('./routes/tableRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const chatbotRoutes = require('./routes/chatbotRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -27,6 +28,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', chatbotRoutes);
 
 // Health check endpoint
 app.get('/', (req, res) => {

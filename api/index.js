@@ -9,6 +9,7 @@ const couponRoutes = require('../backend/routes/couponRoutes');
 const contentRoutes = require('../backend/routes/contentRoutes');
 const tableRoutes = require('../backend/routes/tableRoutes');
 const adminRoutes = require('../backend/routes/adminRoutes');
+const chatbotRoutes = require('../backend/routes/chatbotRoutes');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', chatbotRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'AURA API Serverless backend is live' });

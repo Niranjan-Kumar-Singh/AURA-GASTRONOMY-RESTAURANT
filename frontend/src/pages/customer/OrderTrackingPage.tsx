@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Utensils, CheckCircle2, Clock, ArrowLeft, Plus, ChefHat, Flame, ShoppingBag, Receipt, Sparkles, Timer } from 'lucide-react';
 import { CallWaiterButton } from '../../components/customer/CallWaiterButton';
+import { HelpBotLauncher } from '../../components/customer/HelpBotLauncher';
 import { useCartStore } from '../../store/use-cart-store';
 import { orderService } from '../../services/order.service';
 
@@ -407,6 +408,7 @@ export const OrderTrackingPage: React.FC = () => {
       </div>
 
       <CallWaiterButton tableId={tableId} />
+      <HelpBotLauncher tableId={tableId} />
     </div>
   );
 };
