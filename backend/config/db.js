@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 const dns = require('dns');
 
-// Force Node to use Google's DNS to bypass local ISP SRV blocking
-try {
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
-} catch (e) {
-  // Ignore in environments where setServers is restricted
+// Force Node to use Google's DNS to bypass local ISP SRV blocking (only outside Vercel cloud sandbox)
+if (!process.env.VERCEL) {
+  try {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+  } catch (e) {
+    // Ignore in environments where setServers is restricted
+  }
 }
 
 const connectDB = async () => {
