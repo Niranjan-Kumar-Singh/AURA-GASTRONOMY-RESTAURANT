@@ -13,11 +13,19 @@ const chatbotRoutes = require('../backend/routes/chatbotRoutes');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
 app.use(cors());
 app.use(express.json());
+
+// Ensure DB connection is established before processing serverless requests
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Serverless DB Middleware Error:', err.message);
+    res.status(500).json({ message: 'Database connection failure', error: err.message });
+  }
+});
 
 // API Routes
 app.use('/api', menuRoutes);
