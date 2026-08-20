@@ -12,14 +12,14 @@ interface ReservationsModalProps {
 
 export const ReservationsModal: React.FC<ReservationsModalProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
-  if (!isOpen) return null;
   const { showToast } = useToast();
-
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [guests, setGuests] = useState(2);
   const [loading, setLoading] = useState(false);
   const user = useAuthStore(state => state.user);
+
+  if (!isOpen) return null;
 
 
 

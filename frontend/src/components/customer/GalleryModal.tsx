@@ -10,8 +10,6 @@ interface GalleryModalProps {
 
 export const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
-  if (!isOpen) return null;
-
   const [images, setImages] = useState<{imageUrl: string, title: string, description: string, category: string}[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,6 +18,8 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose }) =
       fetchGallery();
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const fetchGallery = async () => {
     setLoading(true);

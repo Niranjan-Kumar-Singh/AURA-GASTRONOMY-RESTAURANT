@@ -8,6 +8,7 @@ import { useOrderStore } from '../../store/use-order-store';
 import { useTableStore } from '../../store/use-table-store';
 import { tableService } from '../../services/table.service';
 import { useToast } from '../feedback/ToastContainer';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { FileText } from 'lucide-react';
 
 interface CustomerSidebarProps {
@@ -39,6 +40,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
   onOpenGallery,
   onOpenFaq,
 }) => {
+  useBodyScrollLock(isOpen);
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { activeOrderId } = useOrderStore();
@@ -186,6 +188,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
               onClick={() => {
                 logout();
                 onClose();
+                onOpenAuth();
                 showToast('Logged out successfully', 'info');
               }}
               className="w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-500 font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all"

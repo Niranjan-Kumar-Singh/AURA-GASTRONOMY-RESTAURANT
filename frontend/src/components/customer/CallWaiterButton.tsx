@@ -53,11 +53,11 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
       {/* Floating Action Trigger */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 z-40 p-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-full shadow-2xl transition-all duration-300 hover:scale-105 flex items-center space-x-2 border border-aura-gold/40"
+        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 p-3 sm:p-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 border border-aura-gold/40 cursor-pointer"
         title="Call Waiter"
       >
         <Bell className="w-5 h-5 animate-pulse" />
-        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider">Call Waiter</span>
+        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider">Call Staff</span>
       </button>
 
       {/* Modal Dialog */}

@@ -12,9 +12,7 @@ interface OffersDrawerProps {
 
 export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
-  if (!isOpen) return null;
   const { showToast } = useToast();
-
   const [offers, setOffers] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +21,8 @@ export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) =
       fetchOffers();
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const fetchOffers = async () => {
     setLoading(true);

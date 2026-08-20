@@ -13,8 +13,6 @@ interface WishlistDrawerProps {
 
 export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
-  if (!isOpen) return null;
-
   const [wishlist, setWishlist] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
   const addItem = useCartStore(state => state.addItem);
@@ -25,6 +23,8 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({ isOpen, onClose 
       fetchWishlist();
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const fetchWishlist = async () => {
     if (!user) return;

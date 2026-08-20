@@ -1,6 +1,7 @@
 import React from 'react';
 import { CartItem, Coupon } from '../../types/menu.types';
 import { Utensils, ShieldCheck, X, Clock } from 'lucide-react';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface OrderConfirmationModalProps {
   tableId: string;
@@ -27,6 +28,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  useBodyScrollLock(isOpen);
   if (!isOpen) return null;
 
   return (

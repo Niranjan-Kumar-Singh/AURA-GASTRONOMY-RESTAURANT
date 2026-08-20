@@ -10,8 +10,6 @@ interface FaqModalProps {
 
 export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
-  if (!isOpen) return null;
-
   const [faqs, setFaqs] = useState<{question: string, answer: string, category: string}[]>([]);
   const [loading, setLoading] = useState(false);
   const [openIdx, setOpenIdx] = useState<number | null>(0);
@@ -21,6 +19,8 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
       fetchFaqs();
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const fetchFaqs = async () => {
     setLoading(true);

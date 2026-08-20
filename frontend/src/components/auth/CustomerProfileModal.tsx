@@ -12,8 +12,6 @@ interface CustomerProfileModalProps {
 
 export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
-  if (!isOpen) return null;
-
   const { showToast } = useToast();
   const { user, updateUser } = useAuthStore();
   const [name, setName] = useState(user?.name || '');
@@ -26,6 +24,8 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
       setPhone(user.phone);
     }
   }, [user]);
+
+  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,35 +1,35 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, X, Sparkles } from 'lucide-react';
+import { Send, X, Sparkles, Bot, RotateCcw } from 'lucide-react';
 import { chatbotService } from '../../services/chatbot.service';
 import { ChatbotMessage, ChatbotOption } from '../../types/chatbot.types';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface HelpBotPanelProps {
   tableId: string;
+  messages: ChatbotMessage[];
+  setMessages: React.Dispatch<React.SetStateAction<ChatbotMessage[]>>;
+  onClearMessages: () => void;
   onClose: () => void;
 }
 
-const INITIAL_OPTIONS: ChatbotOption[] = [
-  { label: "Today's Specials & Chef Picks", query: "What are today's specials and chef recommendations?" },
-  { label: 'Menu & Cuisine Details', query: 'Tell me about the menu and cuisine' },
-  { label: 'Pricing & Best Value', query: 'Show me pricing and best value combos' },
-  { label: 'Dietary & Allergen Info', query: 'Do you have vegetarian, Jain and gluten-free options?' },
-  { label: 'Spice Levels & Customizations', query: 'Tell me about spice levels and customizations' },
-  { label: 'Reservations & Booking', query: 'How do I make a reservation?' },
-  { label: 'Hours, Parking & Policies', query: 'What are your hours, parking and policies?' },
-  { label: 'Talk to a Waiter', query: 'I want to talk to a human waiter' },
-];
-
 const makeId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({ tableId, onClose }) => {
-  const [messages, setMessages] = useState<ChatbotMessage[]>(() => [
-    {
-      id: makeId(),
-      role: 'bot',
-      text: `Namaste! I'm AURA's virtual assistant for Table ${tableId}. I can help you with our cuisine, pricing, dietary options, offers and more. What would you like to know?`,
-      quickOptions: INITIAL_OPTIONS,
-    },
-  ]);
+export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
+  tableId,
+  messages,
+  setMessages,
+  onClearMessages,
+  onClose,
+}) => {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useBodyScrollLock(isMobile);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -80,81 +80,118 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({ tableId, onClose }) 
   };
 
   return (
-    <div className="fixed bottom-56 right-4 z-50 w-88 sm:w-96 max-w-[calc(100vw-2rem)] flex flex-col bg-aura-container border border-aura-gold/40 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3.5 bg-aura-obsidian border-b border-aura-gold/20">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-aura-gold/10 border border-aura-gold/30 rounded-xl">
-            <Sparkles className="w-5 h-5 text-aura-gold" />
+    <>
+      {/* Dark Backdrop Overlay (Mobile Only < 640px) */}
+      <div 
+        onClick={onClose}
+        className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm block sm:hidden animate-in fade-in duration-200"
+      />
+
+      {/* Main Chatbot Panel (Bottom Sheet on Mobile, Floating Widget on Desktop) */}
+      <div className="fixed inset-x-0 bottom-0 sm:bottom-20 sm:right-6 sm:left-auto z-50 w-full sm:w-[400px] h-[85vh] sm:h-[550px] max-h-[90vh] flex flex-col bg-gradient-to-b from-aura-obsidian via-aura-container to-aura-obsidian border-t sm:border border-aura-gold/40 rounded-t-3xl sm:rounded-3xl shadow-2xl backdrop-blur-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-250">
+        
+        {/* Mobile Pull Handle Indicator */}
+        <div className="w-12 h-1 bg-aura-gold/40 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
+
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between px-4 py-3.5 bg-aura-obsidian/90 border-b border-aura-gold/30 shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-aura-gold via-amber-400 to-aura-gold p-0.5 shadow-[0_0_15px_rgba(212,175,55,0.4)] flex items-center justify-center">
+                <div className="w-full h-full bg-aura-obsidian rounded-[14px] flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-aura-gold" />
+                </div>
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-aura-obsidian rounded-full animate-pulse" />
+            </div>
+
+            <div>
+              <h3 className="font-serif text-sm font-bold text-aura-ivory tracking-wide flex items-center space-x-1.5">
+                <span>AURA Sommelier AI</span>
+                <Sparkles className="w-3.5 h-3.5 text-aura-gold animate-spin-slow" />
+              </h3>
+              <p className="text-[10px] text-aura-gold font-mono font-bold uppercase tracking-wider">
+                Table {tableId} • 5-Star Master Sommelier
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-serif text-sm font-bold text-aura-ivory">AURA Virtual Concierge</h3>
-            <p className="text-[10px] text-aura-gold font-mono font-bold uppercase">Table {tableId} • 5-Star AI Sommelier</p>
+
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={onClearMessages}
+              className="p-1.5 text-aura-slate hover:text-aura-gold rounded-full hover:bg-white/10 transition-colors"
+              title="Reset Chat Session"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 text-aura-slate hover:text-aura-ivory rounded-full hover:bg-white/10 transition-colors"
+              title="Close Concierge"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 text-aura-slate hover:text-aura-ivory rounded-full hover:bg-white/10"
-          title="Close Assistant"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5 max-h-80 sm:max-h-96 custom-scrollbar">
-        {messages.map((msg) =>
-          msg.isTyping ? (
-            <div key={msg.id} className="flex items-center space-x-1.5 py-1.5 px-3 bg-aura-obsidian border border-aura-border/60 rounded-2xl rounded-bl-sm w-16">
-              <span className="w-1.5 h-1.5 bg-aura-gold rounded-full animate-bounce" />
-              <span className="w-1.5 h-1.5 bg-aura-gold rounded-full animate-bounce [animation-delay:120ms]" />
-              <span className="w-1.5 h-1.5 bg-aura-gold rounded-full animate-bounce [animation-delay:240ms]" />
-            </div>
-          ) : msg.role === 'bot' ? (
-            <div key={msg.id} className="space-y-2">
-              <div className="py-2 px-3 bg-aura-obsidian border border-aura-border/60 rounded-2xl rounded-bl-sm text-xs text-aura-ivory leading-relaxed whitespace-pre-line">
+        {/* Message Log Scroll Area */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
+          {messages.map((msg) =>
+            msg.isTyping ? (
+              <div key={msg.id} className="flex items-center space-x-2 py-2.5 px-4 bg-aura-container border border-aura-gold/30 rounded-2xl rounded-bl-sm w-24 shadow-md">
+                <Bot className="w-4 h-4 text-aura-gold animate-bounce" />
+                <span className="w-1.5 h-1.5 bg-aura-gold rounded-full animate-bounce [animation-delay:120ms]" />
+                <span className="w-1.5 h-1.5 bg-aura-gold rounded-full animate-bounce [animation-delay:240ms]" />
+              </div>
+            ) : msg.role === 'bot' ? (
+              <div key={msg.id} className="space-y-2.5 max-w-[95%]">
+                <div className="py-3 px-4 bg-aura-obsidian/95 border-l-4 border-l-aura-gold border border-aura-border/80 rounded-2xl rounded-bl-sm text-xs text-aura-ivory leading-relaxed whitespace-pre-line shadow-lg">
+                  {msg.text}
+                </div>
+                {msg.quickOptions && msg.quickOptions.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {msg.quickOptions.map((opt) => (
+                      <button
+                        key={opt.label}
+                        onClick={() => sendMessage(opt.query, opt.label)}
+                        className="px-3 py-1.5 bg-aura-gold/10 border border-aura-gold/30 hover:border-aura-gold hover:bg-aura-gold hover:text-aura-obsidian text-aura-gold text-[11px] font-bold rounded-full transition-all cursor-pointer shadow-sm active:scale-95"
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div key={msg.id} className="py-2.5 px-4 bg-gradient-to-r from-aura-gold to-amber-500 text-aura-obsidian font-bold rounded-2xl rounded-br-sm text-xs ml-auto max-w-[85%] shadow-xl">
                 {msg.text}
               </div>
-              {msg.quickOptions && msg.quickOptions.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {msg.quickOptions.map((opt) => (
-                    <button
-                      key={opt.label}
-                      onClick={() => sendMessage(opt.query, opt.label)}
-                      className="px-2.5 py-1.5 bg-aura-gold/10 border border-aura-gold/30 hover:border-aura-gold text-aura-gold text-[11px] font-bold rounded-full transition-colors cursor-pointer"
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div key={msg.id} className="py-2 px-3 bg-aura-gold/15 border border-aura-gold/30 rounded-2xl rounded-br-sm text-xs text-aura-ivory ml-8">
-              {msg.text}
-            </div>
-          )
-        )}
-      </div>
+            )
+          )}
+        </div>
 
-      {/* Input */}
-      <div className="flex items-center space-x-2 p-3 border-t border-aura-border/60 bg-aura-obsidian/50">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask about dishes, prices, offers..."
-          className="flex-1 px-3 py-2 bg-aura-obsidian border border-aura-border/60 focus:border-aura-gold text-aura-ivory text-xs rounded-xl outline-none placeholder:text-aura-slate"
-        />
-        <button
-          onClick={() => sendMessage(input)}
-          disabled={isSending || !input.trim()}
-          className="p-2.5 bg-aura-gold text-aura-obsidian rounded-xl disabled:opacity-40 transition-all hover:scale-105 cursor-pointer disabled:cursor-not-allowed"
-          title="Send"
-        >
-          <Send className="w-4 h-4" />
-        </button>
+        {/* Bottom Input Area */}
+        <div className="p-3 bg-aura-container/95 border-t border-aura-gold/20 shrink-0">
+          <div className="flex items-center space-x-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask about menu, prices, coupons, dietary options..."
+              className="flex-1 px-4 py-2.5 bg-aura-obsidian border border-aura-border/80 focus:border-aura-gold text-aura-ivory text-xs rounded-2xl outline-none placeholder:text-aura-slate shadow-inner"
+            />
+            <button
+              onClick={() => sendMessage(input)}
+              disabled={isSending || !input.trim()}
+              className="p-2.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian rounded-2xl disabled:opacity-40 transition-all hover:scale-105 cursor-pointer disabled:cursor-not-allowed shadow-md"
+              title="Send Message"
+            >
+              <Send className="w-4 h-4 font-bold" />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };

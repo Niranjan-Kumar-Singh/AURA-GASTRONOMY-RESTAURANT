@@ -24,7 +24,7 @@ const ToastViewport: React.FC<{
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 max-w-sm w-full pointer-events-none">
+    <div className="fixed bottom-4 sm:bottom-5 left-4 right-4 sm:left-auto sm:right-5 z-[100] flex flex-col space-y-2 max-w-sm sm:w-80 w-auto pointer-events-none">
       {toasts.map((toast) => (
         <div
           key={toast.id}

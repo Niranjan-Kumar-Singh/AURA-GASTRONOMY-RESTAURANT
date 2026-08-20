@@ -13,15 +13,14 @@ interface CustomerAuthModalProps {
 
 export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, onClose, tableId }) => {
   useBodyScrollLock(isOpen);
-  if (!isOpen) return null;
-
   const { showToast } = useToast();
   const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-
   const { setAuth } = useAuthStore();
+
+  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

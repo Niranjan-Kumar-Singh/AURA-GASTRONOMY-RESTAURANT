@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { menuService } from '../../services/menu.service';
 import { Category, MenuItem } from '../../types/menu.types';
 import { CategoryBar } from '../../components/menu/CategoryBar';
 import { DishCard } from '../../components/menu/DishCard';
+import { LazyDishCard } from '../../components/menu/LazyDishCard';
 import { DishDetailModal } from '../../components/menu/DishDetailModal';
 import { CartDrawer } from '../../components/cart/CartDrawer';
 import { CustomerHeroBanner } from '../../components/customer/CustomerHeroBanner';
@@ -168,6 +169,32 @@ export const MenuPage: React.FC = () => {
   // Main food grid items
   const filteredItems = applyDietaryFilter(menuItems);
 
+  // Batching & Infinite Scroll for Ultra-Fast DOM Performance
+  const BATCH_SIZE = 12;
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE);
+  }, [selectedCategoryId, searchQuery, selectedFilters]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, filteredItems.length));
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredItems.length]);
+
   // Specials rails filtered dynamically by active dietary filter
   const chefSpecials = applyDietaryFilter(menuItems.filter((it) => it.isChefSpecial || it.categoryId === 1));
   const todaysSpecials = applyDietaryFilter(menuItems.filter((it) => it.categoryId === 2 || it.isBestSeller));
@@ -281,11 +308,11 @@ export const MenuPage: React.FC = () => {
         />
 
         {/* Main Food Items Grid */}
-        <div className="px-4 py-6 max-w-7xl mx-auto">
+        <div className="px-3 sm:px-4 py-4 sm:py-6 max-w-7xl mx-auto">
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="h-64 bg-aura-container/50 rounded-3xl animate-pulse border border-aura-border" />
+                <div key={n} className="h-48 sm:h-64 bg-aura-container/50 rounded-2xl sm:rounded-3xl animate-pulse border border-aura-border" />
               ))}
             </div>
           ) : fetchError ? (
@@ -313,18 +340,30 @@ export const MenuPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.map((item) => (
-                <DishCard
-                  key={item.id}
-                  item={item}
-                  onAdd={(it) => handleAddToCart(it)}
-                  onClick={(it) => {
-                    setSelectedItem(it);
-                    setIsDetailOpen(true);
-                  }}
-                />
-              ))}
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                {filteredItems.slice(0, visibleCount).map((item) => (
+                  <LazyDishCard
+                    key={item.id}
+                    item={item}
+                    onAdd={(it) => handleAddToCart(it)}
+                    onClick={(it) => {
+                      setSelectedItem(it);
+                      setIsDetailOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Sentinel Div for Infinite Scroll Batch Loading */}
+              {visibleCount < filteredItems.length && (
+                <div ref={sentinelRef} className="py-6 text-center flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-aura-gold rounded-full animate-ping" />
+                  <span className="text-[11px] text-aura-gold font-mono uppercase font-bold tracking-wider">
+                    Loading More Dishes ({visibleCount} of {filteredItems.length})...
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
