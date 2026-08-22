@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { MenuItem } from '../../types/menu.types';
 import { Heart, Share2, Eye, Plus, Minus, Star, Flame, Clock, Sparkles } from 'lucide-react';
 import { useCartStore } from '../../store/use-cart-store';
+import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useToast } from '../feedback/ToastContainer';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
@@ -13,8 +14,9 @@ interface DishCardProps {
 
 export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
   const { showToast } = useToast();
-  const [isLiked, setIsLiked] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const { toggleWishlist, isWishlisted } = useWishlistStore();
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+  const isLiked = isWishlisted(item.id);
   const { items, addItem, updateQuantity } = useCartStore();
 
   const cartItem = items.find((it) => it.menuItem.id === item.id);
@@ -49,10 +51,10 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(!isLiked);
+    const added = toggleWishlist(item);
     showToast(
-      !isLiked ? `Added "${item.name}" to Wishlist` : `Removed "${item.name}" from Wishlist`,
-      !isLiked ? 'success' : 'info'
+      added ? `Added "${item.name}" to Saved Wishlist` : `Removed "${item.name}" from Wishlist`,
+      added ? 'success' : 'info'
     );
   };
 

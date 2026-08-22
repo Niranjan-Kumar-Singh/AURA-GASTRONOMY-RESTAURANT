@@ -345,4 +345,54 @@ router.put('/waiter-calls/:id/resolve', (req, res) => {
   res.json({ success: true, data: globalWaiterAlerts });
 });
 
+// GET Shared Table Cart for a specific Table Number (Laptop/Mobile Multi-Device Sync)
+router.get('/table-number/:tableNumber/cart', async (req, res) => {
+  try {
+    const cleanTableNum = String(req.params.tableNumber || '').match(/\d+/)?.[0] || '1';
+    const table = await Table.findOne({ tableNumber: cleanTableNum });
+    if (!table) return res.json({ data: [] });
+
+    const session = await TableSession.findOne({ tableId: table._id, status: 'active' });
+    if (!session) return res.json({ data: [] });
+
+    res.json({ data: session.activeCart || [] });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT Update Shared Table Cart for a specific Table Number
+router.put('/table-number/:tableNumber/cart', async (req, res) => {
+  try {
+    const cleanTableNum = String(req.params.tableNumber || '').match(/\d+/)?.[0] || '1';
+    const { items } = req.body;
+
+    let table = await Table.findOne({ tableNumber: cleanTableNum });
+    if (!table) {
+      table = await Table.create({
+        tableNumber: cleanTableNum,
+        qrToken: crypto.randomBytes(16).toString('hex'),
+      });
+    }
+
+    let session = await TableSession.findOne({ tableId: table._id, status: 'active' });
+    if (!session) {
+      session = await TableSession.create({
+        tableId: table._id,
+        sessionId: generateSessionId(),
+        activeCart: items || [],
+      });
+      table.status = 'occupied';
+      await table.save();
+    } else {
+      session.activeCart = items || [];
+      await session.save();
+    }
+
+    res.json({ success: true, data: session.activeCart });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

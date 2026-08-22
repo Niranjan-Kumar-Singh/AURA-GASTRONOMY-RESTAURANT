@@ -22,6 +22,7 @@ import { WishlistDrawer } from '../../components/customer/WishlistDrawer';
 import { OffersDrawer } from '../../components/customer/OffersDrawer';
 import { GalleryModal } from '../../components/customer/GalleryModal';
 import { FaqModal } from '../../components/customer/FaqModal';
+import { CustomerFeedbackModal } from '../../components/customer/CustomerFeedbackModal';
 import { useCartStore } from '../../store/use-cart-store';
 import { useOrderStore } from '../../store/use-order-store';
 import { useAuthStore } from '../../store/use-auth-store';
@@ -46,14 +47,34 @@ export const MenuPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Auto-hiding header state on mobile scroll
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+        setIsHeaderVisible(false);
+      } else {
+        setIsHeaderVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Modals State
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isOffersOpen, setIsOffersOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
-  const { addItem, getItemCount, getGrandTotal, clearCart } = useCartStore();
+  const { addItem, getItemCount, getGrandTotal, clearCart, setTableId: setCartTableId, fetchServerCart } = useCartStore();
   const { activeOrderId, setActiveOrderId } = useOrderStore();
   const { isAuthenticated, tableId: sessionTableId, setTableId } = useAuthStore();
 
@@ -64,12 +85,16 @@ export const MenuPage: React.FC = () => {
   else if (tableNum > 16 && tableNum <= 24) zoneName = 'Outdoor Garden';
   else if (tableNum > 24) zoneName = 'Family Section';
 
-  // Sync active URL tableId with AuthStore
+  // Sync active URL tableId with AuthStore & CartStore for Multi-Device Sync
   useEffect(() => {
-    if (tableId && tableId !== sessionTableId) {
-      setTableId(tableId);
+    if (tableId) {
+      if (tableId !== sessionTableId) {
+        setTableId(tableId);
+      }
+      setCartTableId(tableId);
+      fetchServerCart(tableId);
     }
-  }, [tableId, sessionTableId, setTableId]);
+  }, [tableId, sessionTableId, setTableId, setCartTableId, fetchServerCart]);
 
   // Prompt login dialog if not authenticated on first load
   useEffect(() => {
@@ -201,12 +226,16 @@ export const MenuPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-aura-obsidian text-aura-ivory font-sans selection:bg-aura-gold selection:text-aura-obsidian">
-      {/* Sticky Top Navigation Header */}
-      <header className="sticky top-0 z-30 bg-aura-obsidian/95 backdrop-blur-md border-b border-aura-border/60 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shadow-xl">
+      {/* Sticky Top Navigation Header (Auto-Hides on Mobile Scroll Down) */}
+      <header
+        className={`sticky top-0 z-30 bg-aura-obsidian/95 backdrop-blur-md border-b border-aura-border/60 px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between shadow-xl transition-transform duration-300 ${
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-1.5 sm:p-2 text-aura-slate hover:text-aura-gold rounded-xl hover:bg-aura-container transition-colors shrink-0"
+            className="p-1.5 sm:p-2 text-aura-slate hover:text-aura-gold rounded-xl hover:bg-aura-container transition-colors shrink-0 cursor-pointer"
             title="Open Side Menu"
           >
             <Menu className="w-5 h-5" />
@@ -217,26 +246,30 @@ export const MenuPage: React.FC = () => {
               <Utensils className="w-4 h-4 text-aura-gold" />
             </div>
             <div className="min-w-0">
-              <h1 className="font-serif text-xs sm:text-sm font-bold text-aura-ivory tracking-wide truncate max-w-[130px] sm:max-w-none">AURA GASTRONOMY</h1>
-              <p className="text-[8px] sm:text-[9px] text-aura-slate tracking-wider uppercase truncate max-w-[130px] sm:max-w-none">Table {tableId} • {zoneName}</p>
+              <h1 className="font-serif text-xs sm:text-sm font-bold text-aura-ivory tracking-wide truncate max-w-[130px] sm:max-w-none">
+                AURA GASTRONOMY
+              </h1>
+              <p className="text-[8px] sm:text-[9px] text-aura-gold/90 font-semibold tracking-widest uppercase truncate max-w-[140px] sm:max-w-none">
+                FINE DINING • LUXURY EXPERIENCE
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5 sm:space-x-3">
           {activeOrderId && (
             <button
               onClick={() => navigate(`/table/${tableId}/order/${activeOrderId}`)}
-              className="relative px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all shadow-lg flex items-center space-x-2"
+              className="relative px-3 py-1.5 sm:py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all shadow-lg flex items-center space-x-1.5"
             >
-              <Activity className="w-4 h-4 animate-pulse" />
-              <span className="text-xs font-bold hidden sm:inline uppercase tracking-wider">Track Order</span>
+              <Activity className="w-4 h-4 animate-pulse text-emerald-400" />
+              <span className="text-xs font-bold uppercase tracking-wider">Track</span>
             </button>
           )}
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2.5 bg-aura-container border border-aura-border hover:border-aura-gold text-aura-ivory rounded-xl transition-all shadow-lg"
+            className="relative p-2.5 bg-aura-container border border-aura-border hover:border-aura-gold text-aura-ivory rounded-xl transition-all shadow-lg cursor-pointer"
             title="View Active Table Cart"
           >
             <ShoppingBag className="w-5 h-5 text-aura-gold" />
@@ -249,29 +282,30 @@ export const MenuPage: React.FC = () => {
         </div>
       </header>
 
+      {/* Zero-Gap Sticky Category & Mobile Search Control Bar */}
+      <CategoryBar
+        categories={categories}
+        selectedCategoryId={selectedCategoryId}
+        onSelectCategory={setSelectedCategoryId}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        isHeaderVisible={isHeaderVisible}
+      />
+
       {/* Main Content Container */}
       <main className="flex-1 pb-28">
         {/* Hero Banner */}
         <CustomerHeroBanner tableId={tableId} zoneName={zoneName} />
 
-        {/* Search Bar */}
-        <div className="px-4 max-w-7xl mx-auto my-3">
-          <CustomerSearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSelectSuggestion={(term) => setSearchQuery(term)}
-          />
-        </div>
-
-        {/* Combinable Filter Chips */}
-        <div className="px-4 max-w-7xl mx-auto my-3">
+        {/* Combinable Dietary Filter Chips */}
+        <div className="px-3 sm:px-4 max-w-7xl mx-auto my-3">
           <FilterChips
             selectedFilters={selectedFilters}
             onToggleFilter={handleToggleFilter}
           />
         </div>
 
-        {/* Dynamic Recommendation Rails (Stay Visible & Filtered by Dietary Choices) */}
+        {/* Dynamic Recommendation Rails */}
         {!searchQuery && !selectedCategoryId && (
           <div className="space-y-6 my-4">
             {chefSpecials.length > 0 && (
@@ -299,13 +333,6 @@ export const MenuPage: React.FC = () => {
             )}
           </div>
         )}
-
-        {/* Category Pills Bar */}
-        <CategoryBar
-          categories={categories}
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={setSelectedCategoryId}
-        />
 
         {/* Main Food Items Grid */}
         <div className="px-3 sm:px-4 py-4 sm:py-6 max-w-7xl mx-auto">
@@ -375,20 +402,20 @@ export const MenuPage: React.FC = () => {
       {/* Floating Help Bot for Users */}
       <HelpBotLauncher tableId={tableId} />
 
-      {/* Floating Active Cart Bar */}
+      {/* Floating Active Cart Bar (Desktop & Mobile) */}
       {getItemCount() > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 z-30 max-w-md mx-auto">
+        <div className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full py-3.5 px-6 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-sm transition-all duration-200 shadow-2xl flex items-center justify-between border border-aura-gold/40"
+            className="w-full py-3.5 px-5 sm:px-6 bg-gradient-to-r from-aura-gold via-amber-400 to-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs sm:text-sm transition-all duration-200 shadow-2xl flex items-center justify-between border border-aura-gold/50 active:scale-95 cursor-pointer"
           >
-            <div className="flex items-center space-x-2">
-              <span className="w-6 h-6 bg-aura-obsidian text-aura-gold rounded-full text-xs flex items-center justify-center font-bold">
+            <div className="flex items-center space-x-2.5">
+              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-aura-obsidian text-aura-gold rounded-full text-xs flex items-center justify-center font-black">
                 {getItemCount()}
               </span>
-              <span>View Active Table Cart</span>
+              <span className="font-serif tracking-wide uppercase font-bold">View Active Table Cart</span>
             </div>
-            <span className="font-mono font-bold text-base">₹{getGrandTotal().toFixed(2)}</span>
+            <span className="font-mono font-black text-sm sm:text-base">₹{getGrandTotal().toFixed(2)}</span>
           </button>
         </div>
       )}
@@ -412,27 +439,6 @@ export const MenuPage: React.FC = () => {
         }}
       />
 
-      {/* Mobile Sticky Floating Cart Bar (1-Tap Checkout on Mobile Screens) */}
-      {getItemCount() > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 z-40 sm:hidden">
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="w-full bg-gradient-to-r from-aura-gold via-amber-400 to-aura-gold text-aura-obsidian font-bold py-3.5 px-5 rounded-2xl shadow-2xl flex items-center justify-between border border-aura-gold/50 active:scale-95 transition-all"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-aura-obsidian/20 rounded-xl flex items-center justify-center font-extrabold text-xs">
-                {getItemCount()}
-              </div>
-              <span className="font-serif text-sm tracking-wide uppercase">View Active Cart</span>
-            </div>
-            <div className="flex items-center space-x-2 font-mono text-sm font-extrabold">
-              <span>₹{getGrandTotal().toLocaleString('en-IN')}</span>
-              <ShoppingBag className="w-4 h-4 text-aura-obsidian" />
-            </div>
-          </button>
-        </div>
-      )}
-
       <CustomerSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -445,6 +451,7 @@ export const MenuPage: React.FC = () => {
         onOpenOffers={() => setIsOffersOpen(true)}
         onOpenGallery={() => setIsGalleryOpen(true)}
         onOpenFaq={() => setIsFaqOpen(true)}
+        onOpenFeedback={() => setIsFeedbackOpen(true)}
       />
 
       <CustomerAuthModal
@@ -459,10 +466,22 @@ export const MenuPage: React.FC = () => {
       />
 
       <OrderHistoryDrawer isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
-      <WishlistDrawer isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
+      <WishlistDrawer
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        onSelectDish={(item) => {
+          setSelectedItem(item);
+          setIsDetailOpen(true);
+        }}
+      />
       <OffersDrawer isOpen={isOffersOpen} onClose={() => setIsOffersOpen(false)} />
       <GalleryModal isOpen={isGalleryOpen} onClose={() => setIsGalleryOpen(false)} />
       <FaqModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
+      <CustomerFeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        orderId={activeOrderId || undefined}
+      />
 
       {/* Footer */}
       <CustomerFooter />

@@ -12,33 +12,19 @@ export const CustomerHeroBanner: React.FC<CustomerHeroBannerProps> = ({
 }) => {
   return (
     <div className="px-4 pt-3 sm:pt-4 max-w-7xl mx-auto">
-      {/* Sleek Mobile Welcome Strip (Compact < 768px Viewport) */}
-      <div className="block md:hidden bg-gradient-to-r from-aura-container via-aura-obsidian to-aura-container border border-aura-gold/30 rounded-2xl p-3.5 shadow-xl">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-aura-gold/15 border border-aura-gold/30 flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4 text-aura-gold" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="font-serif text-xs font-bold text-aura-ivory truncate">
-                AURA Table {tableId}
-              </h2>
-              <p className="text-[10px] text-aura-gold font-mono font-bold truncate">
-                {zoneName} • Indiranagar
-              </p>
-            </div>
+      {/* Sleek Compact Mobile Offer Strip (< 768px Viewport) */}
+      <div className="block md:hidden bg-gradient-to-r from-aura-gold/15 via-aura-container to-aura-gold/15 border border-aura-gold/40 rounded-xl p-2.5 shadow-lg my-1">
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center space-x-2 min-w-0">
+            <Sparkles className="w-3.5 h-3.5 text-aura-gold shrink-0 animate-pulse" />
+            <span className="text-aura-ivory text-[11px] font-medium truncate">
+              Special Offer: Get <strong className="text-aura-gold">₹100 OFF</strong> your order
+            </span>
           </div>
 
-          <div className="flex items-center space-x-2 shrink-0">
-            <div className="flex items-center space-x-1 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full text-[10px] text-amber-400 font-bold">
-              <Star className="w-3 h-3 fill-amber-400" />
-              <span>4.9</span>
-            </div>
-
-            <div className="flex items-center space-x-1 text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 text-[10px]">
-              <Tag className="w-3 h-3" />
-              <span>WELCOME100</span>
-            </div>
+          <div className="flex items-center space-x-1 text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30 text-[10px] shrink-0 font-mono">
+            <Tag className="w-2.5 h-2.5" />
+            <span>WELCOME100</span>
           </div>
         </div>
       </div>
@@ -67,7 +53,7 @@ export const CustomerHeroBanner: React.FC<CustomerHeroBannerProps> = ({
                 </div>
 
                 <div className="bg-aura-gold text-aura-obsidian font-mono font-extrabold text-[10px] sm:text-xs uppercase px-3.5 py-1.5 rounded-full shadow-lg">
-                  Table {tableId} • {zoneName}
+                  LUXURY DINING • 5-STAR SELECTION
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { X, History, Utensils, CalendarClock, ChevronRight, Loader } from 'lucid
 import { orderService } from '../../services/order.service';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 interface OrderHistoryDrawerProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const getOrderBadge = (order: any) => {
 
 export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
+  useBackHandler(isOpen, onClose);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);

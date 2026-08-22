@@ -8,7 +8,7 @@ const getGroqClient = () => {
   if (!process.env.GROQ_API_KEY) return null;
   return new Groq({ apiKey: process.env.GROQ_API_KEY });
 };
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = 'openai/gpt-oss-20b';
 
 // Static slow-changing facts (hours, parking, policies). Live menu/coupon data is fetched via the LLM's DB tool.
 const STATIC_KNOWLEDGE = {
@@ -102,22 +102,22 @@ async function executeToolCall(rawArgs) {
   return { collection: args.collection, count: results.length, results };
 }
 
-const SYSTEM_PROMPT = `You are AURA's Virtual Concierge & Sommelier, representing AURA Fine Dining in Indiranagar, Bengaluru.
-Your goal is to assist guests with maximum elegance, accuracy, and warmth.
+const SYSTEM_PROMPT = `You are AURA's 5-Star Virtual Sommelier & Master Dining Host, representing AURA Fine Dining in Indiranagar, Bengaluru.
+Your objective is to deliver world-class 5-star hospitality to guests while driving revenue, upselling signature pairings, and assisting table sessions with total clarity.
 
-Key Restaurant Facts:
-- Location: 100 Feet Road, Indiranagar, Bengaluru.
-- Hours: 11:00 AM – 11:30 PM daily.
-- Parking: Complimentary valet parking for all guests.
-- Table Sessions & Reservations: Walk-ins welcome; reservations available via host or the menu page.
-- Active Coupons: WELCOME100 (₹100 Off), AURAVIP (15% Off).
+Dual Perspective Guidelines:
 
-Core Instructions:
-1. For ANY question about dishes, prices, dietary options (Vegetarian, Non-Veg, Jain, Gluten-Free), allergens, spice levels, chef recommendations, or active offers, ALWAYS consult real database records via search_menu_database.
-2. Provide exact prices in Indian Rupees (₹). Never invent prices or dishes.
-3. Keep responses warm, courteous, 5-star hospitality, and concise (3-5 bullet points or short sentences).
-4. Do NOT use markdown symbols like asterisks (**bold**) or hashes (#). Use clean, plain readable text.
-5. If a guest asks for staff or a waiter, inform them to tap the golden "Call Waiter" button on their screen.`;
+1. GUEST PERSPECTIVE (Excellence & Clarity):
+- Provide clear, mouth-watering dish descriptions with exact prices in Indian Rupees (₹), spice levels, preparation times, and dietary tags (Vegetarian, Non-Veg, Jain, Gluten-Free).
+- Proactively explain active coupons (WELCOME100: ₹100 Off over ₹499; AURAVIP: 15% Off) and Spend-More unlocked reward tiers (₹500: Free Naan/Coke; ₹1000: Free Lime Soda/Truffle Dip; ₹2000: Free Lava Cake/Gelato).
+- Make ordering effortless by giving helpful guidance on customizations ("Extra Garlic", "Less Salt") and table services.
+
+2. RESTAURANT PERSPECTIVE (Upselling & Operational Efficiency):
+- Always suggest high-margin, signature pairings (e.g. "Pair your Wagyu Ribeye with our Saffron & Gold Elixir or Truffle Mashed Potatoes!").
+- Encourage guests to add sides, beverages, or reach the next spend tier for a free reward.
+- If a guest needs immediate table assistance, waiter service, bill split, or refills, instruct them to tap the golden "Call Waiter" button on their screen so staff are alerted on POS/KDS.
+
+Tone: Warm, sophisticated, luxurious, 5-star hospitality. Format all prices with ₹. Keep responses structured and elegant.`;
 
 async function askLLM(userMessage) {
   const groq = getGroqClient();
@@ -137,7 +137,7 @@ async function askLLM(userMessage) {
         ],
       })
         .select(MENU_ITEM_PROJECTION)
-        .limit(4)
+        .limit(6)
         .lean();
     }
   } catch (e) {
@@ -146,7 +146,7 @@ async function askLLM(userMessage) {
 
   let userContextPrompt = userMessage;
   if (preloadedDishes.length > 0) {
-    userContextPrompt += `\n\n[Live Menu Database Match]: ${JSON.stringify(preloadedDishes)}`;
+    userContextPrompt += `\n\n[Live Menu Database Context]: ${JSON.stringify(preloadedDishes)}`;
   }
 
   const messages = [
@@ -188,7 +188,6 @@ async function askLLM(userMessage) {
     }
 
     let cleanReply = msg.content || "I couldn't find an answer for that. Please try rephrasing.";
-    // Strip markdown formatting symbols (*, #, `) for clean text UI
     cleanReply = cleanReply.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '').replace(/`/g, '');
     return cleanReply;
   }
@@ -203,15 +202,15 @@ const quickOptionsWithout = (...labels) =>
 const FAQ_INTENTS = [
   {
     key: 'waiter',
-    keywords: ['waiter', 'human', 'talk to staff', 'call someone'],
+    keywords: ['waiter', 'human', 'talk to staff', 'call someone', 'staff', 'bill', 'water', 'refill'],
     handler: () => ({
-      reply: 'Of course! Tap the golden "Call Waiter" button at the bottom-right of your screen and a member of our team will be right with you.',
+      reply: 'Of course! Tap the golden "Call Waiter" button at the bottom-right of your screen and a member of our team will be right with you at Table 7.',
       quickOptions: quickOptionsWithout('Talk to a Waiter'),
     }),
   },
   {
     key: 'reservations',
-    keywords: ['reserve', 'booking', 'reservation', 'book a table'],
+    keywords: ['reserve', 'booking', 'reservation', 'book a table', 'table'],
     handler: () => ({
       reply: STATIC_KNOWLEDGE.reservations,
       quickOptions: quickOptionsWithout('Reservations & Booking'),
@@ -239,6 +238,109 @@ async function findMatchingFaq(normalizedMessage) {
   });
 }
 
+// Fallback search engine directly querying MongoDB when Groq API key is unavailable or fails
+async function findSmartMenuMatches(normalizedQuery) {
+  try {
+    // 1. Non-Vegetarian Check (Must precede veg check)
+    if (normalizedQuery.includes('non veg') || normalizedQuery.includes('non-veg') || normalizedQuery.includes('nonveg') || normalizedQuery.includes('chicken') || normalizedQuery.includes('mutton') || normalizedQuery.includes('meat') || normalizedQuery.includes('seafood') || normalizedQuery.includes('lamb') || normalizedQuery.includes('wagyu')) {
+      const items = await MenuItem.find({ $or: [{ isNonVeg: true }, { isVegetarian: false }] }).limit(6).lean();
+      if (items.length) {
+        return `Here are AURA's Signature Non-Vegetarian Delicacies:\n\n` +
+          items.map(it => `• ${it.name} — ₹${it.price}\n  ${it.description}\n  💡 Chef Tip: Pair with Wood-Fired Garlic Butter Naan or Kashmiri Saffron Basmati Rice!`).join('\n\n');
+      }
+    }
+
+    // 2. Pure Vegetarian Check (Only if not non-veg)
+    if ((normalizedQuery.includes('veg') || normalizedQuery.includes('vegetarian')) && !normalizedQuery.includes('non')) {
+      const items = await MenuItem.find({ isVegetarian: true }).limit(6).lean();
+      if (items.length) {
+        return `Here are our top Vegetarian creations:\n\n` +
+          items.map(it => `• ${it.name} — ₹${it.price}\n  ${it.description}\n  💡 Chef Tip: 100% Pure Vegetarian & Crafted with French Cultured Butter.`).join('\n\n');
+      }
+    }
+
+    if (normalizedQuery.includes('special') || normalizedQuery.includes('best') || normalizedQuery.includes('recommend') || normalizedQuery.includes('signature') || normalizedQuery.includes('pick')) {
+      const items = await MenuItem.find({ $or: [{ isChefSpecial: true }, { isBestSeller: true }] }).limit(6).lean();
+      if (items.length) {
+        return `Here are AURA's Signature Masterpiece Dishes:\n\n` +
+          items.map(it => `• ${it.name} — ₹${it.price}\n  ${it.description}`).join('\n\n');
+      }
+    }
+
+    if (normalizedQuery.includes('coupon') || normalizedQuery.includes('offer') || normalizedQuery.includes('discount') || normalizedQuery.includes('code') || normalizedQuery.includes('deal')) {
+      const coupons = await Coupon.find({ isActive: true }).limit(5).lean();
+      let resText = `🎁 Active Offers & Spend Rewards:\n\n`;
+      if (coupons.length) {
+        resText += `🎟️ PROMO CODES:\n` + coupons.map(c => `• ${c.code}: ${c.description} (Min Order: ₹${c.minOrderAmount})`).join('\n') + `\n\n`;
+      }
+      resText += `🏆 SPEND-MORE REWARD TIERS (Auto-Applied in Cart):\n` +
+        `• Spend ₹500 ➔ Free Wood-Fired Garlic Naan or Chilled Coca-Cola (Save ₹90)\n` +
+        `• Spend ₹1,000 ➔ Free Fresh Mint Lime Soda or Truffle Dip (Save ₹85)\n` +
+        `• Spend ₹2,000 ➔ Free Valrhona Chocolate Lava Cake or Gelato (Save ₹220)`;
+      return resText;
+    }
+
+    if (normalizedQuery.includes('jain')) {
+      const items = await MenuItem.find({ isJain: true }).limit(5).lean();
+      if (items.length) {
+        return `Here are our pure Jain offerings:\n\n` +
+          items.map(it => `• ${it.name} — ₹${it.price}\n  ${it.description}`).join('\n\n');
+      }
+    }
+
+    if (normalizedQuery.includes('gluten')) {
+      const items = await MenuItem.find({ isGlutenFree: true }).limit(5).lean();
+      if (items.length) {
+        return `Here are our Gluten-Free selections:\n\n` +
+          items.map(it => `• ${it.name} — ₹${it.price}\n  ${it.description}`).join('\n\n');
+      }
+    }
+
+    if (normalizedQuery.includes('price') || normalizedQuery.includes('pricing') || normalizedQuery.includes('cheap') || normalizedQuery.includes('combo') || normalizedQuery.includes('cost') || normalizedQuery.includes('value')) {
+      const items = await MenuItem.find({ price: { $lte: 500 } }).sort({ price: 1 }).limit(6).lean();
+      if (items.length) {
+        return `Here are our Best Value gourmet creations (under ₹500):\n\n` +
+          items.map(it => `• ${it.name} — ₹${it.price}\n  ${it.description}`).join('\n\n');
+      }
+    }
+
+    if (normalizedQuery.includes('spice') || normalizedQuery.includes('custom') || normalizedQuery.includes('spicy')) {
+      return `Our dishes feature customizable spice levels:\n\n` +
+        `• 0 (Mild) — Delicately seasoned with French herbs & mild cream\n` +
+        `• 1 (Medium) — Balanced aromatic Indian spices\n` +
+        `• 2 (Spicy) — Bold roasted Guntur chilli & Sichuan pepper\n\n` +
+        `You can add custom notes (e.g., "Extra Garlic", "Less Salt") to any dish in your cart!`;
+    }
+
+    // Explicit food term matching only (avoids matching common words like "aura" or "the")
+    const FOOD_KEYWORDS = [
+      'pizza', 'pasta', 'steak', 'naan', 'biryani', 'chicken', 'lobster', 'sea bass',
+      'bass', 'gelato', 'cake', 'coke', 'soup', 'drink', 'salad', 'rice', 'bread',
+      'dessert', 'starter', 'curry', 'lamb', 'wagyu', 'truffle', 'burrata', 'mutton',
+      'prawn', 'fish', 'mocktail', 'cocktail', 'beverage', 'side', 'extra', 'sauce'
+    ];
+
+    const matchedKeywords = FOOD_KEYWORDS.filter(kw => normalizedQuery.includes(kw));
+    if (matchedKeywords.length > 0) {
+      const regexPattern = matchedKeywords.join('|');
+      const items = await MenuItem.find({
+        $or: [
+          { name: { $regex: regexPattern, $options: 'i' } },
+          { description: { $regex: regexPattern, $options: 'i' } }
+        ]
+      }).limit(5).lean();
+
+      if (items.length) {
+        return `Here is what I found on our menu for "${matchedKeywords.join(', ')}":\n\n` +
+          items.map(it => `• ${it.name} — ₹${it.price}\n  ${it.description}`).join('\n\n');
+      }
+    }
+  } catch (e) {
+    console.error('Failed smart menu match:', e);
+  }
+  return null;
+}
+
 async function handleQuery(message) {
   const normalized = String(message || '').toLowerCase().trim();
   if (!normalized) {
@@ -252,28 +354,33 @@ async function handleQuery(message) {
     }
   }
 
-  // 2. Rule-based FAQ keyword match from the stored Faq collection.
+  // 2. Rule-based FAQ keyword match from stored Faq collection.
   const faq = await findMatchingFaq(normalized);
   if (faq) {
     return { reply: faq.answer, quickOptions: INITIAL_QUICK_OPTIONS };
   }
 
-  // 3. Everything else: Groq LLM answers, using the DB tool to generate & run the query.
+  // 3. Smart MongoDB Menu, Pricing, Dietary & Offers Search (for instant 100% accurate responses)
+  const menuMatch = await findSmartMenuMatches(normalized);
+  if (menuMatch) {
+    return { reply: menuMatch, quickOptions: INITIAL_QUICK_OPTIONS };
+  }
+
+  // 4. Try Groq AI Sommelier (openai/gpt-oss-20b) with live MongoDB context for conversational questions
   if (process.env.GROQ_API_KEY) {
     try {
       const reply = await askLLM(message);
-      return { reply, quickOptions: INITIAL_QUICK_OPTIONS };
+      if (reply && reply.length > 10 && !reply.includes("couldn't find an answer")) {
+        return { reply, quickOptions: INITIAL_QUICK_OPTIONS };
+      }
     } catch (error) {
       console.error('Chatbot LLM error:', error.message);
-      return {
-        reply: "I'm having trouble reaching my assistant right now. Let me check with the chef or manager, or try one of the options below.",
-        quickOptions: INITIAL_QUICK_OPTIONS,
-      };
     }
   }
 
+  // 5. Friendly fallback response with quick options
   return {
-    reply: "I couldn't find an exact answer for that yet. Let me check with the chef or manager. Meanwhile, here's how I can help:",
+    reply: "Welcome to AURA Fine Dining! I am your 5-Star Sommelier & Host. How can I assist your dining experience today?",
     quickOptions: INITIAL_QUICK_OPTIONS,
   };
 }

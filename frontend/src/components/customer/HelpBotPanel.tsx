@@ -3,6 +3,7 @@ import { Send, X, Sparkles, Bot, RotateCcw } from 'lucide-react';
 import { chatbotService } from '../../services/chatbot.service';
 import { ChatbotMessage, ChatbotOption } from '../../types/chatbot.types';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 interface HelpBotPanelProps {
   tableId: string;
@@ -30,6 +31,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
   }, []);
 
   useBodyScrollLock(isMobile);
+  useBackHandler(true, onClose);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -84,11 +86,11 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
       {/* Dark Backdrop Overlay (Mobile Only < 640px) */}
       <div 
         onClick={onClose}
-        className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm block sm:hidden animate-in fade-in duration-200"
+        className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm block sm:hidden animate-in fade-in duration-200"
       />
 
       {/* Main Chatbot Panel (Bottom Sheet on Mobile, Floating Widget on Desktop) */}
-      <div className="fixed inset-x-0 bottom-0 sm:bottom-20 sm:right-6 sm:left-auto z-50 w-full sm:w-[400px] h-[85vh] sm:h-[550px] max-h-[90vh] flex flex-col bg-gradient-to-b from-aura-obsidian via-aura-container to-aura-obsidian border-t sm:border border-aura-gold/40 rounded-t-3xl sm:rounded-3xl shadow-2xl backdrop-blur-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-250">
+      <div className="fixed inset-x-0 bottom-0 sm:bottom-20 sm:right-6 sm:left-auto z-[70] w-full sm:w-[400px] h-[85vh] sm:h-[550px] max-h-[90vh] flex flex-col bg-gradient-to-b from-aura-obsidian via-aura-container to-aura-obsidian border-t sm:border border-aura-gold/40 rounded-t-3xl sm:rounded-3xl shadow-2xl backdrop-blur-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-250">
         
         {/* Mobile Pull Handle Indicator */}
         <div className="w-12 h-1 bg-aura-gold/40 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />

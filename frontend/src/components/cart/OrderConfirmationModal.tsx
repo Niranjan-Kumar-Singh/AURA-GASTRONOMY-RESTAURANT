@@ -47,7 +47,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           </div>
           <div>
             <h3 className="font-serif text-lg font-bold text-aura-ivory">Confirm Dining Order</h3>
-            <p className="text-xs text-aura-slate">Table {tableId} • VIP Dining Session</p>
+            <p className="text-xs text-aura-gold/90 font-semibold">Direct Kitchen Dispatch</p>
           </div>
         </div>
 

@@ -11,7 +11,8 @@ export interface Category {
   displayOrder: number;
   imageUrl?: string;
   iconName?: string;
-  isActive: boolean;
+  icon?: string;
+  isActive?: boolean;
 }
 
 export interface CustomizationOption {

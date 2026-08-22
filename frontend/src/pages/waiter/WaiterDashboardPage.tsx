@@ -747,6 +747,11 @@ export const WaiterDashboardPage: React.FC = () => {
                             <Users className="w-3.5 h-3.5 text-aura-gold" />
                             <span>Seated: {table.guestCount || 2}/{table.capacity}</span>
                           </div>
+                        ) : table.status === 'cleaning' ? (
+                          <div className="flex items-center space-x-1 font-mono text-rose-400 font-bold bg-rose-500/20 px-2.5 py-1 rounded-xl border border-rose-500/50 animate-pulse">
+                            <Clock className="w-3.5 h-3.5 text-rose-400" />
+                            <span>⏱️ 2:45 Turnaround Timer</span>
+                          </div>
                         ) : (
                           <span className="text-[10px] font-mono opacity-80 px-2 py-0.5 rounded-lg border border-current/20">
                             {table.zone}

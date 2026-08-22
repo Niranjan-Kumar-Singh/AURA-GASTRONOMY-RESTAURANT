@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { MenuItem, CustomizationOption } from '../../types/menu.types';
-import { X, Star, Clock, Plus, Minus, Sparkles } from 'lucide-react';
+import { X, Star, Clock, Plus, Minus, Sparkles, ChefHat, Check } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useCartStore } from '../../store/use-cart-store';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useBackHandler } from '../../hooks/useBackHandler';
+import { getSmartAddonsForDish } from '../../services/aiPairingEngine';
 
 interface DishDetailModalProps {
   item: MenuItem | null;
@@ -19,12 +21,14 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
   onAddToCart,
 }) => {
   useBodyScrollLock(isOpen);
+  useBackHandler(isOpen, onClose);
   const { showToast } = useToast();
   const { items, addItem, updateQuantity, updateSpecialNotes } = useCartStore();
   
   const [localQuantity, setLocalQuantity] = useState(1);
   const [specialNotes, setSpecialNotes] = useState('');
   const [selectedCustomizations, setSelectedCustomizations] = useState<{ [groupId: string]: CustomizationOption }>({});
+  const [selectedAddons, setSelectedAddons] = useState<{ [id: string]: boolean }>({});
 
   const cartItem = items.find((it) => it.menuItem.id === item?.id);
   const isUpdating = !!cartItem;
@@ -34,29 +38,52 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
     if (isOpen && item) {
       setLocalQuantity(1);
       setSpecialNotes(cartItem?.specialNotes || '');
+      setSelectedAddons({});
     }
   }, [isOpen, item]);
 
-
-
   if (!isOpen || !item) return null;
+
+  const smartAddons = getSmartAddonsForDish(item);
+
+  const handleToggleAddon = (addonId: string) => {
+    setSelectedAddons((prev) => ({ ...prev, [addonId]: !prev[addonId] }));
+  };
 
   const handleSelectOption = (groupId: string, option: CustomizationOption) => {
     setSelectedCustomizations((prev) => ({ ...prev, [groupId]: option }));
   };
 
   const extraCost = Object.values(selectedCustomizations).reduce((acc, opt) => acc + (opt.price || 0), 0);
-  const unitPrice = item.price + extraCost;
+  const addonsCost = smartAddons
+    .filter((ad) => selectedAddons[ad.id])
+    .reduce((sum, ad) => sum + ad.price, 0);
+
+  const unitPrice = item.price + extraCost + addonsCost;
   const totalPrice = unitPrice * displayQuantity;
 
+  const getCombinedNotes = () => {
+    const chosenAddonNames = smartAddons
+      .filter((ad) => selectedAddons[ad.id])
+      .map((ad) => `${ad.name} (+₹${ad.price})`);
+
+    let finalNotes = specialNotes.trim();
+    if (chosenAddonNames.length > 0) {
+      const addonsStr = `AI Add-ons: ${chosenAddonNames.join(', ')}`;
+      finalNotes = finalNotes ? `${finalNotes} | ${addonsStr}` : addonsStr;
+    }
+    return finalNotes;
+  };
+
   const handleAdd = () => {
+    const finalNotes = getCombinedNotes();
     if (isUpdating) {
-      if (specialNotes !== cartItem?.specialNotes) {
-        updateSpecialNotes(item.id, specialNotes);
+      if (finalNotes !== cartItem?.specialNotes) {
+        updateSpecialNotes(item.id, finalNotes);
       }
       showToast(`Updated "${item.name}" in Table Cart`, 'success');
     } else {
-      addItem(item, localQuantity, specialNotes);
+      addItem(item, localQuantity, finalNotes);
       showToast(`Added ${localQuantity}x "${item.name}" to Table Cart`, 'success');
     }
   };
@@ -85,23 +112,24 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-hidden"
+      className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-hidden animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-aura-container border border-aura-gold/40 rounded-3xl max-w-lg w-full flex flex-col shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden"
+        className="bg-aura-container border-t sm:border border-aura-gold/40 rounded-t-3xl sm:rounded-3xl max-w-lg w-full flex flex-col shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-250 max-h-[92dvh] sm:max-h-[88vh] overflow-hidden"
       >
         {/* Close Trigger */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 bg-aura-obsidian/80 text-aura-ivory hover:text-aura-gold rounded-full border border-white/20 backdrop-blur-md transition-all"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-2 bg-aura-obsidian/80 text-aura-ivory hover:text-aura-gold rounded-full border border-white/20 backdrop-blur-md transition-all shadow-lg cursor-pointer"
+          title="Close detail view"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Hero Image Box */}
-        <div className="relative h-48 sm:h-56 w-full shrink-0 bg-aura-obsidian overflow-hidden">
+        <div className="relative h-36 sm:h-56 w-full shrink-0 bg-aura-obsidian overflow-hidden">
           <img
             src={item.imageUrl}
             alt={item.name}
@@ -109,11 +137,11 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
             decoding="async"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-aura-container via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-aura-container via-transparent to-black/40" />
 
-          <div className="absolute top-4 left-4 flex items-center space-x-2">
+          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center space-x-2">
             <span
-              className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center bg-aura-obsidian/90 backdrop-blur-md ${
+              className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center bg-aura-obsidian/90 backdrop-blur-md shadow-md ${
                 item.isVegetarian ? 'border-emerald-500' : 'border-rose-500'
               }`}
             >
@@ -125,38 +153,38 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
             </span>
 
             {item.isChefSpecial && (
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-aura-gold text-aura-obsidian flex items-center space-x-1 shadow-lg">
-                <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[10px] sm:text-xs font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-aura-gold text-aura-obsidian flex items-center space-x-1 shadow-lg">
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span>Chef Special</span>
               </span>
             )}
           </div>
         </div>
 
-        {/* Body Content */}
-        <div className="p-6 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
+        {/* Scrollable Body Content */}
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 flex-1 overflow-y-auto custom-scrollbar">
           <div>
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between gap-2">
               <div>
-                <h2 className="font-serif text-2xl font-bold text-aura-ivory">{item.name}</h2>
-                <p className="text-xs text-aura-slate">{item.categoryName}</p>
+                <h2 className="font-serif text-lg sm:text-2xl font-bold text-aura-ivory leading-tight">{item.name}</h2>
+                <p className="text-[10px] sm:text-xs text-aura-slate mt-0.5">{item.categoryName}</p>
               </div>
-              <span className="font-mono text-2xl font-bold text-aura-gold">₹{totalPrice}</span>
+              <span className="font-mono text-lg sm:text-2xl font-bold text-aura-gold shrink-0">₹{totalPrice}</span>
             </div>
 
             <p className="text-xs text-aura-slate mt-2 leading-relaxed">{item.description}</p>
           </div>
 
           {/* Quick Metrics */}
-          <div className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between text-xs text-aura-slate">
+          <div className="p-2.5 sm:p-3 bg-aura-obsidian border border-aura-border/80 rounded-2xl flex items-center justify-between text-[11px] sm:text-xs text-aura-slate font-sans">
             <div className="flex items-center space-x-1 text-amber-400 font-bold">
-              <Star className="w-4 h-4 fill-amber-400" />
+              <Star className="w-3.5 h-3.5 fill-amber-400" />
               <span>{item.rating || 4.9}</span>
-              <span className="text-[10px] text-aura-slate font-normal">({item.reviewCount || 120} reviews)</span>
+              <span className="text-[9px] text-aura-slate font-normal hidden sm:inline">({item.reviewCount || 120} reviews)</span>
             </div>
 
             <div className="flex items-center space-x-1">
-              <Clock className="w-4 h-4 text-aura-gold" />
+              <Clock className="w-3.5 h-3.5 text-aura-gold" />
               <span>{item.preparationTimeMinutes} mins prep</span>
             </div>
 
@@ -165,13 +193,13 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
             )}
           </div>
 
-          {/* Ingredients List */}
+          {/* Key Ingredients List */}
           {item.ingredients && item.ingredients.length > 0 && (
             <div className="space-y-1.5">
-              <h3 className="text-xs font-bold text-aura-gold uppercase tracking-wider">Key Ingredients</h3>
+              <h3 className="text-[10px] sm:text-xs font-bold text-aura-gold uppercase tracking-wider">Key Ingredients</h3>
               <div className="flex flex-wrap gap-1.5">
                 {item.ingredients.map((ing, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-aura-obsidian border border-aura-border/60 rounded-xl text-[11px] text-aura-ivory">
+                  <span key={i} className="px-2.5 py-0.5 sm:py-1 bg-aura-obsidian border border-aura-border/60 rounded-xl text-[10px] sm:text-[11px] text-aura-ivory">
                     {ing}
                   </span>
                 ))}
@@ -179,12 +207,67 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
             </div>
           )}
 
+          {/* AI Recommended Flavor Enhancers & Up-sell Add-ons */}
+          {smartAddons.length > 0 && (
+            <div className="p-3 bg-gradient-to-r from-aura-gold/10 via-aura-obsidian to-aura-gold/10 border border-aura-gold/40 rounded-2xl space-y-2.5 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5 text-[10px] sm:text-xs font-bold text-aura-gold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-aura-gold animate-pulse" />
+                  <span>Chef &amp; AI Recommended Add-ons</span>
+                </div>
+                <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                  Better Taste Guaranteed
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                {smartAddons.map((addon) => {
+                  const isChecked = !!selectedAddons[addon.id];
+
+                  return (
+                    <div
+                      key={addon.id}
+                      onClick={() => handleToggleAddon(addon.id)}
+                      className={`p-2.5 rounded-xl border text-[11px] flex items-center justify-between cursor-pointer transition-all ${
+                        isChecked
+                          ? 'bg-aura-gold/20 border-aura-gold text-aura-ivory font-bold shadow-md'
+                          : 'bg-aura-obsidian/90 border-aura-border/70 text-aura-slate hover:text-aura-ivory hover:border-aura-gold/40'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div
+                          className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                            isChecked
+                              ? 'bg-aura-gold border-aura-gold text-aura-obsidian'
+                              : 'border-aura-border bg-aura-container'
+                          }`}
+                        >
+                          {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="truncate block font-semibold text-aura-ivory">{addon.name}</span>
+                          {addon.reason && (
+                            <span className="text-[9px] text-aura-gold/80 block font-normal leading-none mt-0.5">
+                              ✨ {addon.reason}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <span className="font-mono text-aura-gold font-bold shrink-0 ml-2">+₹{addon.price}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Customization Options */}
           {item.customizationGroups && item.customizationGroups.map((group) => (
             <div key={group.id} className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold text-aura-gold uppercase tracking-wider">
+              <div className="flex justify-between items-center text-[10px] sm:text-xs font-bold text-aura-gold uppercase tracking-wider">
                 <span>{group.title}</span>
-                {group.required && <span className="text-[10px] text-rose-400 font-bold">Required</span>}
+                {group.required && <span className="text-[9px] text-rose-400 font-bold">Required</span>}
               </div>
 
               <div className="space-y-1.5">
@@ -195,7 +278,7 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
                     <div
                       key={option.id}
                       onClick={() => handleSelectOption(group.id, option)}
-                      className={`p-3 rounded-xl border text-[11px] flex items-center justify-between cursor-pointer transition-all ${
+                      className={`p-2.5 sm:p-3 rounded-xl border text-[11px] flex items-center justify-between cursor-pointer transition-all ${
                         isSelected
                           ? 'bg-aura-gold/10 border-aura-gold text-aura-gold font-bold'
                           : 'bg-aura-obsidian border-aura-border text-aura-ivory hover:border-aura-gold/40'
@@ -211,56 +294,56 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
           ))}
 
           {/* Special Preparation Instructions */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-aura-gold uppercase tracking-wider">
+          <div className="space-y-1.5 pb-2">
+            <label className="text-[10px] sm:text-xs font-bold text-aura-gold uppercase tracking-wider">
               Special Kitchen Instructions
             </label>
             <textarea
               value={specialNotes}
               onChange={(e) => setSpecialNotes(e.target.value)}
-              placeholder="e.g. Less oil, No chilli, Birthday celebration plate..."
-              className="w-full p-3 bg-aura-obsidian border border-aura-border rounded-xl text-aura-ivory text-xs placeholder:text-aura-slate focus:outline-none focus:border-aura-gold h-20 resize-none"
+              placeholder="e.g. Less oil, No chilli, Extra napkins, Birthday message..."
+              className="w-full p-3 bg-aura-obsidian border border-aura-border/80 rounded-xl text-aura-ivory text-xs placeholder:text-aura-slate/80 focus:outline-none focus:border-aura-gold h-16 sm:h-20 resize-none"
             />
           </div>
         </div>
 
-        {/* Modal Footer (Quantity Stepper & Add CTA) */}
-        <div className="p-4 bg-aura-obsidian border-t border-aura-border flex items-center justify-center">
+        {/* Modal Footer (Quantity Stepper & Add CTA - Safe for Mobile Chrome Viewport) */}
+        <div className="p-3.5 sm:p-4 bg-aura-obsidian border-t border-aura-border flex items-center justify-center shrink-0">
           {item.isAvailable === false ? (
             <button
               disabled
-              className="w-full max-w-sm py-4 px-6 bg-rose-500/10 border border-rose-500/40 text-rose-400 font-bold rounded-full text-xs uppercase tracking-widest cursor-not-allowed opacity-90 flex items-center justify-center space-x-2"
+              className="w-full max-w-sm py-3 sm:py-4 px-6 bg-rose-500/10 border border-rose-500/40 text-rose-400 font-bold rounded-full text-xs uppercase tracking-widest cursor-not-allowed opacity-90 flex items-center justify-center space-x-2"
             >
               <span>CURRENTLY OUT OF STOCK</span>
             </button>
           ) : isUpdating ? (
-            <div className="w-full max-w-sm flex items-center justify-between bg-aura-gold/20 backdrop-blur-md rounded-full p-1.5 border border-aura-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.3)] animate-in fade-in zoom-in duration-200">
+            <div className="w-full max-w-sm flex items-center justify-between bg-aura-gold/20 backdrop-blur-md rounded-full p-1 sm:p-1.5 border border-aura-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.3)] animate-in fade-in zoom-in duration-200">
               <button
                 onClick={handleDecrement}
-                className="w-12 h-12 bg-aura-obsidian hover:bg-black rounded-full flex items-center justify-center text-aura-gold transition-transform active:scale-90 shadow-inner"
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-aura-obsidian hover:bg-black rounded-full flex items-center justify-center text-aura-gold transition-transform active:scale-90 shadow-inner cursor-pointer"
               >
-                <Minus className="w-5 h-5" />
+                <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               <div className="flex flex-col items-center justify-center">
-                <span className="font-mono font-black text-xl text-aura-gold drop-shadow-md">{displayQuantity}</span>
-                <span className="text-[9px] text-aura-gold font-bold uppercase tracking-widest opacity-80">In Cart</span>
+                <span className="font-mono font-black text-lg sm:text-xl text-aura-gold drop-shadow-md">{displayQuantity}</span>
+                <span className="text-[8px] sm:text-[9px] text-aura-gold font-bold uppercase tracking-widest opacity-80">In Cart</span>
               </div>
               
               <button
                 onClick={handleIncrement}
-                className="w-12 h-12 bg-aura-obsidian hover:bg-black rounded-full flex items-center justify-center text-aura-gold transition-transform active:scale-90 shadow-inner"
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-aura-obsidian hover:bg-black rounded-full flex items-center justify-center text-aura-gold transition-transform active:scale-90 shadow-inner cursor-pointer"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
           ) : (
             <button
               onClick={handleAdd}
-              className="w-full max-w-sm py-4 px-6 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black rounded-full text-sm uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-between active:scale-95 animate-in fade-in zoom-in duration-200"
+              className="w-full max-w-sm py-3.5 sm:py-4 px-5 sm:px-6 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black rounded-full text-xs sm:text-sm uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-between active:scale-95 animate-in fade-in zoom-in duration-200 cursor-pointer"
             >
               <span>ADD TO CART</span>
-              <span className="font-mono text-lg">₹{totalPrice}</span>
+              <span className="font-mono text-base sm:text-lg">₹{totalPrice}</span>
             </button>
           )}
         </div>
