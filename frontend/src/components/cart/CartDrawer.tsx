@@ -82,6 +82,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   }, [items, removeItem, showToast]);
 
   const subtotal = items.reduce((acc, it) => acc + it.menuItem.price * it.quantity, 0);
+
+  // Automatic Coupon Revocation Guard if subtotal drops below required threshold
+  useEffect(() => {
+    if (appliedCoupon && subtotal < appliedCoupon.minOrderAmount) {
+      const revokedCode = appliedCoupon.code;
+      setAppliedCoupon(null);
+      showToast(`Revoked coupon "${revokedCode}" — Subtotal dropped below ₹${appliedCoupon.minOrderAmount}`, 'info');
+    }
+  }, [subtotal, appliedCoupon, showToast]);
+
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const taxableSubtotal = Math.max(0, subtotal - discount);
   const gstAmount = taxableSubtotal * 0.05; // 5% Indian GST

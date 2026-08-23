@@ -3,10 +3,14 @@ import { Flame, Clock, CheckCircle2, AlertCircle, RefreshCw, ChefHat, Filter, Ch
 import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 
+import { OrderCancelModal } from '../../components/orders/OrderCancelModal';
+
 interface KDSItem {
   name: string;
   quantity: number;
   notes?: string;
+  status?: string;
+  isPrepared?: boolean;
 }
 
 interface KDSTicket {
@@ -25,6 +29,7 @@ export const KitchenDisplayPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [nowTimestamp, setNowTimestamp] = useState(Date.now());
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [cancelModalTicket, setCancelModalTicket] = useState<{ id: string; tableId: string } | null>(null);
 
   // Track individual item check state: `${ticketId}-${itemIndex}` -> boolean
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -70,10 +75,12 @@ export const KitchenDisplayPage: React.FC = () => {
         tableId: order.tableId,
         createdAt: order.createdAt,
         status: order.status,
-        items: order.items.map((i: any) => ({
+        items: (order.items || []).map((i: any) => ({
           name: i.name,
-          quantity: i.quantity,
+          quantity: i.quantity || i.qty || 1,
           notes: i.notes,
+          status: i.status || 'received',
+          isPrepared: !!i.isPrepared,
         })),
       }));
 
@@ -128,9 +135,17 @@ export const KitchenDisplayPage: React.FC = () => {
     }
   };
 
-  const toggleItemDone = (ticketId: string, itemIndex: number) => {
+  const toggleItemDone = async (ticketId: string, itemIndex: number, currentStatus?: string, currentIsPrepared?: boolean) => {
+    if (currentStatus === 'served') return;
     const key = `${ticketId}-${itemIndex}`;
-    setCheckedItems((prev) => ({ ...prev, [key]: !prev[key] }));
+    const nextState = !currentIsPrepared && !checkedItems[key];
+    setCheckedItems((prev) => ({ ...prev, [key]: nextState }));
+
+    try {
+      await orderService.checkOrderItem(ticketId, itemIndex, nextState);
+    } catch (e) {
+      // Silence background error
+    }
   };
 
   const getElapsedSeconds = (createdAt: string) => {
@@ -359,7 +374,7 @@ export const KitchenDisplayPage: React.FC = () => {
               const timerStyle = getTimerBadgeStyle(elapsedSecs);
 
               const checkedCount = ticket.items.filter(
-                (_, idx) => checkedItems[`${ticket.id}-${idx}`]
+                (it, idx) => checkedItems[`${ticket.id}-${idx}`] || it.status === 'served' || it.isPrepared
               ).length;
               const totalItems = ticket.items.length;
               const isAllChecked = checkedCount === totalItems;
@@ -419,24 +434,27 @@ export const KitchenDisplayPage: React.FC = () => {
                       <div className="flex items-center justify-between text-[10px] text-aura-slate font-mono uppercase tracking-wider px-1">
                         <span>Recipe Items ({totalItems})</span>
                         <span className={isAllChecked ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                          {checkedCount}/{totalItems} Checked
+                          {checkedCount}/{totalItems} Prepared
                         </span>
                       </div>
 
                       {ticket.items.map((item, idx) => {
                         const itemKey = `${ticket.id}-${idx}`;
-                        const isDone = !!checkedItems[itemKey];
+                        const isServed = item.status === 'served';
+                        const isDone = isServed || item.isPrepared || !!checkedItems[itemKey];
 
                         return (
                           <div
                             key={idx}
                             onClick={() => {
-                              if (ticket.status !== 'received') {
-                                toggleItemDone(ticket.id, idx);
+                              if (ticket.status !== 'received' && !isServed) {
+                                toggleItemDone(ticket.id, idx, item.status, item.isPrepared);
                               }
                             }}
                             className={`p-3 rounded-2xl border transition-all flex items-start justify-between space-x-2 ${
-                              ticket.status === 'received'
+                              isServed
+                                ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300/80 cursor-default opacity-85'
+                                : ticket.status === 'received'
                                 ? 'bg-aura-obsidian/40 border-aura-border/40 text-aura-ivory cursor-not-allowed opacity-80'
                                 : isDone
                                 ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200 line-through cursor-pointer'
@@ -444,11 +462,16 @@ export const KitchenDisplayPage: React.FC = () => {
                             }`}
                           >
                             <div className="space-y-0.5 flex-1">
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                                 <span className="w-5 h-5 bg-aura-gold/20 text-aura-gold text-xs font-bold rounded-lg flex items-center justify-center font-mono">
                                   {item.quantity}x
                                 </span>
                                 <span className="font-bold text-xs leading-snug">{item.name}</span>
+                                {isServed && (
+                                  <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/40 uppercase">
+                                    Served to Guest
+                                  </span>
+                                )}
                               </div>
                               {item.notes && (
                                 <div className="flex items-center space-x-1 pt-1 text-[10px] text-amber-400 font-medium italic">
@@ -458,14 +481,18 @@ export const KitchenDisplayPage: React.FC = () => {
                               )}
                             </div>
 
-                            {ticket.status !== 'received' && (
-                              <button className="text-aura-slate hover:text-aura-gold transition-colors mt-0.5">
-                                {isDone ? (
-                                  <CheckSquare className="w-4 h-4 text-emerald-400" />
-                                ) : (
-                                  <Square className="w-4 h-4 text-aura-slate/50" />
-                                )}
-                              </button>
+                            {isServed ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                            ) : (
+                              ticket.status !== 'received' && (
+                                <button className="text-aura-slate hover:text-aura-gold transition-colors mt-0.5">
+                                  {isDone ? (
+                                    <CheckSquare className="w-4 h-4 text-emerald-400" />
+                                  ) : (
+                                    <Square className="w-4 h-4 text-aura-slate/50" />
+                                  )}
+                                </button>
+                              )
                             )}
                           </div>
                         );
@@ -513,6 +540,15 @@ export const KitchenDisplayPage: React.FC = () => {
                         )}
                       </div>
                     )}
+
+                    {/* Authority Cancel Order Button */}
+                    <button
+                      onClick={() => setCancelModalTicket({ id: ticket.id, tableId: ticket.tableId })}
+                      className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                      <span>Cancel Order (Authority)</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -520,6 +556,18 @@ export const KitchenDisplayPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Authority Order Cancel Modal */}
+      {cancelModalTicket && (
+        <OrderCancelModal
+          isOpen={!!cancelModalTicket}
+          orderId={cancelModalTicket.id}
+          tableNumber={cancelModalTicket.tableId}
+          cancelledBy="Head Chef"
+          onClose={() => setCancelModalTicket(null)}
+          onSuccess={() => fetchActiveOrders(true)}
+        />
+      )}
     </div>
   );
 };

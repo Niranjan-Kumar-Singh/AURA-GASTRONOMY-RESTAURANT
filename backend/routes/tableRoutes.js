@@ -59,20 +59,26 @@ router.post('/dev-seed', async (req, res) => {
   }
 });
 
-// GET all tables (For Waiter Dashboard - Ensures all 30 tables exist)
+// GET all tables (For Waiter Dashboard - Ensures strictly 30 tables exist: 1 to 30)
 router.get('/', async (req, res) => {
   try {
-    let tables = await Table.find().sort({ tableNumber: 1 });
+    const validTableNumbers = Array.from({ length: 30 }, (_, i) => String(i + 1));
     
-    // Auto-seed tables 1 through 30 if database has fewer than 30 tables
+    // Purge any legacy/invalid tables outside 1-30
+    await Table.deleteMany({ tableNumber: { $nin: validTableNumbers } }).catch(() => {});
+
+    let tables = await Table.find({ tableNumber: { $in: validTableNumbers } });
+    
+    // Auto-seed missing tables within 1 to 30 range
     if (tables.length < 30) {
-      const existingNumbers = new Set(tables.map(t => Number(t.tableNumber)));
+      const existingNumbers = new Set(tables.map(t => String(t.tableNumber)));
       const tablesToCreate = [];
 
       for (let i = 1; i <= 30; i++) {
-        if (!existingNumbers.has(i)) {
+        const numStr = String(i);
+        if (!existingNumbers.has(numStr)) {
           tablesToCreate.push({
-            tableNumber: String(i),
+            tableNumber: numStr,
             capacity: i % 4 === 0 ? 6 : i % 2 === 0 ? 4 : 2,
             status: 'available',
             qrToken: crypto.randomBytes(16).toString('hex'),
@@ -82,39 +88,66 @@ router.get('/', async (req, res) => {
 
       if (tablesToCreate.length > 0) {
         await Table.insertMany(tablesToCreate);
-        tables = await Table.find().sort({ tableNumber: 1 });
+        tables = await Table.find({ tableNumber: { $in: validTableNumbers } });
       }
     }
 
+    // Strictly sort numerically 1 to 30
+    tables.sort((a, b) => Number(a.tableNumber) - Number(b.tableNumber));
+
     // For each table, attach active session details
     const tablesWithSessions = await Promise.all(tables.map(async (table) => {
+      // Auto-transition table from 'cleaning' to 'available' after 5 minutes (300,000ms)
+      if (table.status === 'cleaning' && table.cleaningStartedAt) {
+        const elapsedMs = Date.now() - new Date(table.cleaningStartedAt).getTime();
+        if (elapsedMs >= 5 * 60 * 1000) {
+          table.status = 'available';
+          table.cleaningStartedAt = null;
+          table.guestCount = 0;
+          await table.save().catch(() => {});
+        }
+      }
+
       const activeSession = await TableSession.findOne({ tableId: table._id, status: 'active' }).populate('orders');
       
       let orderTotal = 0;
       let guestCount = 0;
       let activeOrderId = null;
+      let orderStatus = null;
 
-      if (activeSession && table.status !== 'available' && table.status !== 'cleaning') {
-        guestCount = table.guestCount || activeSession.users.length;
+      if (activeSession) {
+        guestCount = table.guestCount || (activeSession.users ? activeSession.users.length : 0);
         if (activeSession.orders && activeSession.orders.length > 0) {
-          const unpaidOrders = activeSession.orders.filter((o) => o.paymentStatus !== 'PAID' && o.status !== 'cancelled');
+          const unpaidOrders = activeSession.orders.filter((o) => o && o.paymentStatus !== 'PAID' && o.status !== 'cancelled');
           if (unpaidOrders.length > 0) {
-            activeOrderId = unpaidOrders[unpaidOrders.length - 1].orderId;
+            const latestOrder = unpaidOrders[unpaidOrders.length - 1];
+            activeOrderId = latestOrder.orderId;
+            orderStatus = latestOrder.status; // 'received' | 'preparing' | 'ready' | 'served' | 'completed'
             orderTotal = unpaidOrders.reduce((sum, order) => sum + (order.total || order.totalAmount || 0), 0);
+
+            // Auto-heal table status to 'occupied' if active unpaid orders exist!
+            if (table.status === 'available') {
+              table.status = 'occupied';
+              await table.save();
+            }
           }
         }
-      } else {
-        guestCount = (table.status === 'available' || table.status === 'cleaning') ? 0 : (table.guestCount || 0);
+      }
+
+      if (table.status === 'available' || table.status === 'cleaning') {
+        guestCount = 0;
       }
 
       return {
         _id: table._id,
         tableNumber: Number(table.tableNumber),
         status: table.status,
+        orderStatus,
         capacity: table.capacity || 4,
-        activeOrderId: (table.status === 'available' || table.status === 'cleaning') ? null : activeOrderId,
-        orderTotal: (table.status === 'available' || table.status === 'cleaning') ? 0 : orderTotal,
-        guestCount
+        activeOrderId,
+        orderTotal,
+        guestCount,
+        cleaningStartedAt: table.cleaningStartedAt
       };
     }));
     res.json({ data: tablesWithSessions });
@@ -193,10 +226,17 @@ router.post(['/checkout', '/session/:sessionId/checkout'], async (req, res) => {
       $or: [{ tableNumber: identifier }, { _id: isValidObjectId ? identifier : null }]
     });
 
-    // Find orders for this table
+    // Find active UNPAID orders for this table session
     const tableQueryId = table ? String(table.tableNumber) : identifier;
     const allTableOrders = await Order.find({
-      $or: [{ tableId: tableQueryId }, { tableId: identifier }]
+      $or: [
+        { tableId: tableQueryId },
+        { tableId: `table/${tableQueryId}/menu` },
+        { tableId: `table-${tableQueryId}` },
+        { tableId: identifier }
+      ],
+      paymentStatus: { $ne: 'PAID' },
+      status: { $ne: 'cancelled' }
     });
 
     if (allTableOrders.length === 0) {
@@ -270,14 +310,44 @@ router.put(['/:tableId/status', '/status/:tableId'], async (req, res) => {
         qrToken: crypto.randomBytes(16).toString('hex'),
       });
     } else {
+      // Smart Status Guard Rule: Prevent setting table to 'available' if active unpaid orders exist!
+      if (validStatus === 'available') {
+        const cleanNum = String(table.tableNumber);
+        const directUnpaidOrders = await Order.find({
+          $or: [
+            { tableId: cleanNum },
+            { tableId: `table/${cleanNum}/menu` },
+            { tableId: `table-${cleanNum}` },
+            { tableId: String(table._id) }
+          ],
+          paymentStatus: { $ne: 'PAID' },
+          status: { $ne: 'cancelled' }
+        });
+
+        if (directUnpaidOrders.length > 0) {
+          return res.status(400).json({
+            message: `Cannot set Table ${table.tableNumber} to Available: Active unpaid orders exist (${directUnpaidOrders.length} active order). Please settle bill or cancel order first.`
+          });
+        }
+      }
+
       if (validStatus === 'billing' && table.status === 'available') {
         return res.status(400).json({ message: `Cannot set Table ${table.tableNumber} to billing. Table is currently available with no active order.` });
       }
+
       table.status = validStatus;
-      if (validStatus === 'occupied') {
-        table.guestCount = guestCount || table.guestCount || 2;
-      } else if (validStatus === 'available' || validStatus === 'cleaning') {
+
+      if (validStatus === 'cleaning') {
+        table.cleaningStartedAt = new Date();
         table.guestCount = 0;
+      } else if (validStatus === 'occupied') {
+        table.guestCount = guestCount || table.guestCount || 2;
+        table.cleaningStartedAt = null;
+      } else if (validStatus === 'billing') {
+        table.cleaningStartedAt = null;
+      } else if (validStatus === 'available') {
+        table.guestCount = 0;
+        table.cleaningStartedAt = null;
         await TableSession.updateMany(
           { tableId: table._id, status: 'active' },
           { status: 'completed', endTime: new Date() }
@@ -371,27 +441,31 @@ router.put('/table-number/:tableNumber/cart', async (req, res) => {
     if (!table) {
       table = await Table.create({
         tableNumber: cleanTableNum,
+        status: 'occupied',
         qrToken: crypto.randomBytes(16).toString('hex'),
       });
     }
 
-    let session = await TableSession.findOne({ tableId: table._id, status: 'active' });
-    if (!session) {
-      session = await TableSession.create({
-        tableId: table._id,
-        sessionId: generateSessionId(),
-        activeCart: items || [],
-      });
+    // Atomic update or insert using findOneAndUpdate to prevent parallel save VersionErrors
+    const newSessionId = `SESS-${Date.now()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+    const session = await TableSession.findOneAndUpdate(
+      { tableId: table._id, status: 'active' },
+      {
+        $setOnInsert: { sessionId: newSessionId, tableId: table._id, status: 'active' },
+        $set: { activeCart: Array.isArray(items) ? items : [] }
+      },
+      { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true }
+    );
+
+    if (table.status === 'available') {
       table.status = 'occupied';
-      await table.save();
-    } else {
-      session.activeCart = items || [];
-      await session.save();
+      await table.save().catch(() => {});
     }
 
-    res.json({ success: true, data: session.activeCart });
+    res.json({ success: true, data: session ? session.activeCart : [] });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error updating table cart:', error);
+    res.status(500).json({ message: error.message || 'Server error updating cart' });
   }
 });
 

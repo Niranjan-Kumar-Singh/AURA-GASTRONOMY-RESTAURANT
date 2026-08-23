@@ -51,6 +51,21 @@ export const orderService = {
     return response.data.data;
   },
 
+  async checkOrderItem(orderId: string, itemIndex: number, isPrepared: boolean) {
+    const response = await apiClient.put(`/orders/${orderId}/items/check`, { itemIndex, isPrepared });
+    return response.data;
+  },
+
+  async cancelOrder(orderId: string, reason?: string, cancelledBy?: string) {
+    const response = await apiClient.put(`/orders/${orderId}/cancel`, { reason, cancelledBy });
+    return response.data;
+  },
+
+  async payTableBill(tableId: string | number, paymentMethod: string = 'UPI_QR') {
+    const response = await apiClient.post('/orders/pay-table', { tableId: String(tableId), paymentMethod });
+    return response.data;
+  },
+
   async settleTableBill(tableId: string | number, paymentMethod: string = 'UPI_QR') {
     const response = await apiClient.post('/orders/pay-table', { tableId: String(tableId), paymentMethod });
     return response.data;

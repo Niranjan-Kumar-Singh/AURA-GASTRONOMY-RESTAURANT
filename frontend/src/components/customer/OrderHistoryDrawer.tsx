@@ -91,21 +91,59 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
             <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-aura-gold" /></div>
           ) : orders.length === 0 ? (
             <div className="text-center py-20 text-aura-slate text-sm">No past orders found.</div>
-          ) : (
-            orders.map((order) => {
-              const badge = getOrderBadge(order);
-              const orderNum = order.orderId || `ORD-${String(order._id || '').slice(-4).toUpperCase()}`;
+          ) : (() => {
+            // Group orders sharing the same invoiceNumber into a single combined receipt group
+            const groupedMap = new Map<string, any>();
+            orders.forEach((order) => {
+              const groupKey = order.invoiceNumber ? `INV-${order.invoiceNumber}` : (order.orderId || String(order._id));
+              if (!groupedMap.has(groupKey)) {
+                groupedMap.set(groupKey, {
+                  groupKey,
+                  invoiceNumber: order.invoiceNumber,
+                  tableId: order.tableId,
+                  createdAt: order.createdAt,
+                  paymentStatus: order.paymentStatus,
+                  paymentMethod: order.paymentMethod,
+                  ordersCount: 1,
+                  allOrderIds: [order.orderId || order._id],
+                  allItems: [...(order.items || [])],
+                  subtotal: order.subtotal || 0,
+                  tax: order.tax || 0,
+                  discount: order.discount || 0,
+                  total: order.total || 0,
+                  firstOrder: order,
+                });
+              } else {
+                const group = groupedMap.get(groupKey);
+                group.ordersCount += 1;
+                group.allOrderIds.push(order.orderId || order._id);
+                group.allItems.push(...(order.items || []));
+                group.subtotal += order.subtotal || 0;
+                group.tax += order.tax || 0;
+                group.discount += order.discount || 0;
+                group.total += order.total || 0;
+              }
+            });
+
+            const receiptGroups = Array.from(groupedMap.values());
+
+            return receiptGroups.map((receiptGroup) => {
+              const badge = getOrderBadge(receiptGroup.firstOrder);
+              const isMultiOrder = receiptGroup.ordersCount > 1;
+              const displayTitle = receiptGroup.invoiceNumber 
+                ? `Invoice #${receiptGroup.invoiceNumber}`
+                : `Order #${receiptGroup.allOrderIds[0]}`;
 
               return (
                 <div 
-                  key={order._id || order.orderId} 
-                  onClick={() => setSelectedReceipt(order)}
+                  key={receiptGroup.groupKey} 
+                  onClick={() => setSelectedReceipt(receiptGroup)}
                   className="p-5 rounded-2xl bg-aura-container border border-aura-border hover:border-aura-gold/40 transition-all group cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-2">
                       <CalendarClock className="w-4 h-4 text-aura-gold" />
-                      <span className="text-xs font-bold text-aura-ivory">{new Date(order.createdAt).toLocaleDateString()}</span>
+                      <span className="text-xs font-bold text-aura-ivory">{new Date(receiptGroup.createdAt).toLocaleDateString()}</span>
                     </div>
                     <span className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full border ${badge.style}`}>
                       {badge.label}
@@ -116,12 +154,14 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                       <Utensils className="w-5 h-5 text-aura-slate" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-aura-ivory group-hover:text-aura-gold transition-colors">Order #{orderNum}</p>
-                      <p className="text-xs text-aura-slate line-clamp-1">{order.items?.length || 0} Recipe Item(s)</p>
+                      <p className="text-sm font-bold text-aura-ivory group-hover:text-aura-gold transition-colors">{displayTitle}</p>
+                      <p className="text-xs text-aura-slate line-clamp-1">
+                        {isMultiOrder ? `${receiptGroup.ordersCount} Combined Orders` : `1 Order`} • {receiptGroup.allItems.length} Recipe Item(s)
+                      </p>
                     </div>
                   </div>
                   <div className="pt-3 border-t border-aura-border flex items-center justify-between">
-                    <span className="font-mono font-bold text-aura-gold">₹{(order.total || order.totalAmount || 0).toLocaleString('en-IN')}</span>
+                    <span className="font-mono font-bold text-aura-gold">₹{receiptGroup.total.toLocaleString('en-IN')}</span>
                     <div className="flex items-center space-x-1 text-xs text-aura-gold group-hover:underline font-semibold">
                       <span>View Receipt</span>
                       <ChevronRight className="w-4 h-4" />
@@ -129,8 +169,8 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                   </div>
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
 
         {/* Digital Receipt Modal */}
@@ -143,14 +183,10 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
 
               <div className="text-center space-y-1 border-b border-gray-200 pb-3">
                 <h3 className="font-serif font-black text-lg text-gray-900 tracking-wider">AURA GASTRONOMY</h3>
-                <p className="text-[10px] text-gray-500 font-sans">Digital Order Receipt</p>
+                <p className="text-[10px] text-gray-500 font-sans">Combined Dining Session Receipt</p>
               </div>
 
               <div className="space-y-1 bg-gray-50 p-3 rounded-xl text-[11px] border border-gray-200">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Order ID:</span>
-                  <span className="font-bold">{selectedReceipt.orderId || selectedReceipt._id}</span>
-                </div>
                 {selectedReceipt.invoiceNumber && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Invoice #:</span>
@@ -158,26 +194,34 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                   </div>
                 )}
                 <div className="flex justify-between">
+                  <span className="text-gray-500">Order ID(s):</span>
+                  <span className="font-bold text-[10px]">{selectedReceipt.allOrderIds?.join(', ')}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-500">Table #:</span>
-                  <span className="font-bold">Table {selectedReceipt.tableId || selectedReceipt.tableNumber || '5'}</span>
+                  <span className="font-bold">Table {selectedReceipt.tableId || '7'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Date:</span>
                   <span>{new Date(selectedReceipt.createdAt).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Status:</span>
-                  <span className="font-bold text-emerald-700 uppercase">{selectedReceipt.paymentStatus === 'PAID' ? 'PAID & SETTLED' : 'COMPLETED'}</span>
+                  <span className="text-gray-500">Payment:</span>
+                  <span className={`font-bold uppercase ${selectedReceipt.paymentStatus === 'PAID' ? 'text-emerald-700' : 'text-amber-600 font-extrabold'}`}>
+                    {selectedReceipt.paymentStatus === 'PAID' 
+                      ? `${selectedReceipt.paymentMethod || 'CASH'} (PAID)` 
+                      : 'DINING IN PROGRESS (UNPAID)'}
+                  </span>
                 </div>
               </div>
 
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                 <div className="grid grid-cols-12 text-[10px] font-bold uppercase text-gray-500 border-b border-gray-200 pb-1">
                   <span className="col-span-7">Item</span>
                   <span className="col-span-2 text-center">Qty</span>
                   <span className="col-span-3 text-right">Price</span>
                 </div>
-                {selectedReceipt.items?.map((it: any, i: number) => (
+                {selectedReceipt.allItems?.map((it: any, i: number) => (
                   <div key={i} className="grid grid-cols-12 text-xs py-1 border-b border-gray-100">
                     <span className="col-span-7 font-medium text-gray-800">{it.name}</span>
                     <span className="col-span-2 text-center text-gray-500">{it.quantity || it.qty || 1}</span>
@@ -189,14 +233,14 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
               <div className="space-y-1 pt-2 border-t border-gray-300 text-xs">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>₹{(selectedReceipt.subtotal || selectedReceipt.total || 0).toLocaleString('en-IN')}</span>
+                  <span>₹{(selectedReceipt.subtotal || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>GST Tax</span>
                   <span>₹{(selectedReceipt.tax || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-gray-900">
-                  <span>TOTAL</span>
+                  <span>TOTAL SESSION BILL</span>
                   <span>₹{(selectedReceipt.total || 0).toLocaleString('en-IN')}</span>
                 </div>
               </div>

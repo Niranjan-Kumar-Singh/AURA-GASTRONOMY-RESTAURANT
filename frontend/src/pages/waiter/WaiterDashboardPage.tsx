@@ -16,6 +16,7 @@ interface TableState {
   orderTotal?: number;
   orderStatus?: string;
   items?: { name: string; quantity: number }[];
+  cleaningStartedAt?: string | Date;
 }
 
 interface WaiterAlert {
@@ -36,6 +37,7 @@ export const WaiterDashboardPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchTableQuery, setSearchTableQuery] = useState<string>('');
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(Date.now());
 
   const [alerts, setAlerts] = useState<WaiterAlert[]>([]);
   const [tables, setTables] = useState<TableState[]>([]);
@@ -51,6 +53,7 @@ export const WaiterDashboardPage: React.FC = () => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const prevReadyCountRef = useRef<number>(0);
+  const tableOrdersMapRef = useRef<Map<string, any[]>>(new Map());
 
   // Web Audio Chime Notification
   const playAudioChime = () => {
@@ -71,6 +74,7 @@ export const WaiterDashboardPage: React.FC = () => {
 
       osc.connect(gain);
       gain.connect(ctx.destination);
+
       osc.start();
       osc.stop(ctx.currentTime + 0.5);
     } catch (e) {
@@ -98,6 +102,7 @@ export const WaiterDashboardPage: React.FC = () => {
         }
         tableOrdersMap.get(numKey)!.push(ord);
       });
+      tableOrdersMapRef.current = tableOrdersMap;
 
       // Construct complete array of 30 tables (Table 1 through Table 30)
       const full30TableList: TableState[] = Array.from({ length: 30 }, (_, index) => {
@@ -129,11 +134,31 @@ export const WaiterDashboardPage: React.FC = () => {
           return sum + ordTotal;
         }, 0);
 
-        // Overall order status prioritization (ready > preparing > received)
+        // Overall order status prioritization (ready > preparing > served > received)
         const latestOrder = tableOrders[tableOrders.length - 1];
         let overallOrderStatus = latestOrder?.status;
-        if (tableOrders.some((o: any) => o.status === 'ready')) overallOrderStatus = 'ready';
-        else if (tableOrders.some((o: any) => o.status === 'preparing')) overallOrderStatus = 'preparing';
+        
+        const hasUnservedReadyDishes = tableOrders.some((o: any) => {
+          if (o.status === 'ready') {
+            const items = o.items || [];
+            if (items.length === 0) return true;
+            return items.some((it: any) => it.status !== 'served');
+          }
+          return (o.items || []).some((it: any) => it.status === 'ready');
+        });
+
+        const hasPreparingDishes = tableOrders.some((o: any) => {
+          if (o.status === 'preparing') return true;
+          return (o.items || []).some((it: any) => it.status === 'preparing');
+        });
+
+        if (hasUnservedReadyDishes) {
+          overallOrderStatus = 'ready';
+        } else if (hasPreparingDishes) {
+          overallOrderStatus = 'preparing';
+        } else if (tableOrders.every((o: any) => o.status === 'served' || (o.items || []).every((it: any) => it.status === 'served'))) {
+          overallOrderStatus = 'served';
+        }
 
         const isTableActive = computedStatus === 'occupied' || computedStatus === 'billing' || hasActiveOrders;
 
@@ -160,13 +185,6 @@ export const WaiterDashboardPage: React.FC = () => {
       prevReadyCountRef.current = currentReadyCount;
 
       setTables(full30TableList);
-
-      // Keep open selectedTable modal 100% in sync with live floor state
-      setSelectedTable((prevSelected) => {
-        if (!prevSelected) return null;
-        const updated = full30TableList.find((t) => t.tableNumber === prevSelected.tableNumber);
-        return updated || prevSelected;
-      });
       if (isManual) showToast('Floor status refreshed (30 Tables Active)', 'info');
     } catch (error) {
       console.error('Failed to fetch floor tables:', error);
@@ -211,10 +229,12 @@ export const WaiterDashboardPage: React.FC = () => {
 
     const tableInterval = setInterval(() => fetchFloorState(false), 3000); // 3s auto sync
     const alertInterval = setInterval(() => syncWaiterCalls(), 1500); // 1.5s live alert sync
+    const timerTickInterval = setInterval(() => setNowTimestamp(Date.now()), 1000); // 1s cleanup countdown tick
 
     return () => {
       clearInterval(tableInterval);
       clearInterval(alertInterval);
+      clearInterval(timerTickInterval);
     };
   }, []);
 
@@ -339,28 +359,39 @@ export const WaiterDashboardPage: React.FC = () => {
     try {
       const res = await orderService.settleTableBill(tableNum, selectedPaymentMethod);
       const invNum = res?.data?.invoiceNumber || 'INV-SETTLED';
-      
-      // Update table status to cleaning in backend API
-      await tableService.updateTableStatus(tableNum, 'cleaning').catch(() => {});
 
       showToast(`Bill settled via ${selectedPaymentMethod}! Invoice #${invNum} generated. Table ${tableNum} set to Cleaning.`, 'success');
       playAudioChime();
       setSelectedTable(null);
-      fetchFloorState();
+      await fetchFloorState();
     } catch (error: any) {
-      showToast('Failed to settle bill', 'error');
+      const errMsg = error?.response?.data?.message || error?.message || 'Failed to settle bill';
+      showToast(errMsg, 'error');
     } finally {
       setIsProcessingPayment(false);
     }
   };
 
-  const handleMarkServed = async (e: React.MouseEvent, orderId: string) => {
+  const handleMarkServed = async (e: React.MouseEvent, orderId: string, tableNumber?: number) => {
     e.stopPropagation();
     try {
-      await orderService.updateOrderStatus(orderId, 'served');
-      showToast(`Order #${orderId} marked SERVED to guest!`, 'success');
+      if (tableNumber) {
+        const tableOrds = tableOrdersMapRef.current.get(String(tableNumber)) || [];
+        const readyOrds = tableOrds.filter((o: any) => o.status === 'ready');
+        if (readyOrds.length > 0) {
+          await Promise.all(readyOrds.map((o: any) => orderService.updateOrderStatus(o.orderId || o._id, 'served')));
+          showToast(`All ready dishes for Table ${tableNumber} marked SERVED to guest!`, 'success');
+        } else {
+          await orderService.updateOrderStatus(orderId, 'served');
+          showToast(`Order #${orderId} marked SERVED to guest!`, 'success');
+        }
+      } else {
+        await orderService.updateOrderStatus(orderId, 'served');
+        showToast(`Order #${orderId} marked SERVED to guest!`, 'success');
+      }
+
       if (selectedTable) setSelectedTable(null);
-      fetchFloorState();
+      await fetchFloorState();
     } catch (error) {
       showToast('Failed to update order status', 'error');
     }
@@ -936,43 +967,58 @@ export const WaiterDashboardPage: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {readyToServeTables.map((tbl) => (
-                  <div key={tbl._id} className="p-5 bg-aura-obsidian border border-emerald-500/40 rounded-2xl flex flex-col justify-between space-y-4 shadow-xl">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-serif font-black text-aura-ivory text-2xl">Table {tbl.tableNumber}</span>
-                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
-                          {tbl.zone}
-                        </span>
-                      </div>
+                {readyToServeTables.map((tbl) => {
+                  const tableOrds = tableOrdersMapRef.current.get(String(tbl.tableNumber)) || [];
+                  
+                  // Extract ONLY items that are marked ready or prepared and NOT YET SERVED!
+                  const readyItems = tableOrds
+                    .flatMap((o: any) => (o.items || []).map((it: any) => ({ ...it, parentStatus: o.status })))
+                    .filter((it: any) => (it.status === 'ready' || (it.parentStatus === 'ready' && it.status !== 'served')) && it.status !== 'served');
 
-                      <p className="text-xs text-emerald-300 font-bold flex items-center space-x-1.5">
-                        <Flame className="w-4 h-4 text-emerald-400" />
-                        <span>Order #{tbl.activeOrderId} Ready to Serve</span>
-                      </p>
+                  // If all items for this table are already served, skip rendering this card
+                  if (readyItems.length === 0) return null;
 
-                      {/* Dish Items List */}
-                      {tbl.items && tbl.items.length > 0 && (
+                  const displayOrderId = tbl.activeOrderId || (tableOrds.length > 0 ? tableOrds[tableOrds.length - 1].orderId : 'ORD-101');
+
+                  return (
+                    <div key={tbl._id} className="p-5 bg-aura-obsidian border border-emerald-500/40 rounded-2xl flex flex-col justify-between space-y-4 shadow-xl">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="font-serif font-black text-aura-ivory text-2xl">Table {tbl.tableNumber}</span>
+                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+                            {tbl.zone}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-emerald-300 font-bold flex items-center space-x-1.5">
+                          <Flame className="w-4 h-4 text-emerald-400" />
+                          <span>Order #{displayOrderId} ({readyItems.length} New Ready Dishes)</span>
+                        </p>
+
+                        {/* Dish Items List */}
                         <div className="space-y-1 bg-aura-container/60 p-2.5 rounded-xl border border-aura-border/40 text-xs">
-                          <span className="text-[10px] font-mono text-aura-slate uppercase block">Ready Dishes:</span>
-                          {tbl.items.map((item, idx) => (
-                            <div key={idx} className="flex justify-between text-aura-ivory font-bold">
-                              <span>{item.quantity}x {item.name}</span>
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-aura-slate block mb-1">
+                            Dishes Ready For Pickup ({readyItems.length}):
+                          </span>
+                          {readyItems.map((it: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-center py-1 border-b border-aura-border/20 last:border-0 font-medium text-aura-ivory">
+                              <span>{it.quantity || 1}x {it.name}</span>
+                              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase">Ready</span>
                             </div>
                           ))}
                         </div>
-                      )}
-                    </div>
+                      </div>
 
-                    <button
-                      onClick={(e) => handleMarkServed(e, tbl.activeOrderId!)}
-                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center justify-center space-x-1.5"
-                    >
-                      <Check className="w-4 h-4 font-bold" />
-                      <span>Confirm Dish Served to Guest</span>
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        onClick={(e) => handleMarkServed(e, displayOrderId!, tbl.tableNumber)}
+                        className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center justify-center space-x-1.5"
+                      >
+                        <Check className="w-4 h-4 font-bold" />
+                        <span>Confirm {readyItems.length} Dish(es) Served to Guest</span>
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -37,6 +37,7 @@ export const OrderTrackingPage: React.FC = () => {
   const { items, clearCart } = useCartStore();
 
   const [orders, setOrders] = useState<OrderData[]>([]);
+  const [cancelledOrders, setCancelledOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [nowTimestamp, setNowTimestamp] = useState(Date.now());
 
@@ -54,9 +55,13 @@ export const OrderTrackingPage: React.FC = () => {
       if (Array.isArray(data)) {
         // Filter active session orders (unpaid or newly placed)
         const activeSessionOrders = data.filter(
-          (ord: OrderData) => ord.status !== 'cancelled' && ord.paymentStatus !== 'PAID'
+          (ord: any) => ord.status !== 'cancelled' && ord.paymentStatus !== 'PAID'
+        );
+        const recentlyCancelled = data.filter(
+          (ord: any) => ord.status === 'cancelled'
         );
         setOrders(activeSessionOrders);
+        setCancelledOrders(recentlyCancelled);
       }
     } catch (err) {
       console.error('Failed to fetch table orders:', err);
@@ -92,7 +97,7 @@ export const OrderTrackingPage: React.FC = () => {
       case 'received': return 0;
       case 'preparing': return 1;
       case 'ready': return 2;
-      case 'completed': return 3;
+      case 'completed':
       case 'served': return 3;
       default: return 0;
     }
@@ -167,6 +172,46 @@ export const OrderTrackingPage: React.FC = () => {
       </header>
 
       <div className="p-4 max-w-3xl mx-auto space-y-6 pt-6">
+        {/* Cancelled Order Notice Banner */}
+        {cancelledOrders.length > 0 && (
+          <div className="p-5 bg-gradient-to-r from-red-950/80 to-amber-950/80 border border-red-500/50 rounded-3xl shadow-2xl space-y-3 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-red-500/20 border border-red-500/40 rounded-xl text-red-400 font-bold text-xs">
+                  ⚠️ Notice
+                </div>
+                <span className="font-serif font-bold text-aura-ivory text-sm">Order Cancelled Notice</span>
+              </div>
+              <button
+                onClick={() => setCancelledOrders([])}
+                className="text-aura-slate hover:text-aura-ivory text-[11px] px-2.5 py-1 rounded-lg bg-aura-obsidian/60 border border-aura-border/60"
+              >
+                Dismiss
+              </button>
+            </div>
+
+            {cancelledOrders.map((cOrd: any) => (
+              <div key={cOrd._id || cOrd.orderId} className="p-3 bg-aura-obsidian/70 border border-red-500/30 rounded-2xl text-xs space-y-1">
+                <div className="flex justify-between font-bold text-red-300">
+                  <span>Order #{cOrd.orderId}</span>
+                  <span className="uppercase text-[10px] bg-red-500/20 px-2 py-0.5 rounded border border-red-500/40 font-mono">Cancelled</span>
+                </div>
+                <p className="text-aura-slate text-[11px]">Reason: <span className="text-aura-ivory font-medium">{cOrd.cancelReason || 'Kitchen timeout / Table issue'}</span></p>
+              </div>
+            ))}
+
+            <div className="pt-2 flex items-center justify-between border-t border-red-500/20 text-xs">
+              <p className="text-aura-slate text-[11px]">You can place new items anytime.</p>
+              <button
+                onClick={() => navigate(`/table/${tableId}/menu`)}
+                className="px-4 py-2 bg-aura-gold text-aura-obsidian font-bold text-xs rounded-xl hover:bg-aura-gold-hover transition-all flex items-center space-x-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Order New Dishes</span>
+              </button>
+            </div>
+          </div>
+        )}
         {/* Loading State */}
         {isLoading ? (
           <div className="py-16 text-center space-y-4 bg-aura-container/50 rounded-3xl border border-aura-border p-8">

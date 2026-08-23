@@ -6,6 +6,12 @@ const orderItemSchema = new mongoose.Schema({
   quantity: { type: Number, required: true },
   price: { type: Number, required: true },
   notes: { type: String },
+  status: {
+    type: String,
+    enum: ['received', 'preparing', 'ready', 'served'],
+    default: 'received'
+  },
+  isPrepared: { type: Boolean, default: false },
   customizations: [{
     groupId: String,
     groupTitle: String,
@@ -45,7 +51,10 @@ const orderSchema = new mongoose.Schema({
   invoiceNumber: { type: String },
   refundReason: { type: String },
   refundedAt: { type: Date },
-  refundedBy: { type: String }
+  refundedBy: { type: String },
+  cancelReason: { type: String },
+  cancelledAt: { type: Date },
+  cancelledBy: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

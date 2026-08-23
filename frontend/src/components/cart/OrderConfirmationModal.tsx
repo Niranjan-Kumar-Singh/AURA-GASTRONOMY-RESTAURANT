@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CartItem, Coupon } from '../../types/menu.types';
-import { Utensils, ShieldCheck, X, Clock } from 'lucide-react';
+import { Utensils, ShieldCheck, X, Clock, Loader2 } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 interface OrderConfirmationModalProps {
   tableId: string;
@@ -12,7 +13,7 @@ interface OrderConfirmationModalProps {
   discount: number;
   gstAmount: number;
   grandTotal: number;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void> | void;
   onCancel: () => void;
 }
 
@@ -28,15 +29,30 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useBodyScrollLock(isOpen);
+  useBackHandler(isOpen, onCancel);
+
   if (!isOpen) return null;
 
+  const handleConfirmClick = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-aura-container border border-aura-gold/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200">
         <button
           onClick={onCancel}
-          className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-aura-ivory rounded-full"
+          disabled={isSubmitting}
+          className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-aura-ivory rounded-full disabled:opacity-40"
         >
           <X className="w-5 h-5" />
         </button>
@@ -47,12 +63,12 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           </div>
           <div>
             <h3 className="font-serif text-lg font-bold text-aura-ivory">Confirm Dining Order</h3>
-            <p className="text-xs text-aura-gold/90 font-semibold">Direct Kitchen Dispatch</p>
+            <p className="text-xs text-aura-gold/90 font-semibold">Table {tableId} • Direct Kitchen Dispatch</p>
           </div>
         </div>
 
         {/* Order Items Preview */}
-        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
           {items.map((item, idx) => (
             <div key={idx} className="p-2.5 bg-aura-obsidian border border-aura-border/40 rounded-xl flex items-center justify-between text-xs">
               <div>
@@ -99,17 +115,28 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
         <div className="flex items-center space-x-3 pt-2">
           <button
             onClick={onCancel}
-            className="w-1/3 py-3 bg-aura-obsidian border border-aura-border text-aura-slate hover:text-aura-ivory rounded-2xl text-xs font-bold transition-all"
+            disabled={isSubmitting}
+            className="w-1/3 py-3 bg-aura-obsidian border border-aura-border text-aura-slate hover:text-aura-ivory rounded-2xl text-xs font-bold transition-all disabled:opacity-40"
           >
             Cancel
           </button>
 
           <button
-            onClick={onConfirm}
-            className="flex-1 py-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl flex items-center justify-center space-x-2"
+            onClick={handleConfirmClick}
+            disabled={isSubmitting}
+            className="flex-1 py-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl flex items-center justify-center space-x-2 disabled:opacity-60 cursor-pointer"
           >
-            <ShieldCheck className="w-4 h-4" />
-            <span>CONFIRM ORDER</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-aura-obsidian" />
+                <span>Sending to Kitchen...</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-4 h-4" />
+                <span>CONFIRM ORDER</span>
+              </>
+            )}
           </button>
         </div>
       </div>
