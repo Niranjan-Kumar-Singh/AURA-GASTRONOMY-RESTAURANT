@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CartItem, MenuItem } from '../types/menu.types';
-import axios from 'axios';
+import { apiClient } from '../services/api-client';
 
 interface CartState {
   items: CartItem[];
@@ -21,11 +21,6 @@ interface CartState {
   getItemCount: () => number;
 }
 
-const getApiBaseUrl = () => {
-  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  return `http://${host}:5000/api`;
-};
-
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
@@ -40,7 +35,7 @@ export const useCartStore = create<CartState>()(
       fetchServerCart: async (tableId: string) => {
         try {
           const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || '1';
-          const res = await axios.get(`${getApiBaseUrl()}/tables/table-number/${cleanTableNum}/cart`);
+          const res = await apiClient.get(`/tables/table-number/${cleanTableNum}/cart`);
           if (res.data && Array.isArray(res.data.data)) {
             set({ items: res.data.data, tableId });
           }
@@ -52,7 +47,7 @@ export const useCartStore = create<CartState>()(
       syncWithServer: async (tableId: string, items: CartItem[]) => {
         try {
           const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || '1';
-          await axios.put(`${getApiBaseUrl()}/tables/table-number/${cleanTableNum}/cart`, { items });
+          await apiClient.put(`/tables/table-number/${cleanTableNum}/cart`, { items });
         } catch (e) {
           console.error('Failed to sync cart to server:', e);
         }
@@ -72,10 +67,13 @@ export const useCartStore = create<CartState>()(
             updatedItems[existingIndex] = {
               ...existingItem,
               quantity: existingItem.quantity + quantity,
-              specialNotes: specialNotes || existingItem.specialNotes
+              specialNotes: specialNotes || existingItem.specialNotes,
             };
           } else {
-            updatedItems = [...state.items, { menuItem, quantity, specialNotes }];
+            updatedItems = [
+              ...state.items,
+              { menuItem, quantity, specialNotes },
+            ];
           }
 
           if (state.tableId) {
@@ -88,10 +86,14 @@ export const useCartStore = create<CartState>()(
 
       removeItem: (menuItemId) => {
         set((state) => {
-          const updatedItems = state.items.filter((item) => item.menuItem.id !== menuItemId);
+          const updatedItems = state.items.filter(
+            (item) => item.menuItem.id !== menuItemId
+          );
+
           if (state.tableId) {
             get().syncWithServer(state.tableId, updatedItems);
           }
+
           return { items: updatedItems };
         });
       },
@@ -104,11 +106,15 @@ export const useCartStore = create<CartState>()(
 
         set((state) => {
           const updatedItems = state.items.map((item) =>
-            item.menuItem.id === menuItemId ? { ...item, quantity } : item
+            item.menuItem.id === menuItemId
+              ? { ...item, quantity }
+              : item
           );
+
           if (state.tableId) {
             get().syncWithServer(state.tableId, updatedItems);
           }
+
           return { items: updatedItems };
         });
       },
@@ -116,11 +122,15 @@ export const useCartStore = create<CartState>()(
       updateSpecialNotes: (menuItemId, notes) => {
         set((state) => {
           const updatedItems = state.items.map((item) =>
-            item.menuItem.id === menuItemId ? { ...item, specialNotes: notes } : item
+            item.menuItem.id === menuItemId
+              ? { ...item, specialNotes: notes }
+              : item
           );
+
           if (state.tableId) {
             get().syncWithServer(state.tableId, updatedItems);
           }
+
           return { items: updatedItems };
         });
       },
@@ -135,30 +145,37 @@ export const useCartStore = create<CartState>()(
 
       getSubtotal: () => {
         return get().items.reduce(
-          (sum, item) => sum + Number(item.menuItem.price) * item.quantity,
+          (acc, item) => acc + item.menuItem.price * item.quantity,
           0
         );
       },
 
       getTaxAmount: () => {
-        return get().getSubtotal() * 0.05; // 5% GST
+        // 5% GST on Subtotal
+        return get().getSubtotal() * 0.05;
       },
 
       getServiceCharge: () => {
-        return get().getSubtotal() * 0.05; // 5% Service Charge
+        // Optional 5% service charge
+        return get().getSubtotal() * 0.05;
       },
 
       getGrandTotal: () => {
         const subtotal = get().getSubtotal();
-        return subtotal + get().getTaxAmount();
+        const gst = get().getTaxAmount();
+        return subtotal + gst;
       },
 
       getItemCount: () => {
-        return get().items.reduce((count, item) => count + item.quantity, 0);
+        return get().items.reduce((acc, item) => acc + item.quantity, 0);
       },
     }),
     {
-      name: 'aura-table-cart',
+      name: 'aura_cart_storage',
+      partialize: (state) => ({
+        items: state.items,
+        tableId: state.tableId,
+      }),
     }
   )
 );
