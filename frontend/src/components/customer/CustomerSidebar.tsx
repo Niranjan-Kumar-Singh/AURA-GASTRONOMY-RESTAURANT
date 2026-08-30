@@ -211,10 +211,10 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
             </button>
 
             <button
-              onClick={() => handleCallWaiter('General Table Assistance')}
+              onClick={() => handleCallWaiter('Call Waiter to Table')}
               className="p-2 bg-aura-obsidian hover:bg-aura-gold/10 border border-aura-border/60 hover:border-aura-gold/40 text-aura-slate hover:text-aura-gold rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
             >
-              <Award className="w-3 h-3 text-aura-gold" />
+              <Bell className="w-3 h-3 text-aura-gold" />
               <span>Call Waiter</span>
             </button>
           </div>

@@ -42,9 +42,9 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
 
   const options = [
     { label: 'Request Final Bill & Checkout', reason: 'Request Final Bill / Settlement', icon: <Receipt className="w-4.5 h-4.5 text-emerald-400" />, isPrimary: true },
+    { label: 'Call Waiter to Table', reason: 'Call Waiter to Table', icon: <Bell className="w-4.5 h-4.5 text-aura-gold" /> },
     { label: 'Water Refill', reason: 'Water Refill Request', icon: <Droplet className="w-4.5 h-4.5 text-sky-400" /> },
     { label: 'Extra Cutlery & Napkins', reason: 'Cutlery & Napkins Request', icon: <UtensilsCrossed className="w-4.5 h-4.5 text-amber-400" /> },
-    { label: 'General Assistance', reason: 'General Table Assistance', icon: <Bell className="w-4.5 h-4.5 text-aura-gold" /> },
     { label: 'Speak to Floor Manager', reason: 'Request Manager Assistance', icon: <UserCheck className="w-4.5 h-4.5 text-purple-400" /> },
   ];
 
@@ -57,7 +57,7 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
         title="Call Waiter"
       >
         <Bell className="w-5 h-5 animate-pulse" />
-        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider">Call Staff</span>
+        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider">Call Waiter</span>
       </button>
 
       {/* Modal Dialog */}

@@ -379,7 +379,7 @@ router.post('/call-waiter', async (req, res) => {
     const newAlert = {
       id: Date.now(),
       tableId: cleanTableNum,
-      reason: reason || 'General Table Assistance',
+      reason: reason || 'Call Waiter to Table',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'PENDING',
     };
