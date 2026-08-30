@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, X, MessageSquare, ExternalLink, CheckCircle2, Heart, Award } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useBackHandler } from '../../hooks/useBackHandler';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface CustomerFeedbackModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
   onClose,
   orderId = 'ORD-8901',
 }) => {
+  useBodyScrollLock(isOpen);
   useBackHandler(isOpen, onClose);
   const { showToast } = useToast();
   const [rating, setRating] = useState<number>(5);

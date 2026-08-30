@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AlertTriangle, X, Check, Ban } from 'lucide-react';
 import { orderService } from '../../services/order.service';
 import { useToast } from '../feedback/ToastContainer';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface OrderCancelModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  useBodyScrollLock(isOpen);
   const { showToast } = useToast();
   const [selectedReason, setSelectedReason] = useState<string>(PRESET_REASONS[0]);
   const [customReason, setCustomReason] = useState<string>('');

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Bell, Droplet, UtensilsCrossed, Receipt, CheckCircle, X, ShieldAlert, UserCheck, Coffee } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface CallWaiterButtonProps {
   tableId?: string;
@@ -9,6 +10,7 @@ interface CallWaiterButtonProps {
 
 export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '14' }) => {
   const [isOpen, setIsOpen] = useState(false);
+  useBodyScrollLock(isOpen);
   const [sentReason, setSentReason] = useState<string | null>(null);
   const { showToast } = useToast();
 
