@@ -191,11 +191,11 @@ export const KitchenDisplayPage: React.FC = () => {
         {/* Station Identity Header */}
         <div className="p-5 border-b border-aura-border/60 space-y-1">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-aura-gold/10 border border-aura-gold/30 rounded-xl">
-              <ChefHat className="w-6 h-6 text-aura-gold" />
+            <div className="p-2.5 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-xl">
+              <ChefHat className="w-6 h-6 text-[#38BDF8]" />
             </div>
             <div>
-              <h1 className="font-serif text-base font-bold text-aura-ivory leading-tight tracking-wide">
+              <h1 className="font-serif text-base font-bold text-white leading-tight tracking-wide">
                 KITCHEN DISPLAY
               </h1>
               <div className="flex items-center space-x-1.5 mt-0.5">
@@ -207,7 +207,7 @@ export const KitchenDisplayPage: React.FC = () => {
 
           {/* Live Clock */}
           <div className="mt-3 p-3 bg-aura-obsidian/60 rounded-xl border border-aura-border/50 text-center">
-            <p className="font-mono text-xl font-black text-aura-gold tracking-widest">{timeStr}</p>
+            <p className="font-mono text-xl font-black text-[#38BDF8] tracking-widest">{timeStr}</p>
             <p className="text-[10px] text-aura-slate font-mono mt-0.5">{dateStr}</p>
           </div>
         </div>
@@ -220,8 +220,8 @@ export const KitchenDisplayPage: React.FC = () => {
             <div className="bg-aura-obsidian/60 rounded-xl p-3 border border-aura-border/50 space-y-1">
               <span className="text-[9px] font-mono text-aura-slate uppercase block">Queue</span>
               <div className="flex items-center justify-between">
-                <span className="font-serif text-xl font-black text-aura-ivory">{activeCount}</span>
-                <Activity className="w-4 h-4 text-aura-gold" />
+                <span className="font-serif text-xl font-black text-white">{activeCount}</span>
+                <Activity className="w-4 h-4 text-[#38BDF8]" />
               </div>
             </div>
 
@@ -261,8 +261,8 @@ export const KitchenDisplayPage: React.FC = () => {
             onClick={() => setFilterStatus('ALL')}
             className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left border flex items-center justify-between ${
               filterStatus === 'ALL'
-                ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-lg'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-aura-gold/50'
+                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
+                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
             }`}
           >
             <span>All Active Queue</span>
@@ -324,9 +324,9 @@ export const KitchenDisplayPage: React.FC = () => {
 
           <button
             onClick={() => fetchActiveOrders(true)}
-            className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border hover:border-aura-gold text-aura-slate hover:text-aura-gold rounded-xl transition-all flex items-center space-x-2 text-xs font-bold"
+            className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border hover:border-[#38BDF8] text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all flex items-center space-x-2 text-xs font-bold cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-aura-gold' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#38BDF8]' : ''}`} />
             <span>Sync Floor Plan</span>
           </button>
         </div>
@@ -360,10 +360,10 @@ export const KitchenDisplayPage: React.FC = () => {
           </div>
         ) : filteredTickets.length === 0 ? (
           <div className="py-20 text-center space-y-4 bg-aura-container/40 rounded-3xl border border-aura-border/60 p-8 max-w-md mx-auto shadow-2xl">
-            <ChefHat className="w-12 h-12 text-aura-gold/40 mx-auto" />
-            <h2 className="font-serif text-xl font-bold text-aura-ivory">Kitchen Station Clear</h2>
+            <ChefHat className="w-12 h-12 text-[#38BDF8]/40 mx-auto" />
+            <h2 className="font-serif text-xl font-bold text-white">Kitchen Station Clear</h2>
             <p className="text-xs text-aura-slate leading-relaxed">
-              No pending cooking tickets in the <span className="text-aura-gold font-bold uppercase">{filterStatus}</span> queue. All dishes dispatched!
+              No pending cooking tickets in the <span className="text-[#38BDF8] font-bold uppercase">{filterStatus}</span> queue. All dishes dispatched!
             </p>
           </div>
         ) : (
@@ -387,7 +387,7 @@ export const KitchenDisplayPage: React.FC = () => {
                       ? isAllChecked
                         ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-aura-container/95'
                         : 'border-amber-500/60 ring-1 ring-amber-500/20'
-                      : 'border-aura-border hover:border-aura-gold/60'
+                      : 'border-aura-border hover:border-[#38BDF8]/60'
                   }`}
                 >
                   <div className="space-y-4">
@@ -395,7 +395,7 @@ export const KitchenDisplayPage: React.FC = () => {
                     <div className="flex items-center justify-between border-b border-aura-border/60 pb-3.5">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-serif text-2xl font-black text-aura-ivory">
+                          <span className="font-serif text-2xl font-black text-white">
                             Table {ticket.tableId}
                           </span>
                           <span
@@ -408,7 +408,7 @@ export const KitchenDisplayPage: React.FC = () => {
                             {ticket.status === 'received' ? 'NEW ORDER' : 'IN PREP'}
                           </span>
                         </div>
-                        <span className="font-mono text-[11px] font-bold text-aura-gold">
+                        <span className="font-mono text-[11px] font-bold text-[#38BDF8]">
                           Order #{ticket.id}
                         </span>
                       </div>
@@ -458,12 +458,12 @@ export const KitchenDisplayPage: React.FC = () => {
                                 ? 'bg-aura-obsidian/40 border-aura-border/40 text-aura-ivory cursor-not-allowed opacity-80'
                                 : isDone
                                 ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200 line-through cursor-pointer'
-                                : 'bg-aura-obsidian border-aura-border/70 text-aura-ivory hover:border-aura-gold/60 cursor-pointer'
+                                : 'bg-aura-obsidian border-aura-border/70 text-aura-ivory hover:border-[#38BDF8]/60 cursor-pointer'
                             }`}
                           >
                             <div className="space-y-0.5 flex-1">
                               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                                <span className="w-5 h-5 bg-aura-gold/20 text-aura-gold text-xs font-bold rounded-lg flex items-center justify-center font-mono">
+                                <span className="w-5 h-5 bg-[#38BDF8]/20 text-[#38BDF8] text-xs font-bold rounded-lg flex items-center justify-center font-mono">
                                   {item.quantity}x
                                 </span>
                                 <span className="font-bold text-xs leading-snug">{item.name}</span>
@@ -485,7 +485,7 @@ export const KitchenDisplayPage: React.FC = () => {
                               <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                             ) : (
                               ticket.status !== 'received' && (
-                                <button className="text-aura-slate hover:text-aura-gold transition-colors mt-0.5">
+                                <button className="text-aura-slate hover:text-[#38BDF8] transition-colors mt-0.5">
                                   {isDone ? (
                                     <CheckSquare className="w-4 h-4 text-emerald-400" />
                                   ) : (
@@ -506,7 +506,7 @@ export const KitchenDisplayPage: React.FC = () => {
                     {ticket.status === 'received' && (
                       <button
                         onClick={() => handleAcceptOrder(ticket.id)}
-                        className="w-full py-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-aura-gold/10 cursor-pointer"
+                        className="w-full py-3.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-[#0EA5E9]/10 cursor-pointer border border-[#7DD3FC]/50"
                       >
                         <Flame className="w-4 h-4" />
                         <span>Accept &amp; Start Cooking</span>

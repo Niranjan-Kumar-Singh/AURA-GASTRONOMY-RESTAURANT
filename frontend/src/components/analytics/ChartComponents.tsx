@@ -29,14 +29,14 @@ export const RevenueAreaChart: React.FC = () => {
           const heightPct = (pt.val / 4500) * 100;
           return (
             <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-              <div className="text-[9px] font-bold text-aura-gold opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="text-[9px] font-bold text-[#38BDF8] opacity-0 group-hover:opacity-100 transition-opacity">
                 £{pt.val}
               </div>
               <div
                 style={{ height: `${heightPct}%` }}
-                className="w-full max-w-[28px] bg-gradient-to-t from-aura-gold/20 to-aura-gold rounded-t-lg transition-all duration-500 group-hover:brightness-125 relative"
+                className="w-full max-w-[28px] bg-gradient-to-t from-[#0EA5E9]/20 to-[#38BDF8] rounded-t-lg transition-all duration-500 group-hover:brightness-125 relative"
               >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-aura-gold shadow-lg shadow-aura-gold" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-[#38BDF8] shadow-lg shadow-[#38BDF8]/50" />
               </div>
               <span className="text-[9px] text-aura-slate">{pt.time}</span>
             </div>
@@ -82,7 +82,7 @@ export const PeakHoursBarChart: React.FC = () => {
                 className={`w-full max-w-[24px] rounded-t-lg transition-all duration-500 ${
                   h.peak
                     ? 'bg-gradient-to-t from-amber-500/30 to-amber-400 shadow-md shadow-amber-500/20'
-                    : 'bg-aura-obsidian border border-aura-border hover:border-aura-gold'
+                    : 'bg-aura-obsidian border border-aura-border hover:border-[#38BDF8]'
                 }`}
               />
               <span className="text-[9px] text-aura-slate">{h.hour}</span>
@@ -97,7 +97,7 @@ export const PeakHoursBarChart: React.FC = () => {
 // 3. Category Revenue Donut Chart
 export const CategoryDonutChart: React.FC = () => {
   const categories = [
-    { name: 'Chef Specials', pct: 35, color: 'bg-aura-gold' },
+    { name: 'Chef Specials', pct: 35, color: 'bg-[#38BDF8]' },
     { name: 'Artisanal Cocktails', pct: 25, color: 'bg-emerald-400' },
     { name: 'Fine Wines', pct: 20, color: 'bg-purple-400' },
     { name: 'Pastry & Desserts', pct: 20, color: 'bg-blue-400' }
@@ -109,7 +109,7 @@ export const CategoryDonutChart: React.FC = () => {
 
       <div className="flex items-center space-x-6 py-2">
         {/* Simple Ring Representation */}
-        <div className="relative w-28 h-28 rounded-full border-8 border-aura-gold/80 flex items-center justify-center shadow-inner">
+        <div className="relative w-28 h-28 rounded-full border-8 border-[#38BDF8]/80 flex items-center justify-center shadow-inner">
           <div className="text-center">
             <span className="font-serif text-lg font-bold text-aura-ivory">100%</span>
             <span className="text-[9px] text-aura-slate block">Category Mix</span>

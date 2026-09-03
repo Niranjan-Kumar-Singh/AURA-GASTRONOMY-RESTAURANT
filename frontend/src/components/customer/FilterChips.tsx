@@ -12,39 +12,37 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onTog
   const isSelected = (filter: ActiveFilter) => selectedFilters.includes(filter);
 
   const chips: { id: ActiveFilter; label: string; icon?: React.ReactNode; activeBg: string }[] = [
-    { id: 'ALL', label: 'All Items', activeBg: 'bg-aura-gold text-aura-obsidian' },
-    { id: 'VEG', label: 'Veg', icon: <Leaf className="w-3.5 h-3.5 text-emerald-400" />, activeBg: 'bg-emerald-500 text-aura-obsidian' },
-    { id: 'NON_VEG', label: 'Non-Veg', activeBg: 'bg-rose-500 text-white' },
-    { id: 'JAIN', label: 'Jain Friendly', activeBg: 'bg-purple-500 text-white' },
-    { id: 'GF', label: 'Gluten-Free', icon: <Wheat className="w-3.5 h-3.5 text-amber-400" />, activeBg: 'bg-amber-500 text-aura-obsidian' },
-    { id: 'SPECIAL', label: "Chef's Special", icon: <Sparkles className="w-3.5 h-3.5 text-aura-gold" />, activeBg: 'bg-aura-gold text-aura-obsidian' },
-    { id: 'BESTSELLER', label: 'Best Sellers', icon: <Award className="w-3.5 h-3.5 text-amber-400" />, activeBg: 'bg-amber-500 text-aura-obsidian' },
-    { id: 'UNDER300', label: 'Under ₹300', icon: <Tag className="w-3.5 h-3.5 text-emerald-400" />, activeBg: 'bg-emerald-500 text-aura-obsidian' },
-    { id: 'SPICY', label: 'Spicy Delights', icon: <Flame className="w-3.5 h-3.5 text-rose-400" />, activeBg: 'bg-rose-500 text-white' },
+    { id: 'ALL', label: 'All Items', activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] shadow-[0_0_15px_rgba(56,189,248,0.35)] font-extrabold scale-[1.02]' },
+    { id: 'VEG', label: 'Veg', icon: <Leaf className="w-3.5 h-3.5 text-emerald-400" />, activeBg: 'bg-[#062C22] border-2 border-emerald-500 text-emerald-300 font-bold scale-[1.02]' },
+    { id: 'NON_VEG', label: 'Non-Veg', activeBg: 'bg-[#350A14] border-2 border-rose-500 text-rose-300 font-bold scale-[1.02]' },
+    { id: 'JAIN', label: 'Jain Friendly', activeBg: 'bg-[#210D35] border-2 border-purple-500 text-purple-300 font-bold scale-[1.02]' },
+    { id: 'GF', label: 'Gluten-Free', icon: <Wheat className="w-3.5 h-3.5 text-[#38BDF8]" />, activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] font-bold scale-[1.02]' },
+    { id: 'SPECIAL', label: "Chef's Special", icon: <Sparkles className="w-3.5 h-3.5 text-[#38BDF8]" />, activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] font-bold scale-[1.02]' },
+    { id: 'BESTSELLER', label: 'Best Sellers', icon: <Award className="w-3.5 h-3.5 text-[#38BDF8]" />, activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] font-bold scale-[1.02]' },
+    { id: 'UNDER300', label: 'Under ₹300', icon: <Tag className="w-3.5 h-3.5 text-emerald-400" />, activeBg: 'bg-[#062C22] border-2 border-emerald-500 text-emerald-300 font-bold scale-[1.02]' },
+    { id: 'SPICY', label: 'Spicy Delights', icon: <Flame className="w-3.5 h-3.5 text-rose-400" />, activeBg: 'bg-[#350A14] border-2 border-rose-500 text-rose-300 font-bold scale-[1.02]' },
   ];
 
   return (
-    <div className="px-4 max-w-7xl mx-auto my-2">
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs no-scrollbar">
-        {chips.map((chip) => {
-          const active = isSelected(chip.id);
+    <div className="flex items-center space-x-2.5 overflow-x-auto px-1 py-1 text-xs no-scrollbar select-none scroll-smooth">
+      {chips.map((chip) => {
+        const active = isSelected(chip.id);
 
-          return (
-            <button
-              key={chip.id}
-              onClick={() => onToggleFilter(chip.id)}
-              className={`px-3.5 py-1.5 rounded-xl font-semibold flex items-center space-x-1.5 transition-all whitespace-nowrap border shadow-sm ${
-                active
-                  ? `${chip.activeBg} font-bold border-transparent scale-105`
-                  : 'bg-aura-container text-aura-slate border-aura-border hover:border-aura-gold/50'
-              }`}
-            >
-              {chip.icon && <span>{chip.icon}</span>}
-              <span>{chip.label}</span>
-            </button>
-          );
-        })}
-      </div>
+        return (
+          <button
+            key={chip.id}
+            onClick={() => onToggleFilter(chip.id)}
+            className={`px-3.5 py-1.5 rounded-xl font-semibold flex items-center space-x-1.5 transition-all whitespace-nowrap border cursor-pointer shrink-0 ${
+              active
+                ? chip.activeBg
+                : 'bg-[#161A28]/80 text-slate-300 border-[#38BDF8]/20 hover:border-[#38BDF8]/50 hover:text-white hover:scale-[1.01]'
+            }`}
+          >
+            {chip.icon && <span>{chip.icon}</span>}
+            <span>{chip.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 };

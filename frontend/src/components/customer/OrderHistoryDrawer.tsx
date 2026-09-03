@@ -88,7 +88,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
 
         <div className="p-6 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
           {loading ? (
-            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-aura-gold" /></div>
+            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#38BDF8]" /></div>
           ) : orders.length === 0 ? (
             <div className="text-center py-20 text-aura-slate text-sm">No past orders found.</div>
           ) : (() => {
@@ -138,31 +138,31 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                 <div 
                   key={receiptGroup.groupKey} 
                   onClick={() => setSelectedReceipt(receiptGroup)}
-                  className="p-5 rounded-2xl bg-aura-container border border-aura-border hover:border-aura-gold/40 transition-all group cursor-pointer"
+                  className="p-5 rounded-2xl bg-aura-container border border-[#38BDF8]/20 hover:border-[#38BDF8]/50 transition-all group cursor-pointer shadow-lg"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-2">
-                      <CalendarClock className="w-4 h-4 text-aura-gold" />
-                      <span className="text-xs font-bold text-aura-ivory">{new Date(receiptGroup.createdAt).toLocaleDateString()}</span>
+                      <CalendarClock className="w-4 h-4 text-[#38BDF8]" />
+                      <span className="text-xs font-bold text-white">{new Date(receiptGroup.createdAt).toLocaleDateString()}</span>
                     </div>
                     <span className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full border ${badge.style}`}>
                       {badge.label}
                     </span>
                   </div>
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-aura-obsidian flex items-center justify-center shrink-0 border border-aura-border">
+                    <div className="w-12 h-12 rounded-xl bg-[#090A0F] flex items-center justify-center shrink-0 border border-[#38BDF8]/20">
                       <Utensils className="w-5 h-5 text-aura-slate" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-aura-ivory group-hover:text-aura-gold transition-colors">{displayTitle}</p>
+                      <p className="text-sm font-bold text-white group-hover:text-[#38BDF8] transition-colors">{displayTitle}</p>
                       <p className="text-xs text-aura-slate line-clamp-1">
                         {isMultiOrder ? `${receiptGroup.ordersCount} Combined Orders` : `1 Order`} • {receiptGroup.allItems.length} Recipe Item(s)
                       </p>
                     </div>
                   </div>
-                  <div className="pt-3 border-t border-aura-border flex items-center justify-between">
-                    <span className="font-mono font-bold text-aura-gold">₹{receiptGroup.total.toLocaleString('en-IN')}</span>
-                    <div className="flex items-center space-x-1 text-xs text-aura-gold group-hover:underline font-semibold">
+                  <div className="pt-3 border-t border-[#38BDF8]/20 flex items-center justify-between">
+                    <span className="font-mono font-bold text-[#38BDF8]">₹{receiptGroup.total.toLocaleString('en-IN')}</span>
+                    <div className="flex items-center space-x-1 text-xs text-[#38BDF8] group-hover:underline font-semibold">
                       <span>View Receipt</span>
                       <ChevronRight className="w-4 h-4" />
                     </div>

@@ -33,12 +33,12 @@ const ToastViewport: React.FC<{
               ? 'bg-emerald-950/95 border-emerald-500/40 text-emerald-300'
               : toast.type === 'error'
               ? 'bg-rose-950/95 border-rose-500/40 text-rose-300'
-              : 'bg-aura-container/95 border-aura-gold/40 text-aura-ivory'
+              : 'bg-[#121520]/95 border-[#38BDF8]/40 text-white'
           }`}
         >
           {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />}
           {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />}
-          {toast.type === 'info' && <Info className="w-5 h-5 text-aura-gold flex-shrink-0 mt-0.5" />}
+          {toast.type === 'info' && <Info className="w-5 h-5 text-[#38BDF8] flex-shrink-0 mt-0.5" />}
 
           <div className="flex-1 space-y-0.5">
             <h4 className="font-bold text-xs">{toast.title}</h4>

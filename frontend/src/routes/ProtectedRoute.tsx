@@ -23,11 +23,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
           </div>
           <h1 className="font-serif text-3xl font-bold text-aura-ivory">Access Restricted</h1>
           <p className="text-aura-slate text-sm">
-            Your user role <span className="font-mono text-aura-gold">{user.role}</span> does not have privilege to access this module.
+            Your user role <span className="font-mono text-[#38BDF8] font-bold">{user.role}</span> does not have privilege to access this module.
           </p>
           <a
             href="/"
-            className="inline-block px-6 py-2.5 bg-aura-gold text-aura-obsidian font-semibold rounded-xl text-sm transition-all"
+            className="inline-block px-6 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-bold rounded-xl text-sm transition-all border border-[#7DD3FC]/50"
           >
             Return to Homepage
           </a>

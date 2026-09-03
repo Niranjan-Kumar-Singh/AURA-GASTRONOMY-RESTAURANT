@@ -81,8 +81,8 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
     { 
       label: 'Current Session Cart', 
       badge: cartCount > 0 ? `${cartCount} Items` : undefined,
-      badgeColor: 'bg-aura-gold text-aura-obsidian font-black',
-      icon: <Utensils className="w-4 h-4 text-aura-gold" />, 
+      badgeColor: 'bg-[#0EA5E9] text-[#090A0F] font-black',
+      icon: <Utensils className="w-4 h-4 text-[#38BDF8]" />, 
       action: () => { onOpenCart(); } 
     },
     { 
@@ -109,8 +109,8 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
     { 
       label: 'Rate Dining & Earn Points', 
       badge: '+100 PTS',
-      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-mono',
-      icon: <Star className="w-4 h-4 text-amber-400 fill-amber-400" />, 
+      badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-mono',
+      icon: <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />, 
       action: () => { if (onOpenFeedback) onOpenFeedback(); } 
     },
     { 
@@ -132,7 +132,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
     },
     { 
       label: 'Restaurant Story & Gallery', 
-      icon: <BookOpen className="w-4 h-4 text-aura-gold" />, 
+      icon: <BookOpen className="w-4 h-4 text-[#38BDF8]" />, 
       action: () => { onOpenGallery(); } 
     },
     { 
@@ -149,30 +149,30 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[310px] sm:max-w-xs bg-aura-container border-r border-aura-border/80 h-full flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300 relative overflow-hidden"
+        className="w-full max-w-[310px] sm:max-w-xs bg-[#121520] border-r border-[#38BDF8]/20 h-full flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300 relative overflow-hidden"
       >
         {/* Decorative Background Accent */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-aura-gold/5 blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-48 h-48 bg-[#38BDF8]/5 blur-[80px] rounded-full pointer-events-none" />
 
         {/* Top Header Card */}
-        <div className="p-5 border-b border-aura-border/80 bg-gradient-to-br from-aura-obsidian via-aura-container to-aura-obsidian relative z-10 space-y-3">
+        <div className="p-5 border-b border-[#38BDF8]/20 bg-gradient-to-br from-[#090A0F] via-[#121520] to-[#090A0F] relative z-10 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 min-w-0">
-              <div className="w-11 h-11 bg-gradient-to-tr from-aura-gold/20 via-aura-obsidian to-aura-gold/10 border-2 border-aura-gold/50 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+              <div className="w-11 h-11 bg-gradient-to-tr from-[#38BDF8]/20 via-[#090A0F] to-[#38BDF8]/10 border-2 border-[#38BDF8]/50 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
                 {isAuthenticated ? (
-                  <User className="w-5 h-5 text-aura-gold" />
+                  <User className="w-5 h-5 text-[#38BDF8]" />
                 ) : (
-                  <Sparkles className="w-5 h-5 text-aura-gold" />
+                  <Sparkles className="w-5 h-5 text-[#38BDF8]" />
                 )}
               </div>
               <div className="min-w-0">
-                <h3 className="font-serif font-bold text-base text-aura-ivory truncate">
-                  {isAuthenticated ? user?.name : 'Guest Dining Session'}
+                <h3 className="font-serif font-bold text-base text-white truncate">
+                  {isAuthenticated ? user?.name : `Table ${tableId} Patron`}
                 </h3>
                 <div className="flex items-center space-x-1.5 mt-0.5">
-                  <span className="px-2.5 py-0.5 bg-aura-gold/10 border border-aura-gold/40 text-[9px] uppercase tracking-widest text-aura-gold rounded-full font-bold shadow-sm font-mono flex items-center space-x-1">
-                    <ShieldCheck className="w-3 h-3 text-aura-gold inline mr-0.5" />
-                    <span>{isAuthenticated ? (user?.status === 'VIP' ? 'VIP MEMBER' : 'AURA MEMBER') : `TABLE ${tableId}`}</span>
+                  <span className="px-2.5 py-0.5 bg-[#38BDF8]/10 border border-[#38BDF8]/40 text-[9px] uppercase tracking-widest text-[#38BDF8] rounded-full font-bold shadow-sm font-mono flex items-center space-x-1">
+                    <ShieldCheck className="w-3 h-3 text-[#38BDF8] inline mr-0.5" />
+                    <span>{isAuthenticated ? 'AURA MEMBER • 250 PTS' : `TABLE ${tableId} • ACTIVE SESSION`}</span>
                   </span>
                 </div>
               </div>
@@ -184,7 +184,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
                   onClick={() => {
                     onOpenProfile();
                   }}
-                  className="p-2 text-aura-slate hover:text-aura-gold rounded-xl hover:bg-aura-obsidian border border-transparent hover:border-aura-gold/30 transition-all cursor-pointer"
+                  className="p-2 text-aura-slate hover:text-[#38BDF8] rounded-xl hover:bg-[#090A0F] border border-transparent hover:border-[#38BDF8]/30 transition-all cursor-pointer"
                   title="Edit Profile"
                 >
                   <Edit2 className="w-4 h-4" />
@@ -192,7 +192,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
               )}
               <button
                 onClick={onClose}
-                className="p-2 text-aura-slate hover:text-aura-ivory rounded-xl hover:bg-aura-obsidian border border-transparent hover:border-aura-border transition-all cursor-pointer"
+                className="p-2 text-aura-slate hover:text-white rounded-xl hover:bg-[#090A0F] border border-transparent hover:border-aura-border transition-all cursor-pointer"
                 title="Close Drawer"
               >
                 <X className="w-5 h-5" />
@@ -201,20 +201,20 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
           </div>
 
           {/* Quick Table Call Shortcuts Bar */}
-          <div className="pt-2 border-t border-aura-border/40 grid grid-cols-2 gap-2 text-[10px] font-bold">
+          <div className="pt-2 border-t border-[#38BDF8]/20 grid grid-cols-2 gap-2 text-[10px] font-bold">
             <button
               onClick={() => handleCallWaiter('Water Refill')}
-              className="p-2 bg-aura-obsidian hover:bg-aura-gold/10 border border-aura-border/60 hover:border-aura-gold/40 text-aura-slate hover:text-aura-gold rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+              className="p-2 bg-[#090A0F] hover:bg-[#38BDF8]/10 border border-[#38BDF8]/20 hover:border-[#38BDF8]/40 text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
             >
-              <Bell className="w-3 h-3 text-aura-gold" />
+              <Bell className="w-3 h-3 text-[#38BDF8]" />
               <span>Water Refill</span>
             </button>
 
             <button
               onClick={() => handleCallWaiter('Call Waiter to Table')}
-              className="p-2 bg-aura-obsidian hover:bg-aura-gold/10 border border-aura-border/60 hover:border-aura-gold/40 text-aura-slate hover:text-aura-gold rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+              className="p-2 bg-[#090A0F] hover:bg-[#38BDF8]/10 border border-[#38BDF8]/20 hover:border-[#38BDF8]/40 text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
             >
-              <Bell className="w-3 h-3 text-aura-gold" />
+              <Bell className="w-3 h-3 text-[#38BDF8]" />
               <span>Call Waiter</span>
             </button>
           </div>
@@ -226,13 +226,13 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
             <button
               key={idx}
               onClick={() => link.action()}
-              className="w-full flex items-center justify-between p-3 rounded-2xl bg-aura-container/40 hover:bg-aura-obsidian border border-aura-border/40 hover:border-aura-gold/40 text-aura-slate hover:text-aura-ivory transition-all group cursor-pointer shadow-sm"
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-[#090A0F]/40 hover:bg-[#090A0F] border border-[#38BDF8]/15 hover:border-[#38BDF8]/40 text-aura-slate hover:text-white transition-all group cursor-pointer shadow-sm"
             >
               <div className="flex items-center space-x-3 min-w-0">
-                <div className="p-2 bg-aura-obsidian/80 border border-white/10 rounded-xl group-hover:border-aura-gold/50 group-hover:scale-105 transition-all shrink-0 shadow-inner">
+                <div className="p-2 bg-[#090A0F]/80 border border-white/10 rounded-xl group-hover:border-[#38BDF8]/50 group-hover:scale-105 transition-all shrink-0 shadow-inner">
                   {link.icon}
                 </div>
-                <span className="text-xs sm:text-sm font-semibold truncate text-aura-ivory/90 group-hover:text-aura-gold transition-colors">
+                <span className="text-xs sm:text-sm font-semibold truncate text-white/90 group-hover:text-[#38BDF8] transition-colors">
                   {link.label}
                 </span>
               </div>
@@ -243,21 +243,21 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
                     {link.badge}
                   </span>
                 )}
-                <ChevronRight className="w-4 h-4 text-aura-slate/50 group-hover:text-aura-gold group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight className="w-4 h-4 text-aura-slate/50 group-hover:text-[#38BDF8] group-hover:translate-x-0.5 transition-all" />
               </div>
             </button>
           ))}
         </div>
 
         {/* Auth / Account Switcher Footer */}
-        <div className="p-4 border-t border-aura-border/80 bg-aura-obsidian space-y-2.5 relative z-10">
+        <div className="p-4 border-t border-[#38BDF8]/20 bg-[#090A0F] space-y-2.5 relative z-10">
           {!isAuthenticated ? (
             <button
               onClick={() => {
                 onClose();
                 onOpenAuth();
               }}
-              className="w-full py-3 px-4 bg-gradient-to-r from-aura-gold via-amber-400 to-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black rounded-2xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all shadow-xl shadow-aura-gold/15 active:scale-95 cursor-pointer"
+              className="w-full py-3 px-4 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all shadow-xl shadow-[#0EA5E9]/20 border border-[#7DD3FC]/60 active:scale-95 cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
               <span>Login / Register Account</span>

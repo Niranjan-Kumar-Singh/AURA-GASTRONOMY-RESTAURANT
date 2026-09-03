@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Category } from '../../types/menu.types';
 
 interface CategoryBarProps {
@@ -19,31 +19,29 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   onSearchChange,
   isHeaderVisible = true,
 }) => {
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-
   return (
     <div
-      className={`sticky z-20 w-full bg-aura-obsidian/95 backdrop-blur-xl border-b border-aura-border/80 shadow-xl transition-all duration-300 ${
+      className={`sticky z-20 w-full bg-[#090A0F] border-b border-[#38BDF8]/20 shadow-2xl transition-all duration-300 ${
         isHeaderVisible ? 'top-[52px] sm:top-[57px]' : 'top-0'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 space-y-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 space-y-2.5">
         {/* Mobile Search Bar & Category Navigation Header */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-3">
           {/* Quick Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-aura-gold absolute left-3 top-2.5 pointer-events-none" />
+            <Search className="w-4 h-4 text-[#38BDF8] absolute left-3.5 top-3 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
               placeholder="Search dishes, ingredients, drinks..."
-              className="w-full pl-9 pr-8 py-2 bg-aura-container/80 border border-aura-border/80 focus:border-aura-gold hover:border-aura-gold/50 rounded-xl text-aura-ivory text-xs placeholder:text-aura-slate/80 focus:outline-none shadow-inner transition-all font-sans"
+              className="w-full pl-10 pr-9 py-2.5 bg-[#161A28]/90 border border-[#38BDF8]/25 focus:border-[#38BDF8] hover:border-[#38BDF8]/50 rounded-xl text-white text-xs placeholder:text-slate-400 focus:outline-none shadow-inner transition-all font-sans"
             />
             {searchQuery && (
               <button
                 onClick={() => onSearchChange && onSearchChange('')}
-                className="absolute right-2.5 top-2.5 text-aura-slate hover:text-aura-ivory p-0.5 rounded-full"
+                className="absolute right-3 top-3 text-slate-400 hover:text-white p-0.5 rounded-full cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -51,20 +49,20 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
           </div>
 
           {searchQuery && (
-            <span className="text-[10px] font-mono font-bold px-2.5 py-1 bg-aura-gold/15 text-aura-gold border border-aura-gold/30 rounded-lg whitespace-nowrap shrink-0 animate-pulse">
+            <span className="text-[10px] font-mono font-bold px-3 py-1.5 bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 rounded-lg whitespace-nowrap shrink-0 animate-pulse">
               Filtered
             </span>
           )}
         </div>
 
-        {/* Scrollable Categories Rail */}
-        <div className="overflow-x-auto no-scrollbar flex items-center space-x-2 py-0.5 min-w-full select-none">
+        {/* Scrollable Categories Rail with Bespoke Spaced Luxury Horizontal Scrollbar */}
+        <div className="overflow-x-auto luxury-scrollbar-x flex items-center space-x-2.5 px-2 pt-1 pb-2.5 min-w-full select-none scroll-smooth">
           <button
             onClick={() => onSelectCategory(null)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer border ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer ${
               selectedCategoryId === null
-                ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-md font-black'
-                : 'bg-aura-container/90 border-aura-border/70 text-aura-slate hover:text-aura-ivory hover:border-aura-gold/40'
+                ? 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] shadow-[0_0_15px_rgba(56,189,248,0.35)] font-extrabold scale-[1.02]'
+                : 'bg-[#161A28]/80 border border-[#38BDF8]/20 text-slate-300 hover:text-white hover:border-[#38BDF8]/50 hover:scale-[1.01]'
             }`}
           >
             All Dishes
@@ -76,10 +74,10 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer border ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer ${
                   isSelected
-                    ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-md font-black'
-                    : 'bg-aura-container/90 border-aura-border/70 text-aura-slate hover:text-aura-ivory hover:border-aura-gold/40'
+                    ? 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] shadow-[0_0_15px_rgba(56,189,248,0.35)] font-extrabold scale-[1.02]'
+                    : 'bg-[#161A28]/80 border border-[#38BDF8]/20 text-slate-300 hover:text-white hover:border-[#38BDF8]/50 hover:scale-[1.01]'
                 }`}
               >
                 {category.name}

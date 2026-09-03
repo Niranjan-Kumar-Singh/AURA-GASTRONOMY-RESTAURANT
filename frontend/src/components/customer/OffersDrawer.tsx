@@ -68,19 +68,19 @@ export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) =
 
         <div className="p-6 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
           {loading ? (
-            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-aura-gold" /></div>
+            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#38BDF8]" /></div>
           ) : (
             offers.map((offer, i) => (
-              <div key={i} className="relative bg-aura-container border border-aura-border rounded-2xl p-5 overflow-hidden group">
-                <div className="absolute -right-4 -top-4 w-16 h-16 bg-aura-gold/10 rounded-full blur-xl group-hover:bg-aura-gold/20 transition-all" />
-                <h3 className="font-serif font-bold text-lg text-aura-ivory mb-1">{offer.description}</h3>
+              <div key={i} className="relative bg-aura-container border border-[#38BDF8]/20 hover:border-[#38BDF8]/50 transition-all rounded-2xl p-5 overflow-hidden group shadow-lg">
+                <div className="absolute -right-4 -top-4 w-16 h-16 bg-[#38BDF8]/10 rounded-full blur-xl group-hover:bg-[#38BDF8]/20 transition-all" />
+                <h3 className="font-serif font-bold text-lg text-white mb-1">{offer.description}</h3>
                 <p className="text-[10px] text-aura-slate uppercase tracking-wider mb-4">Min Order: ₹{offer.minOrderAmount}</p>
                 
-                <div className="flex items-center justify-between bg-aura-obsidian border border-aura-border/60 rounded-xl p-1 pl-4">
-                  <span className="font-mono font-bold text-aura-gold tracking-widest">{offer.code}</span>
+                <div className="flex items-center justify-between bg-[#090A0F] border border-[#38BDF8]/30 rounded-xl p-1 pl-4">
+                  <span className="font-mono font-bold text-[#38BDF8] tracking-widest">{offer.code}</span>
                   <button 
                     onClick={() => handleCopy(offer.code)}
-                    className="bg-aura-gold/10 hover:bg-aura-gold hover:text-aura-obsidian text-aura-gold p-2 rounded-lg transition-colors flex items-center space-x-2"
+                    className="bg-[#38BDF8]/15 hover:bg-[#0EA5E9] hover:text-[#090A0F] text-[#38BDF8] border border-[#38BDF8]/40 p-2 rounded-lg transition-colors flex items-center space-x-2 cursor-pointer"
                   >
                     <Copy className="w-4 h-4" />
                     <span className="text-[10px] font-bold uppercase tracking-wider pr-1">Copy</span>

@@ -71,7 +71,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
         transformStyle: "preserve-3d",
       }}
       onClick={() => onClick(item)}
-      className="bg-aura-container border border-aura-border hover:border-aura-gold/60 rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-lg hover:shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] group relative perspective-1000"
+      className="bg-[#121520] border border-[#38BDF8]/30 hover:border-[#38BDF8] rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_10px_30px_rgba(0,0,0,0.85)] hover:shadow-[0_20px_45px_rgba(56,189,248,0.25)] group relative perspective-1000 transition-all duration-300 hover:-translate-y-1"
     >
       {/* Top Image Box */}
       <div className="relative h-36 sm:h-52 w-full bg-aura-obsidian overflow-hidden" style={{ transform: "translateZ(30px)" }}>
@@ -111,7 +111,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           </span>
 
           {item.isGlutenFree && (
-            <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md">
+            <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 backdrop-blur-md">
               GF
             </span>
           )}
@@ -129,7 +129,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
             className={`p-1.5 sm:p-2 rounded-full backdrop-blur-md border transition-all ${
               isLiked
                 ? 'bg-rose-500 text-white border-rose-500'
-                : 'bg-aura-obsidian/70 text-aura-ivory border-white/20 hover:border-aura-gold'
+                : 'bg-aura-obsidian/70 text-aura-ivory border-white/20 hover:border-aura-cyan'
             }`}
             title="Add to Wishlist"
           >
@@ -141,7 +141,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
               e.stopPropagation();
               onClick(item);
             }}
-            className="p-1.5 sm:p-2 rounded-full bg-aura-obsidian/70 backdrop-blur-md border border-white/20 text-aura-ivory hover:border-aura-gold transition-all"
+            className="p-1.5 sm:p-2 rounded-full bg-aura-obsidian/70 backdrop-blur-md border border-white/20 text-aura-ivory hover:border-aura-cyan transition-all"
             title="Quick View"
           >
             <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -151,14 +151,14 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
         {/* Badges Bar */}
         <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex flex-wrap gap-1 z-10">
           {item.isChefSpecial && (
-            <span className="text-[8px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-aura-gold text-aura-obsidian flex items-center space-x-1 shadow-md">
-              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <span className="text-[8px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0EA5E9] text-[#090A0F] flex items-center space-x-1 shadow-md">
+              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#090A0F]" />
               <span className="hidden sm:inline">Chef Special</span>
               <span className="inline sm:hidden">Special</span>
             </span>
           )}
           {item.isBestSeller && (
-            <span className="text-[8px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-aura-obsidian shadow-md">
+            <span className="text-[8px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7DD3FC] text-[#090A0F] shadow-md">
               <span className="hidden sm:inline">Best Seller</span>
               <span className="inline sm:hidden">Best</span>
             </span>
@@ -169,29 +169,29 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
       {/* Dish Content Body */}
       <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 flex-1 flex flex-col justify-between">
         <div className="space-y-1">
-          <div className="flex items-start sm:items-center justify-between gap-1">
-            <h3 className="font-serif text-xs sm:text-base font-bold text-aura-ivory group-hover:text-aura-gold transition-colors line-clamp-1">
+          <div className="flex items-start justify-between gap-1.5">
+            <h3 className="font-serif text-xs sm:text-sm md:text-base font-bold text-white group-hover:text-[#38BDF8] transition-colors line-clamp-2 leading-snug min-h-[28px] sm:min-h-[36px]">
               {item.name}
             </h3>
-            <span className="font-mono text-xs sm:text-base font-bold text-aura-gold shrink-0">₹{item.price}</span>
+            <span className="font-mono text-xs sm:text-sm md:text-base font-black text-[#38BDF8] shrink-0 pt-0.5">₹{item.price}</span>
           </div>
 
-          <p className="text-[10px] sm:text-xs text-aura-slate line-clamp-2 leading-tight sm:leading-relaxed">
+          <p className="text-[10px] sm:text-xs text-[#94A3B8] line-clamp-2 leading-tight sm:leading-relaxed">
             {item.description}
           </p>
         </div>
 
         {/* Metadata Rail (Rating, Calories, Prep Time, Spice Meter) */}
-        <div className="pt-1.5 sm:pt-2 border-t border-aura-border/40 flex items-center justify-between text-[9px] sm:text-[11px] text-aura-slate">
+        <div className="pt-1.5 sm:pt-2 border-t border-[#38BDF8]/20 flex items-center justify-between text-[9px] sm:text-[11px] text-[#94A3B8]">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            <div className="flex items-center space-x-0.5 text-amber-400 font-bold">
-              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400" />
+            <div className="flex items-center space-x-0.5 text-[#38BDF8] font-bold">
+              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-[#38BDF8] text-[#38BDF8]" />
               <span>{item.rating || 4.9}</span>
-              <span className="text-[8px] sm:text-[9px] text-aura-slate font-normal hidden sm:inline">({item.reviewCount || 120})</span>
+              <span className="text-[8px] sm:text-[9px] text-[#94A3B8] font-normal hidden sm:inline">({item.reviewCount || 120})</span>
             </div>
 
             <div className="flex items-center space-x-0.5">
-              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-aura-gold" />
+              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#38BDF8]" />
               <span>{item.preparationTimeMinutes}m</span>
             </div>
 
@@ -225,30 +225,30 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
                 e.stopPropagation();
                 onAdd(item);
               }}
-              className="w-full py-2 sm:py-2.5 px-2 sm:px-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-black uppercase tracking-wider rounded-xl sm:rounded-2xl text-[10px] sm:text-xs transition-all flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-[0_0_15px_rgba(212,175,55,0.2)] active:scale-95 cursor-pointer"
+              className="w-full py-2 sm:py-2.5 px-2 sm:px-4 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black uppercase tracking-wider rounded-xl sm:rounded-2xl text-[10px] sm:text-xs transition-all flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-[0_4px_20px_rgba(14,165,233,0.4)] hover:shadow-[0_6px_25px_rgba(14,165,233,0.55)] border border-[#7DD3FC]/60 active:scale-95 cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>ADD</span>
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#090A0F]" />
+              <span className="text-[#090A0F]">ADD</span>
             </button>
           ) : (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full py-0.5 sm:py-1 px-1 bg-aura-gold/20 backdrop-blur-md border border-aura-gold/40 rounded-full flex items-center justify-between shadow-[0_0_15px_rgba(212,175,55,0.3)] animate-in zoom-in-95 duration-150"
+              className="w-full py-0.5 sm:py-1 px-1 bg-[#0EA5E9]/20 backdrop-blur-md border-2 border-[#0EA5E9] rounded-full flex items-center justify-between shadow-[0_0_15px_rgba(56,189,248,0.3)] animate-in zoom-in-95 duration-150"
             >
               <button
                 onClick={() => updateQuantity(item.id, quantity - 1)}
-                className="w-7 h-7 sm:w-9 sm:h-9 bg-aura-obsidian hover:bg-black rounded-full flex items-center justify-center font-bold text-aura-gold shadow-inner transition-transform active:scale-90"
+                className="w-7 h-7 sm:w-9 sm:h-9 bg-[#090A0F] hover:bg-black rounded-full flex items-center justify-center font-bold text-[#38BDF8] shadow-inner transition-transform active:scale-90"
               >
                 <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
               
               <div className="flex flex-col items-center justify-center leading-none">
-                <span className="font-mono text-xs sm:text-sm font-black text-aura-gold">{quantity}</span>
+                <span className="font-mono text-xs sm:text-sm font-black text-[#38BDF8]">{quantity}</span>
               </div>
               
               <button
                 onClick={() => addItem(item, 1)}
-                className="w-7 h-7 sm:w-9 sm:h-9 bg-aura-obsidian hover:bg-black rounded-full flex items-center justify-center font-bold text-aura-gold shadow-inner transition-transform active:scale-90"
+                className="w-7 h-7 sm:w-9 sm:h-9 bg-[#090A0F] hover:bg-black rounded-full flex items-center justify-center font-bold text-[#38BDF8] shadow-inner transition-transform active:scale-90"
               >
                 <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>

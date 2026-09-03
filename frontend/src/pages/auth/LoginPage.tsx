@@ -71,7 +71,7 @@ export const LoginPage: React.FC = () => {
     { role: 'WAITER', title: 'Waiter Dispatch', email: 'waiter@aura.com', pass: 'waiter123', icon: <UserCheck className="w-4 h-4 text-emerald-400" /> },
     { role: 'CASHIER', title: 'Cashier POS', email: 'cashier@aura.com', pass: 'cashier123', icon: <CreditCard className="w-4 h-4 text-sky-400" /> },
     { role: 'OWNER', title: 'Owner Suite', email: 'owner@aura.com', pass: 'owner123', icon: <Award className="w-4 h-4 text-purple-400" /> },
-    { role: 'ADMIN', title: 'System Admin', email: 'admin@aura.com', pass: 'admin123', icon: <LayoutDashboard className="w-4 h-4 text-aura-gold" /> },
+    { role: 'ADMIN', title: 'System Admin', email: 'admin@aura.com', pass: 'admin123', icon: <LayoutDashboard className="w-4 h-4 text-[#38BDF8]" /> },
   ];
 
   return (
@@ -79,7 +79,7 @@ export const LoginPage: React.FC = () => {
       {/* Back to Home Button */}
       <button
         onClick={() => navigate('/')}
-        className="absolute top-6 left-6 z-20 flex items-center space-x-2 px-4 py-2 bg-aura-obsidian/70 backdrop-blur-md border border-aura-border/60 hover:border-aura-gold text-aura-slate hover:text-aura-ivory text-xs font-semibold rounded-xl transition-all"
+        className="absolute top-6 left-6 z-20 flex items-center space-x-2 px-4 py-2 bg-aura-obsidian/70 backdrop-blur-md border border-aura-border/60 hover:border-[#38BDF8] text-aura-slate hover:text-white text-xs font-semibold rounded-xl transition-all cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Return to Website</span>
@@ -96,11 +96,11 @@ export const LoginPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-aura-obsidian via-aura-obsidian/60 to-transparent" />
 
         <div className="relative z-10 space-y-3 pt-12">
-          <div className="w-12 h-12 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl flex items-center justify-center shadow-lg shadow-aura-gold/10">
-            <Utensils className="w-6 h-6 text-aura-gold" />
+          <div className="w-12 h-12 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl flex items-center justify-center shadow-lg shadow-[#38BDF8]/10">
+            <Utensils className="w-6 h-6 text-[#38BDF8]" />
           </div>
-          <h1 className="font-serif text-3xl font-bold tracking-widest text-aura-ivory">AURA GASTRONOMY</h1>
-          <p className="text-xs text-aura-gold uppercase tracking-[0.2em] font-mono font-semibold">Mayfair Enterprise Staff Hub</p>
+          <h1 className="font-serif text-3xl font-bold tracking-widest text-white">AURA GASTRONOMY</h1>
+          <p className="text-xs text-[#38BDF8] uppercase tracking-[0.2em] font-mono font-semibold">Mayfair Enterprise Staff Hub</p>
         </div>
 
         <div className="relative z-10 space-y-6 max-w-lg">
@@ -109,15 +109,15 @@ export const LoginPage: React.FC = () => {
           </h2>
           <div className="grid grid-cols-3 gap-4 border-t border-aura-border/60 pt-6">
             <div>
-              <h3 className="font-serif text-xl font-bold text-aura-gold">30 Tables</h3>
+              <h3 className="font-serif text-xl font-bold text-[#38BDF8]">30 Tables</h3>
               <p className="text-[10px] text-aura-slate uppercase font-mono">Live Occupancy</p>
             </div>
             <div>
-              <h3 className="font-serif text-xl font-bold text-aura-gold">KDS Live</h3>
+              <h3 className="font-serif text-xl font-bold text-[#38BDF8]">KDS Live</h3>
               <p className="text-[10px] text-aura-slate uppercase font-mono">Kitchen Stream</p>
             </div>
             <div>
-              <h3 className="font-serif text-xl font-bold text-aura-gold">CEO Suite</h3>
+              <h3 className="font-serif text-xl font-bold text-[#38BDF8]">CEO Suite</h3>
               <p className="text-[10px] text-aura-slate uppercase font-mono">Real-Time Metrics</p>
             </div>
           </div>
@@ -132,11 +132,11 @@ export const LoginPage: React.FC = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 z-10 overflow-y-auto my-auto py-12">
         <div className="w-full max-w-md bg-aura-container/90 backdrop-blur-2xl border border-aura-border/80 p-8 sm:p-10 rounded-3xl shadow-2xl space-y-7">
           <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center px-4 py-1.5 bg-aura-gold/10 border border-aura-gold/30 rounded-full">
-              <ShieldCheck className="w-4 h-4 text-aura-gold mr-2" />
-              <span className="font-mono text-xs tracking-widest text-aura-gold font-bold uppercase">Staff Portal</span>
+            <div className="inline-flex items-center justify-center px-4 py-1.5 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-full">
+              <ShieldCheck className="w-4 h-4 text-[#38BDF8] mr-2" />
+              <span className="font-mono text-xs tracking-widest text-[#38BDF8] font-bold uppercase">Staff Portal</span>
             </div>
-            <h2 className="font-serif text-3xl font-bold text-aura-ivory">Secure Sign In</h2>
+            <h2 className="font-serif text-3xl font-bold text-white">Secure Sign In</h2>
             <p className="text-xs text-aura-slate font-light">Access your operational role workspace</p>
           </div>
 
@@ -159,7 +159,7 @@ export const LoginPage: React.FC = () => {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="chef@aura.com"
-                  className="w-full pl-10 pr-4 py-3.5 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory text-xs placeholder:text-aura-slate/50 focus:outline-none focus:border-aura-gold transition-colors font-mono"
+                  className="w-full pl-10 pr-4 py-3.5 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory text-xs placeholder:text-aura-slate/50 focus:outline-none focus:border-[#38BDF8] transition-colors font-mono"
                 />
               </div>
             </div>
@@ -176,12 +176,12 @@ export const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-3.5 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory text-xs placeholder:text-aura-slate/50 focus:outline-none focus:border-aura-gold transition-colors font-mono"
+                  className="w-full pl-10 pr-10 py-3.5 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory text-xs placeholder:text-aura-slate/50 focus:outline-none focus:border-[#38BDF8] transition-colors font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3.5 text-aura-slate hover:text-aura-ivory transition-colors"
+                  className="absolute right-3.5 top-3.5 text-aura-slate hover:text-aura-ivory transition-colors cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -191,7 +191,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl shadow-aura-gold/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-4 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#0EA5E9]/20 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer border border-[#7DD3FC]/50"
             >
               <span>{isLoading ? 'Authenticating...' : 'Sign In to Workspace'}</span>
               {!isLoading && <ArrowRight className="w-4 h-4" />}
@@ -200,7 +200,7 @@ export const LoginPage: React.FC = () => {
 
           {/* Quick Staff Workspace Access Selectors */}
           <div className="pt-5 border-t border-aura-border/60 space-y-3">
-            <p className="text-[10px] font-mono font-bold text-aura-gold uppercase tracking-widest text-center">
+            <p className="text-[10px] font-mono font-bold text-[#38BDF8] uppercase tracking-widest text-center">
               1-Click Staff Workspace Access
             </p>
             <div className="grid grid-cols-2 gap-2.5">
@@ -212,13 +212,13 @@ export const LoginPage: React.FC = () => {
                     setPassword(item.pass);
                     handleLoginSubmit(item.email, item.pass);
                   }}
-                  className="p-3 bg-aura-obsidian/80 border border-aura-border/60 hover:border-aura-gold text-left rounded-2xl transition-all flex items-center space-x-2.5 group"
+                  className="p-3 bg-aura-obsidian/80 border border-aura-border/60 hover:border-[#38BDF8] text-left rounded-2xl transition-all flex items-center space-x-2.5 group cursor-pointer"
                 >
-                  <div className="p-2 bg-aura-container border border-aura-border rounded-xl group-hover:border-aura-gold/50 transition-colors">
+                  <div className="p-2 bg-aura-container border border-aura-border rounded-xl group-hover:border-[#38BDF8]/50 transition-colors">
                     {item.icon}
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-aura-ivory group-hover:text-aura-gold transition-colors">{item.title}</h4>
+                    <h4 className="font-bold text-xs text-white group-hover:text-[#38BDF8] transition-colors">{item.title}</h4>
                     <span className="text-[9px] text-aura-slate font-mono block">{item.email}</span>
                   </div>
                 </button>

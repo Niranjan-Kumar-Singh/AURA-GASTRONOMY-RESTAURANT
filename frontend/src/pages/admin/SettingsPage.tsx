@@ -21,18 +21,18 @@ export const SettingsPage: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center border-b border-aura-border pb-4">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-aura-gold/10 border border-aura-gold/30 rounded-xl flex items-center justify-center">
-            <Settings className="w-5 h-5 text-aura-gold" />
+          <div className="w-10 h-10 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-xl flex items-center justify-center">
+            <Settings className="w-5 h-5 text-[#38BDF8]" />
           </div>
           <div>
-            <h1 className="font-serif text-xl font-bold tracking-wide text-aura-ivory">SAAS PLATFORM SETTINGS</h1>
+            <h1 className="font-serif text-xl font-bold tracking-wide text-white">SAAS PLATFORM SETTINGS</h1>
             <p className="text-xs text-aura-slate">Configure Restaurant Branding, Taxes, Thermal Receipts & Security</p>
           </div>
         </div>
 
         <button
           onClick={handleSave}
-          className="px-5 py-2.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs rounded-xl shadow-lg shadow-aura-gold/20 flex items-center space-x-2 transition-all"
+          className="px-5 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs rounded-xl shadow-lg shadow-[#0EA5E9]/20 flex items-center space-x-2 transition-all border border-[#7DD3FC]/50 cursor-pointer"
         >
           <Save className="w-4 h-4" />
           <span>Save Settings</span>
@@ -50,32 +50,32 @@ export const SettingsPage: React.FC = () => {
       <div className="flex space-x-3 border-b border-aura-border pb-3 text-xs">
         <button
           onClick={() => setActiveTab('GENERAL')}
-          className={`px-4 py-2 rounded-xl font-bold transition-all ${
-            activeTab === 'GENERAL' ? 'bg-aura-gold text-aura-obsidian' : 'text-aura-slate hover:text-aura-ivory'
+          className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
+            activeTab === 'GENERAL' ? 'bg-[#0EA5E9] text-[#090A0F] font-black shadow-md' : 'text-aura-slate hover:text-white'
           }`}
         >
           General & Branding
         </button>
         <button
           onClick={() => setActiveTab('OPERATIONS')}
-          className={`px-4 py-2 rounded-xl font-bold transition-all ${
-            activeTab === 'OPERATIONS' ? 'bg-aura-gold text-aura-obsidian' : 'text-aura-slate hover:text-aura-ivory'
+          className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
+            activeTab === 'OPERATIONS' ? 'bg-[#0EA5E9] text-[#090A0F] font-black shadow-md' : 'text-aura-slate hover:text-white'
           }`}
         >
           Taxes & Operations
         </button>
         <button
           onClick={() => setActiveTab('RECEIPTS')}
-          className={`px-4 py-2 rounded-xl font-bold transition-all ${
-            activeTab === 'RECEIPTS' ? 'bg-aura-gold text-aura-obsidian' : 'text-aura-slate hover:text-aura-ivory'
+          className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
+            activeTab === 'RECEIPTS' ? 'bg-[#0EA5E9] text-[#090A0F] font-black shadow-md' : 'text-aura-slate hover:text-white'
           }`}
         >
           Thermal Receipts
         </button>
         <button
           onClick={() => setActiveTab('SECURITY')}
-          className={`px-4 py-2 rounded-xl font-bold transition-all ${
-            activeTab === 'SECURITY' ? 'bg-aura-gold text-aura-obsidian' : 'text-aura-slate hover:text-aura-ivory'
+          className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
+            activeTab === 'SECURITY' ? 'bg-[#0EA5E9] text-[#090A0F] font-black shadow-md' : 'text-aura-slate hover:text-white'
           }`}
         >
           Security & Audit
@@ -83,17 +83,17 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* Tab Panels */}
-      <div className="bg-aura-container/80 backdrop-blur-xl border border-aura-border rounded-2xl p-6 shadow-xl space-y-6 max-w-3xl">
+      <div className="bg-aura-container/80 backdrop-blur-xl border border-[#38BDF8]/20 rounded-2xl p-6 shadow-xl space-y-6 max-w-3xl">
         {activeTab === 'GENERAL' && (
           <div className="space-y-4">
-            <h3 className="font-serif text-base font-bold text-aura-ivory">Restaurant Profile & Branding</h3>
+            <h3 className="font-serif text-base font-bold text-white">Restaurant Profile & Branding</h3>
             <div className="space-y-2">
               <label className="text-xs font-semibold text-aura-slate">Restaurant Name</label>
               <input
                 type="text"
                 value={restaurantName}
                 onChange={(e) => setRestaurantName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold"
+                className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8]"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -102,7 +102,7 @@ export const SettingsPage: React.FC = () => {
                 <input
                   type="text"
                   defaultValue="£"
-                  className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold"
+                  className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8]"
                 />
               </div>
               <div className="space-y-2">
@@ -110,7 +110,7 @@ export const SettingsPage: React.FC = () => {
                 <input
                   type="text"
                   defaultValue="Europe/London (GMT)"
-                  className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold"
+                  className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8]"
                 />
               </div>
             </div>
@@ -119,7 +119,7 @@ export const SettingsPage: React.FC = () => {
 
         {activeTab === 'OPERATIONS' && (
           <div className="space-y-4">
-            <h3 className="font-serif text-base font-bold text-aura-ivory">Taxes, Gratuity & Service Rules</h3>
+            <h3 className="font-serif text-base font-bold text-white">Taxes, Gratuity & Service Rules</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-aura-slate">Tax Rate (%)</label>
@@ -127,7 +127,7 @@ export const SettingsPage: React.FC = () => {
                   type="text"
                   value={taxRate}
                   onChange={(e) => setTaxRate(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold"
+                  className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8]"
                 />
               </div>
               <div className="space-y-2">
@@ -136,7 +136,7 @@ export const SettingsPage: React.FC = () => {
                   type="text"
                   value={serviceCharge}
                   onChange={(e) => setServiceCharge(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold"
+                  className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8]"
                 />
               </div>
             </div>
@@ -145,14 +145,14 @@ export const SettingsPage: React.FC = () => {
 
         {activeTab === 'RECEIPTS' && (
           <div className="space-y-4">
-            <h3 className="font-serif text-base font-bold text-aura-ivory">Thermal Printer Receipt Customizer</h3>
+            <h3 className="font-serif text-base font-bold text-white">Thermal Printer Receipt Customizer</h3>
             <div className="space-y-2">
               <label className="text-xs font-semibold text-aura-slate">Receipt Footer Slogan</label>
               <textarea
                 rows={3}
                 value={receiptFooter}
                 onChange={(e) => setReceiptFooter(e.target.value)}
-                className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+                className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono"
               />
             </div>
           </div>

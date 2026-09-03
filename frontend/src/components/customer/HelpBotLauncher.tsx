@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { HelpBotPanel } from './HelpBotPanel';
 import { ChatbotMessage, ChatbotOption } from '../../types/chatbot.types';
+import { useCartStore } from '../../store/use-cart-store';
 
 interface HelpBotLauncherProps {
   tableId?: string;
@@ -22,6 +23,8 @@ const makeId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)
 
 export const HelpBotLauncher: React.FC<HelpBotLauncherProps> = ({ tableId = '14' }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const itemCount = useCartStore((state) => state.getItemCount());
+  const hasCart = itemCount > 0;
   const [messages, setMessages] = useState<ChatbotMessage[]>(() => {
     const stored = sessionStorage.getItem('aura_chat_messages');
     if (stored) {
@@ -67,11 +70,15 @@ export const HelpBotLauncher: React.FC<HelpBotLauncherProps> = ({ tableId = '14'
       {/* Floating Launcher Button */}
       <button
         onClick={() => setIsOpen((open) => !open)}
-        className="fixed bottom-36 right-4 sm:bottom-6 sm:right-44 z-40 p-3 sm:p-3.5 bg-gradient-to-br from-aura-container via-aura-obsidian to-aura-container border border-aura-gold/50 hover:border-aura-gold text-aura-gold rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 cursor-pointer"
+        className={`fixed z-40 p-2.5 sm:p-3.5 bg-[#10131E] border-2 border-[#38BDF8] hover:border-[#7DD3FC] text-[#38BDF8] rounded-full shadow-[0_4px_20px_rgba(56,189,248,0.3)] hover:shadow-[0_6px_25px_rgba(56,189,248,0.45)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 cursor-pointer backdrop-blur-xl ${
+          hasCart
+            ? 'bottom-32 right-4 sm:bottom-20 sm:right-6'
+            : 'bottom-17 right-4 sm:bottom-20 sm:right-6'
+        }`}
         title="Ask AURA Sommelier AI"
       >
-        {isOpen ? <X className="w-5 h-5 text-aura-ivory" /> : <MessageCircle className="w-5 h-5 text-aura-gold" />}
-        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider text-aura-ivory">AI Concierge</span>
+        {isOpen ? <X className="w-5 h-5 text-white" /> : <MessageCircle className="w-5 h-5 text-[#38BDF8]" />}
+        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider text-[#7DD3FC]">AI Concierge</span>
       </button>
 
       {isOpen && (

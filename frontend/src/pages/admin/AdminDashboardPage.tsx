@@ -352,11 +352,11 @@ export const AdminDashboardPage: React.FC = () => {
         {/* Header Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-aura-container border border-aura-border/80 p-6 rounded-3xl shadow-2xl">
           <div className="flex items-center space-x-4">
-            <div className="p-3.5 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl shadow-inner">
-              <TrendingUp className="w-8 h-8 text-aura-gold" />
+            <div className="p-3.5 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl shadow-inner">
+              <TrendingUp className="w-8 h-8 text-[#38BDF8]" />
             </div>
             <div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-wide text-aura-ivory">
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-wide text-white">
                 ADMIN MISSION CONTROL
               </h1>
               <p className="text-xs text-aura-slate mt-0.5">Live Menu Catalog Management & Enterprise Operations Audit</p>
@@ -377,13 +377,13 @@ export const AdminDashboardPage: React.FC = () => {
               disabled={isLoadingRealOrders}
               className="px-4 py-2.5 bg-aura-obsidian hover:bg-aura-container border border-aura-border text-aura-ivory rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer shadow-md"
             >
-              <RefreshCw className={`w-4 h-4 text-aura-gold ${isLoadingRealOrders ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-[#38BDF8] ${isLoadingRealOrders ? 'animate-spin' : ''}`} />
               <span>Refresh Stream</span>
             </button>
 
             <a
               href="/owner"
-              className="px-4 py-2.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs rounded-xl shadow-lg shadow-aura-gold/20 transition-all flex items-center space-x-2 cursor-pointer"
+              className="px-4 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs rounded-xl shadow-lg shadow-[#0EA5E9]/20 transition-all flex items-center space-x-2 cursor-pointer border border-[#7DD3FC]/50"
             >
               <Award className="w-4 h-4" />
               <span>Owner CEO Analytics →</span>
@@ -397,8 +397,8 @@ export const AdminDashboardPage: React.FC = () => {
             onClick={() => setActiveTab('OVERVIEW')}
             className={`px-4 py-2 rounded-xl font-bold transition-all border cursor-pointer ${
               activeTab === 'OVERVIEW'
-                ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-lg'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-aura-gold/50'
+                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
+                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
             }`}
           >
             Operational Overview
@@ -407,8 +407,8 @@ export const AdminDashboardPage: React.FC = () => {
             onClick={() => setActiveTab('MENU_CATALOG')}
             className={`px-4 py-2 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
               activeTab === 'MENU_CATALOG'
-                ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-lg'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-aura-gold/50'
+                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
+                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
             }`}
           >
             <ChefHat className="w-4 h-4" />
@@ -418,8 +418,8 @@ export const AdminDashboardPage: React.FC = () => {
             onClick={() => setActiveTab('CATEGORIES')}
             className={`px-4 py-2 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
               activeTab === 'CATEGORIES'
-                ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-lg'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-aura-gold/50'
+                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
+                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
             }`}
           >
             <Layers className="w-4 h-4" />
@@ -429,8 +429,8 @@ export const AdminDashboardPage: React.FC = () => {
             onClick={() => setActiveTab('AUDIT_LOGS')}
             className={`px-4 py-2 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
               activeTab === 'AUDIT_LOGS'
-                ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-lg'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-aura-gold/50'
+                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
+                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
@@ -458,7 +458,7 @@ export const AdminDashboardPage: React.FC = () => {
                 subtitle="Active dining tickets"
                 trend="Live DB Data"
                 icon={ShoppingBag}
-                iconColor="text-aura-gold"
+                iconColor="text-[#38BDF8]"
                 onClick={() => setActiveDetailModal('ONGOING')}
                 clickHint="View Active Tickets"
               />
@@ -537,16 +537,16 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-aura-container border border-aura-border p-5 rounded-3xl">
               <div className="flex items-center space-x-3">
-                <ChefHat className="w-6 h-6 text-aura-gold" />
+                <ChefHat className="w-6 h-6 text-[#38BDF8]" />
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-aura-ivory">Menu Catalog Master</h3>
+                  <h3 className="font-serif text-lg font-bold text-white">Menu Catalog Master</h3>
                   <p className="text-xs text-aura-slate">Add, edit, toggle availability, or remove dishes from customer menu</p>
                 </div>
               </div>
 
               <button
                 onClick={() => handleOpenDishModal()}
-                className="px-5 py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-aura-gold/20 cursor-pointer"
+                className="px-5 py-3 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-[#0EA5E9]/20 cursor-pointer border border-[#7DD3FC]/50"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add New Recipe Item</span>
@@ -562,14 +562,14 @@ export const AdminDashboardPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search dish name or description..."
-                  className="w-full pl-10 pr-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-xs text-aura-ivory placeholder:text-aura-slate/50 focus:outline-none focus:border-aura-gold font-mono"
+                  className="w-full pl-10 pr-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-xs text-aura-ivory placeholder:text-aura-slate/50 focus:outline-none focus:border-[#38BDF8] font-mono"
                 />
               </div>
 
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-xs text-aura-ivory font-mono focus:outline-none focus:border-aura-gold cursor-pointer"
+                className="px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-xs text-aura-ivory font-mono focus:outline-none focus:border-[#38BDF8] cursor-pointer"
               >
                 <option value="">All Categories ({categories.length})</option>
                 {categories.map((c) => (
@@ -587,11 +587,11 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             ) : filteredMenuItems.length === 0 ? (
               <div className="py-16 text-center bg-aura-container border border-aura-border/60 rounded-3xl space-y-3">
-                <ChefHat className="w-10 h-10 text-aura-gold/40 mx-auto" />
+                <ChefHat className="w-10 h-10 text-[#38BDF8]/40 mx-auto" />
                 <p className="text-sm font-semibold text-aura-slate">No dishes found matching search criteria</p>
                 <button
                   onClick={() => { setSearchQuery(''); setSelectedCategory(''); }}
-                  className="text-xs text-aura-gold underline hover:text-aura-ivory cursor-pointer"
+                  className="text-xs text-[#38BDF8] underline hover:text-white cursor-pointer"
                 >
                   Reset filters
                 </button>
@@ -603,7 +603,7 @@ export const AdminDashboardPage: React.FC = () => {
                   return (
                     <div
                       key={dish.id}
-                      className={`bg-aura-container border rounded-3xl p-4 flex flex-col justify-between space-y-4 transition-all shadow-xl hover:border-aura-gold/50 relative overflow-hidden ${
+                      className={`bg-aura-container border rounded-3xl p-4 flex flex-col justify-between space-y-4 transition-all shadow-xl hover:border-[#38BDF8]/50 relative overflow-hidden ${
                         dish.isAvailable ? 'border-aura-border/80' : 'border-rose-500/40 bg-rose-500/5'
                       }`}
                     >
@@ -619,14 +619,14 @@ export const AdminDashboardPage: React.FC = () => {
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="text-[10px] font-mono text-aura-gold uppercase tracking-wider block truncate">
+                              <span className="text-[10px] font-mono text-[#38BDF8] uppercase tracking-wider block truncate">
                                 {cat?.name || `Cat #${dish.categoryId}`}
                               </span>
                               <span className="text-[10px] font-mono text-aura-slate">#{dish.id}</span>
                             </div>
-                            <h4 className="font-serif font-bold text-sm text-aura-ivory truncate">{dish.name}</h4>
+                            <h4 className="font-serif font-bold text-sm text-white truncate">{dish.name}</h4>
                             <div className="flex items-center space-x-2 mt-1">
-                              <span className="font-serif font-bold text-aura-gold text-base">
+                              <span className="font-serif font-bold text-[#38BDF8] text-base">
                                 ₹{dish.price.toLocaleString('en-IN')}
                               </span>
                               {dish.isVegetarian && (
@@ -635,7 +635,7 @@ export const AdminDashboardPage: React.FC = () => {
                                 </span>
                               )}
                               {dish.isChefSpecial && (
-                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-aura-gold/10 border border-aura-gold/30 text-aura-gold font-bold flex items-center gap-0.5">
+                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#38BDF8]/10 border border-[#38BDF8]/30 text-[#38BDF8] font-bold flex items-center gap-0.5">
                                   <Sparkles className="w-2.5 h-2.5" /> SPECIAL
                                 </span>
                               )}
@@ -665,7 +665,7 @@ export const AdminDashboardPage: React.FC = () => {
                         <div className="flex items-center space-x-1.5">
                           <button
                             onClick={() => handleOpenDishModal(dish)}
-                            className="p-2 bg-aura-obsidian hover:bg-aura-gold/10 border border-aura-border hover:border-aura-gold/40 text-aura-slate hover:text-aura-gold rounded-xl transition-all cursor-pointer"
+                            className="p-2 bg-aura-obsidian hover:bg-[#38BDF8]/10 border border-aura-border hover:border-[#38BDF8]/40 text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all cursor-pointer"
                             title="Edit Dish"
                           >
                             <Edit className="w-3.5 h-3.5" />
@@ -692,16 +692,16 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-aura-container border border-aura-border p-5 rounded-3xl">
               <div className="flex items-center space-x-3">
-                <Layers className="w-6 h-6 text-aura-gold" />
+                <Layers className="w-6 h-6 text-[#38BDF8]" />
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-aura-ivory">Menu Categories</h3>
+                  <h3 className="font-serif text-lg font-bold text-white">Menu Categories</h3>
                   <p className="text-xs text-aura-slate">Organize and re-order menu categories across the customer digital menu</p>
                 </div>
               </div>
 
               <button
                 onClick={() => handleOpenCategoryModal()}
-                className="px-5 py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-aura-gold/20 cursor-pointer"
+                className="px-5 py-3 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-[#0EA5E9]/20 cursor-pointer border border-[#7DD3FC]/50"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Category</span>
@@ -714,14 +714,14 @@ export const AdminDashboardPage: React.FC = () => {
                 return (
                   <div
                     key={cat.id}
-                    className="bg-aura-container border border-aura-border/80 rounded-3xl p-5 flex items-center justify-between shadow-xl hover:border-aura-gold/50 transition-all"
+                    className="bg-aura-container border border-aura-border/80 rounded-3xl p-5 flex items-center justify-between shadow-xl hover:border-[#38BDF8]/50 transition-all"
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="p-3 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl text-aura-gold font-bold">
+                      <div className="p-3 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl text-[#38BDF8] font-bold">
                         #{cat.displayOrder || cat.id}
                       </div>
                       <div>
-                        <h4 className="font-serif font-bold text-base text-aura-ivory">{cat.name}</h4>
+                        <h4 className="font-serif font-bold text-base text-white">{cat.name}</h4>
                         <span className="text-xs text-aura-slate font-mono block">{count} Recipe Items</span>
                       </div>
                     </div>
@@ -729,7 +729,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <div className="flex items-center space-x-1.5">
                       <button
                         onClick={() => handleOpenCategoryModal(cat)}
-                        className="p-2.5 bg-aura-obsidian hover:bg-aura-gold/10 border border-aura-border hover:border-aura-gold/40 text-aura-slate hover:text-aura-gold rounded-xl transition-all cursor-pointer"
+                        className="p-2.5 bg-aura-obsidian hover:bg-[#38BDF8]/10 border border-aura-border hover:border-[#38BDF8]/40 text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all cursor-pointer"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -774,14 +774,14 @@ export const AdminDashboardPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-aura-border/40 font-mono">
                   <tr className="hover:bg-aura-obsidian/40">
-                    <td className="py-3.5 px-4 text-aura-gold font-bold">#101</td>
+                    <td className="py-3.5 px-4 text-[#38BDF8] font-bold">#101</td>
                     <td className="py-3.5 px-4 font-semibold text-aura-ivory">TABLE_SESSION_CHECKOUT</td>
                     <td className="py-3.5 px-4 text-aura-slate">admin@aura.com</td>
                     <td className="py-3.5 px-4"><StatusBadge status="SETTLED" /></td>
                     <td className="py-3.5 px-4 text-aura-slate">Just now</td>
                   </tr>
                   <tr className="hover:bg-aura-obsidian/40">
-                    <td className="py-3.5 px-4 text-aura-gold font-bold">#102</td>
+                    <td className="py-3.5 px-4 text-[#38BDF8] font-bold">#102</td>
                     <td className="py-3.5 px-4 font-semibold text-aura-ivory">ORDER_PLACED</td>
                     <td className="py-3.5 px-4 text-aura-slate">guest@table10.com</td>
                     <td className="py-3.5 px-4"><StatusBadge status="PENDING" /></td>
@@ -800,8 +800,8 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="bg-aura-container border border-aura-border rounded-3xl p-6 sm:p-8 max-w-xl w-full space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-aura-border/60 pb-4">
               <div className="flex items-center space-x-3">
-                <ChefHat className="w-6 h-6 text-aura-gold" />
-                <h3 className="font-serif text-xl font-bold text-aura-ivory">
+                <ChefHat className="w-6 h-6 text-[#38BDF8]" />
+                <h3 className="font-serif text-xl font-bold text-white">
                   {editingDish ? `Edit "${editingDish.name}"` : 'Add New Recipe Dish'}
                 </h3>
               </div>
@@ -822,7 +822,7 @@ export const AdminDashboardPage: React.FC = () => {
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
                   placeholder="e.g. Kashmiri Saffron Zafrani Murgh Tikka"
-                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono"
                 />
               </div>
 
@@ -836,7 +836,7 @@ export const AdminDashboardPage: React.FC = () => {
                     value={dishPrice}
                     onChange={(e) => setDishPrice(e.target.value)}
                     placeholder="650"
-                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono"
                   />
                 </div>
 
@@ -845,7 +845,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <select
                     value={dishCategoryId}
                     onChange={(e) => setDishCategoryId(Number(e.target.value))}
-                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono cursor-pointer"
+                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono cursor-pointer"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -863,7 +863,7 @@ export const AdminDashboardPage: React.FC = () => {
                   value={dishDescription}
                   onChange={(e) => setDishDescription(e.target.value)}
                   placeholder="Artisanal description of ingredients, preparation method, and flavors..."
-                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono resize-none"
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono resize-none"
                 />
               </div>
 
@@ -874,7 +874,7 @@ export const AdminDashboardPage: React.FC = () => {
                   value={dishImageUrl}
                   onChange={(e) => setDishImageUrl(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono text-[11px]"
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono text-[11px]"
                 />
               </div>
 
@@ -885,7 +885,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <select
                     value={dishSpiceLevel}
                     onChange={(e) => setDishSpiceLevel(Number(e.target.value))}
-                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono cursor-pointer"
+                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono cursor-pointer"
                   >
                     <option value={0}>🌶️ None (0)</option>
                     <option value={1}>🌶️ Mild (1)</option>
@@ -902,7 +902,7 @@ export const AdminDashboardPage: React.FC = () => {
                     value={dishPrepTime}
                     onChange={(e) => setDishPrepTime(Number(e.target.value))}
                     placeholder="15"
-                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono"
                   />
                 </div>
               </div>
@@ -911,7 +911,7 @@ export const AdminDashboardPage: React.FC = () => {
               <div className="space-y-1.5 pt-2">
                 <label className="font-semibold text-aura-slate uppercase tracking-wider block">Dietary Tags & Badges</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-aura-gold/40 transition-all">
+                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-[#38BDF8]/40 transition-all">
                     <input
                       type="checkbox"
                       checked={dishIsVeg}
@@ -924,7 +924,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <span className="font-bold text-emerald-400">Vegetarian</span>
                   </label>
 
-                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-aura-gold/40 transition-all">
+                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-[#38BDF8]/40 transition-all">
                     <input
                       type="checkbox"
                       checked={dishIsNonVeg}
@@ -937,7 +937,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <span className="font-bold text-rose-400">Non-Veg</span>
                   </label>
 
-                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-aura-gold/40 transition-all">
+                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-[#38BDF8]/40 transition-all">
                     <input
                       type="checkbox"
                       checked={dishIsGlutenFree}
@@ -947,7 +947,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <span className="font-bold text-amber-300">Gluten-Free (GF)</span>
                   </label>
 
-                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-aura-gold/40 transition-all">
+                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-[#38BDF8]/40 transition-all">
                     <input
                       type="checkbox"
                       checked={dishIsJain}
@@ -957,17 +957,17 @@ export const AdminDashboardPage: React.FC = () => {
                     <span className="font-bold text-purple-300">Jain</span>
                   </label>
 
-                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-aura-gold/40 transition-all">
+                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-[#38BDF8]/40 transition-all">
                     <input
                       type="checkbox"
                       checked={dishIsChefSpecial}
                       onChange={(e) => setDishIsChefSpecial(e.target.checked)}
-                      className="accent-aura-gold rounded"
+                      className="accent-[#0EA5E9] rounded"
                     />
-                    <span className="font-bold text-aura-gold">Chef Special</span>
+                    <span className="font-bold text-[#38BDF8]">Chef Special</span>
                   </label>
 
-                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-aura-gold/40 transition-all">
+                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-[#38BDF8]/40 transition-all">
                     <input
                       type="checkbox"
                       checked={dishIsBestSeller}
@@ -977,7 +977,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <span className="font-bold text-amber-400">Best Seller</span>
                   </label>
 
-                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-aura-gold/40 transition-all col-span-2 sm:col-span-1">
+                  <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-[#38BDF8]/40 transition-all col-span-2 sm:col-span-1">
                     <input
                       type="checkbox"
                       checked={dishIsAvailable}
@@ -999,7 +999,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl uppercase tracking-wider shadow-lg shadow-aura-gold/20 cursor-pointer"
+                  className="px-6 py-3 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl uppercase tracking-wider shadow-lg shadow-[#0EA5E9]/20 cursor-pointer border border-[#7DD3FC]/50"
                 >
                   Save Dish
                 </button>
@@ -1015,8 +1015,8 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="bg-aura-container border border-aura-border rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-aura-border/60 pb-4">
               <div className="flex items-center space-x-3">
-                <Layers className="w-6 h-6 text-aura-gold" />
-                <h3 className="font-serif text-xl font-bold text-aura-ivory">
+                <Layers className="w-6 h-6 text-[#38BDF8]" />
+                <h3 className="font-serif text-xl font-bold text-white">
                   {editingCategory ? `Edit "${editingCategory.name}"` : 'Add Category'}
                 </h3>
               </div>
@@ -1037,7 +1037,7 @@ export const AdminDashboardPage: React.FC = () => {
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                   placeholder="e.g. Botanical Cocktails & Elixirs"
-                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono"
                 />
               </div>
 
@@ -1049,7 +1049,7 @@ export const AdminDashboardPage: React.FC = () => {
                   min="1"
                   value={categoryDisplayOrder}
                   onChange={(e) => setCategoryDisplayOrder(Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-aura-gold font-mono"
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono"
                 />
               </div>
 
@@ -1063,7 +1063,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl uppercase tracking-wider shadow-lg shadow-aura-gold/20 cursor-pointer"
+                  className="px-6 py-3 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl uppercase tracking-wider shadow-lg shadow-[#0EA5E9]/20 cursor-pointer border border-[#7DD3FC]/50"
                 >
                   Save Category
                 </button>
@@ -1079,10 +1079,10 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-aura-border/60 pb-4">
               <div className="flex items-center space-x-3">
                 {activeDetailModal === 'REVENUE' && <DollarSign className="w-6 h-6 text-emerald-400" />}
-                {activeDetailModal === 'ONGOING' && <ShoppingBag className="w-6 h-6 text-aura-gold" />}
+                {activeDetailModal === 'ONGOING' && <ShoppingBag className="w-6 h-6 text-[#38BDF8]" />}
                 {activeDetailModal === 'COMPLETED' && <CheckCircle2 className="w-6 h-6 text-blue-400" />}
                 {activeDetailModal === 'RESERVATIONS' && <Calendar className="w-6 h-6 text-purple-400" />}
-                <h3 className="font-serif text-xl font-bold text-aura-ivory">
+                <h3 className="font-serif text-xl font-bold text-white">
                   {activeDetailModal === 'REVENUE' && 'Daily Revenue & Profit Breakdown'}
                   {activeDetailModal === 'ONGOING' && 'Active Dining Tickets & KDS Status'}
                   {activeDetailModal === 'COMPLETED' && "Today's Settled Orders Log"}
@@ -1109,7 +1109,7 @@ export const AdminDashboardPage: React.FC = () => {
                   </div>
                   <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl">
                     <span className="text-[10px] text-aura-slate uppercase font-bold block">Est. Profit (35%)</span>
-                    <span className="font-serif font-bold text-xl text-aura-gold">
+                    <span className="font-serif font-bold text-xl text-[#38BDF8]">
                       ₹{(displayRevenue * 0.35).toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -1122,7 +1122,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-bold text-aura-gold uppercase tracking-wider text-[11px]">Real Settled Orders Breakdown ({realSettledOrders.length} Invoices)</h4>
+                  <h4 className="font-bold text-[#38BDF8] uppercase tracking-wider text-[11px]">Real Settled Orders Breakdown ({realSettledOrders.length} Invoices)</h4>
                   {realSettledOrders.length === 0 ? (
                     <div className="p-4 bg-aura-obsidian border border-aura-border rounded-xl text-center text-aura-slate font-mono">
                       No settled bills in database yet. Settle bills at Cashier POS to see live revenue breakdown.
@@ -1161,7 +1161,7 @@ export const AdminDashboardPage: React.FC = () => {
                       <div key={ord._id || ord.orderId} className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between">
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-aura-gold">Table {ord.tableId}</span>
+                            <span className="font-bold text-[#38BDF8]">Table {ord.tableId}</span>
                             <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
                               {ord.status || 'received'}
                             </span>
@@ -1176,7 +1176,7 @@ export const AdminDashboardPage: React.FC = () => {
                           </span>
                           <button
                             onClick={() => setViewBillOrder(ord)}
-                            className="px-2.5 py-1 bg-aura-gold/20 hover:bg-aura-gold/30 text-aura-gold border border-aura-gold/40 font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer flex items-center space-x-1"
+                            className="px-2.5 py-1 bg-[#38BDF8]/20 hover:bg-[#38BDF8]/30 text-[#38BDF8] border border-[#38BDF8]/40 font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer flex items-center space-x-1"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>View Bill</span>
@@ -1197,7 +1197,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <div className="py-8 text-center text-aura-slate font-mono">Fetching settled orders from MongoDB...</div>
                 ) : realSettledOrders.length === 0 ? (
                   <div className="py-12 text-center bg-aura-obsidian border border-aura-border rounded-2xl space-y-2 font-mono">
-                    <Receipt className="w-8 h-8 text-aura-gold mx-auto" />
+                    <Receipt className="w-8 h-8 text-[#38BDF8] mx-auto" />
                     <p className="font-bold text-aura-ivory text-sm">No Settled Bills Recorded Yet Today</p>
                     <p className="text-aura-slate text-xs">Settled orders from Cashier POS will automatically appear here.</p>
                   </div>
@@ -1217,7 +1217,7 @@ export const AdminDashboardPage: React.FC = () => {
                       <tbody className="divide-y divide-aura-border/40">
                         {realSettledOrders.map((ord) => (
                           <tr key={ord._id || ord.orderId}>
-                            <td className="py-3 px-3 text-aura-gold font-bold">{ord.invoiceNumber || ord.orderId}</td>
+                            <td className="py-3 px-3 text-[#38BDF8] font-bold">{ord.invoiceNumber || ord.orderId}</td>
                             <td className="py-3 px-3">Table {ord.tableId}</td>
                             <td className="py-3 px-3 text-aura-slate">{ord.paymentMethod || 'UPI/Card'}</td>
                             <td className="py-3 px-3 font-bold text-emerald-400">₹{(ord.total || 0).toLocaleString('en-IN')}</td>
@@ -1226,7 +1226,7 @@ export const AdminDashboardPage: React.FC = () => {
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => setViewBillOrder(ord)}
-                                  className="px-2.5 py-1 bg-aura-gold/20 hover:bg-aura-gold/30 text-aura-gold border border-aura-gold/40 font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer flex items-center space-x-1"
+                                  className="px-2.5 py-1 bg-[#38BDF8]/20 hover:bg-[#38BDF8]/30 text-[#38BDF8] border border-[#38BDF8]/40 font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer flex items-center space-x-1"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
                                   <span>View Bill</span>
@@ -1256,7 +1256,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <div className="space-y-3 font-mono">
                   <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-aura-gold text-sm">Baron Rothschild</h4>
+                      <h4 className="font-bold text-[#38BDF8] text-sm">Baron Rothschild</h4>
                       <span className="text-aura-slate text-[11px]">Party of 4 • VIP Terrace Table 1</span>
                     </div>
                     <div className="text-right">
@@ -1267,7 +1267,7 @@ export const AdminDashboardPage: React.FC = () => {
 
                   <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-aura-gold text-sm">Dr. Ananya Sharma</h4>
+                      <h4 className="font-bold text-[#38BDF8] text-sm">Dr. Ananya Sharma</h4>
                       <span className="text-aura-slate text-[11px]">Party of 2 • Main Dining Table 8</span>
                     </div>
                     <div className="text-right">
@@ -1278,7 +1278,7 @@ export const AdminDashboardPage: React.FC = () => {
 
                   <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-aura-gold text-sm">Vikramaditya Singh</h4>
+                      <h4 className="font-bold text-[#38BDF8] text-sm">Vikramaditya Singh</h4>
                       <span className="text-aura-slate text-[11px]">Party of 6 • Private Dining Suite</span>
                     </div>
                     <div className="text-right">
@@ -1300,7 +1300,7 @@ export const AdminDashboardPage: React.FC = () => {
                   </div>
                   <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl">
                     <span className="text-[10px] text-aura-slate uppercase font-bold block">Refunded Bills</span>
-                    <span className="font-serif font-bold text-xl text-aura-gold">{realRefundedOrders.length} Orders</span>
+                    <span className="font-serif font-bold text-xl text-[#38BDF8]">{realRefundedOrders.length} Orders</span>
                   </div>
                   <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl">
                     <span className="text-[10px] text-aura-slate uppercase font-bold block">Total Refunded Amount</span>

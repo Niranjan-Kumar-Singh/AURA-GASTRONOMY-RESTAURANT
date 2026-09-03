@@ -48,22 +48,22 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-aura-container border border-aura-gold/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200">
+      <div className="bg-aura-container border border-[#38BDF8]/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200">
         <button
           onClick={onCancel}
           disabled={isSubmitting}
-          className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-aura-ivory rounded-full disabled:opacity-40"
+          className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-aura-ivory rounded-full disabled:opacity-40 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center space-x-3">
-          <div className="p-3 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl">
-            <Utensils className="w-6 h-6 text-aura-gold" />
+          <div className="p-3 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl">
+            <Utensils className="w-6 h-6 text-[#38BDF8]" />
           </div>
           <div>
-            <h3 className="font-serif text-lg font-bold text-aura-ivory">Confirm Dining Order</h3>
-            <p className="text-xs text-aura-gold/90 font-semibold">Table {tableId} • Direct Kitchen Dispatch</p>
+            <h3 className="font-serif text-lg font-bold text-white">Confirm Dining Order</h3>
+            <p className="text-xs text-[#38BDF8]/90 font-semibold">Table {tableId} • Direct Kitchen Dispatch</p>
           </div>
         </div>
 
@@ -77,7 +77,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   <p className="text-[10px] text-amber-300 italic font-medium">Note: {item.specialNotes}</p>
                 )}
               </div>
-              <span className="font-mono text-aura-gold font-bold">₹{item.menuItem.price * item.quantity}</span>
+              <span className="font-mono text-[#38BDF8] font-bold">₹{item.menuItem.price * item.quantity}</span>
             </div>
           ))}
         </div>
@@ -101,9 +101,9 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
             <span className="font-mono">₹{gstAmount.toFixed(2)}</span>
           </div>
 
-          <div className="flex justify-between text-base font-bold text-aura-ivory pt-2 border-t border-aura-border">
+          <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-aura-border">
             <span>Total Active Bill</span>
-            <span className="font-mono text-aura-gold">₹{grandTotal.toFixed(2)}</span>
+            <span className="font-mono text-[#38BDF8]">₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           <button
             onClick={onCancel}
             disabled={isSubmitting}
-            className="w-1/3 py-3 bg-aura-obsidian border border-aura-border text-aura-slate hover:text-aura-ivory rounded-2xl text-xs font-bold transition-all disabled:opacity-40"
+            className="w-1/3 py-3 bg-aura-obsidian border border-aura-border text-aura-slate hover:text-aura-ivory rounded-2xl text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
           >
             Cancel
           </button>
@@ -124,11 +124,11 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           <button
             onClick={handleConfirmClick}
             disabled={isSubmitting}
-            className="flex-1 py-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl flex items-center justify-center space-x-2 disabled:opacity-60 cursor-pointer"
+            className="flex-1 py-3.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#0EA5E9]/20 flex items-center justify-center space-x-2 disabled:opacity-60 cursor-pointer border border-[#7DD3FC]/50"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-aura-obsidian" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#090A0F]" />
                 <span>Sending to Kitchen...</span>
               </>
             ) : (

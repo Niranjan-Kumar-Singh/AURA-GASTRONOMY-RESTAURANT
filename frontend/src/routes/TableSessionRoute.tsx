@@ -51,8 +51,8 @@ export const TableSessionRoute: React.FC = () => {
   if (isValidating && !activeTableId) {
     return (
       <div className="min-h-screen bg-aura-obsidian flex flex-col items-center justify-center">
-        <Loader className="w-8 h-8 text-aura-gold animate-spin mb-4" />
-        <p className="text-aura-ivory font-serif">Connecting to Table {tableId} Session...</p>
+        <Loader className="w-8 h-8 text-[#38BDF8] animate-spin mb-4" />
+        <p className="text-white font-serif">Connecting to Table {tableId} Session...</p>
       </div>
     );
   }

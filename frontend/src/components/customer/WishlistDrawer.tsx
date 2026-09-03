@@ -92,7 +92,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({ isOpen, onClose,
               </div>
               <button
                 onClick={onClose}
-                className="px-5 py-2.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-xs rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer"
+                className="px-5 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-bold text-xs rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer"
               >
                 Browse Menu
               </button>
@@ -102,33 +102,33 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({ isOpen, onClose,
               <div 
                 key={item.id} 
                 onClick={() => handleItemClick(item)}
-                className="p-3 rounded-2xl bg-aura-container border border-aura-border/80 flex items-center space-x-3.5 hover:border-aura-gold/60 transition-all shadow-md group cursor-pointer active:scale-[0.99]"
+                className="p-3 rounded-2xl bg-aura-container border border-[#38BDF8]/20 flex items-center space-x-3.5 hover:border-[#38BDF8]/60 transition-all shadow-md group cursor-pointer active:scale-[0.99]"
                 title="Tap to view dish details & add-ons"
               >
                 <img 
                   src={item.imageUrl} 
                   alt={item.name} 
-                  className="w-20 h-20 rounded-xl object-cover border border-aura-border/50 shrink-0 group-hover:scale-105 transition-transform" 
+                  className="w-20 h-20 rounded-xl object-cover border border-[#38BDF8]/20 shrink-0 group-hover:scale-105 transition-transform" 
                 />
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <h3 className="text-xs sm:text-sm font-bold text-aura-ivory truncate group-hover:text-aura-gold transition-colors">
+                    <h3 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#38BDF8] transition-colors">
                       {item.name}
                     </h3>
-                    <Eye className="w-3.5 h-3.5 text-aura-slate opacity-0 group-hover:opacity-100 transition-opacity text-aura-gold shrink-0" />
+                    <Eye className="w-3.5 h-3.5 text-aura-slate opacity-0 group-hover:opacity-100 transition-opacity text-[#38BDF8] shrink-0" />
                   </div>
 
                   <div className="flex items-center space-x-2 mt-0.5 text-[10px] text-aura-slate">
-                    <div className="flex items-center space-x-1 text-amber-400 font-bold">
-                      <Star className="w-3 h-3 fill-amber-400" />
+                    <div className="flex items-center space-x-1 text-[#38BDF8] font-bold">
+                      <Star className="w-3 h-3 fill-[#38BDF8] text-[#38BDF8]" />
                       <span>{item.rating || 4.9}</span>
                     </div>
                     <span>•</span>
-                    <span className="font-mono text-aura-gold font-bold">₹{item.price}</span>
+                    <span className="font-mono text-[#38BDF8] font-bold">₹{item.price}</span>
                   </div>
 
-                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-aura-border/40">
+                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-[#38BDF8]/20">
                     <button
                       onClick={(e) => handleRemoveItem(e, item)}
                       className="p-1 text-aura-slate hover:text-rose-400 transition-colors flex items-center space-x-1 text-[10px]"
@@ -140,7 +140,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({ isOpen, onClose,
 
                     <button 
                       onClick={(e) => handleAddToCart(e, item)}
-                      className="px-3 py-1.5 rounded-xl bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold text-[11px] flex items-center space-x-1 shadow-md transition-transform active:scale-95 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-[11px] flex items-center space-x-1 shadow-md transition-transform active:scale-95 cursor-pointer border border-[#7DD3FC]/50"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Add To Cart</span>

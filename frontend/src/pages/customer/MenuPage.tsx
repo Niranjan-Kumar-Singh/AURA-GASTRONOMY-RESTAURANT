@@ -225,31 +225,31 @@ export const MenuPage: React.FC = () => {
   const todaysSpecials = applyDietaryFilter(menuItems.filter((it) => it.categoryId === 2 || it.isBestSeller));
 
   return (
-    <div className="min-h-screen flex flex-col bg-aura-obsidian text-aura-ivory font-sans selection:bg-aura-gold selection:text-aura-obsidian">
+    <div className="min-h-screen flex flex-col bg-[#090A0F] text-aura-ivory font-sans selection:bg-[#0EA5E9] selection:text-[#090A0F]">
       {/* Sticky Top Navigation Header (Auto-Hides on Mobile Scroll Down) */}
       <header
-        className={`sticky top-0 z-30 bg-aura-obsidian/95 backdrop-blur-md border-b border-aura-border/60 px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between shadow-xl transition-transform duration-300 ${
+        className={`sticky top-0 z-30 bg-[#090A0F] border-b border-[#38BDF8]/20 px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between shadow-xl transition-transform duration-300 ${
           isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
         <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-1.5 sm:p-2 text-aura-slate hover:text-aura-gold rounded-xl hover:bg-aura-container transition-colors shrink-0 cursor-pointer"
+            className="p-1.5 sm:p-2 text-aura-slate hover:text-aura-cyan rounded-xl hover:bg-aura-container transition-colors shrink-0 cursor-pointer"
             title="Open Side Menu"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           <div className="flex items-center space-x-2 min-w-0">
-            <div className="w-8 h-8 bg-aura-gold/10 border border-aura-gold/30 rounded-xl flex items-center justify-center shadow-md shrink-0">
-              <Utensils className="w-4 h-4 text-aura-gold" />
+            <div className="w-8 h-8 bg-aura-cyan/10 border border-aura-cyan/30 rounded-xl flex items-center justify-center shadow-md shrink-0">
+              <Utensils className="w-4 h-4 text-aura-cyan" />
             </div>
             <div className="min-w-0">
               <h1 className="font-serif text-xs sm:text-sm font-bold text-aura-ivory tracking-wide truncate max-w-[130px] sm:max-w-none">
                 AURA GASTRONOMY
               </h1>
-              <p className="text-[8px] sm:text-[9px] text-aura-gold/90 font-semibold tracking-widest uppercase truncate max-w-[140px] sm:max-w-none">
+              <p className="text-[8px] sm:text-[9px] text-aura-cyan/90 font-semibold tracking-widest uppercase truncate max-w-[140px] sm:max-w-none">
                 FINE DINING • LUXURY EXPERIENCE
               </p>
             </div>
@@ -269,12 +269,12 @@ export const MenuPage: React.FC = () => {
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2.5 bg-aura-container border border-aura-border hover:border-aura-gold text-aura-ivory rounded-xl transition-all shadow-lg cursor-pointer"
+            className="relative p-2.5 bg-aura-container border border-aura-border hover:border-aura-cyan text-aura-ivory rounded-xl transition-all shadow-lg cursor-pointer"
             title="View Active Table Cart"
           >
-            <ShoppingBag className="w-5 h-5 text-aura-gold" />
+            <ShoppingBag className="w-5 h-5 text-aura-cyan" />
             {getItemCount() > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-aura-gold text-aura-obsidian text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#0EA5E9] text-[#090A0F] text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
                 {getItemCount()}
               </span>
             )}
@@ -293,12 +293,12 @@ export const MenuPage: React.FC = () => {
       />
 
       {/* Main Content Container */}
-      <main className="flex-1 pb-28">
+      <main className="flex-1 pb-36 sm:pb-32">
         {/* Hero Banner */}
         <CustomerHeroBanner tableId={tableId} zoneName={zoneName} />
 
         {/* Combinable Dietary Filter Chips */}
-        <div className="px-3 sm:px-4 max-w-7xl mx-auto my-3">
+        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto my-3 sm:my-4">
           <FilterChips
             selectedFilters={selectedFilters}
             onToggleFilter={handleToggleFilter}
@@ -311,7 +311,7 @@ export const MenuPage: React.FC = () => {
             {chefSpecials.length > 0 && (
               <RecommendationSection
                 title="Chef's Signature Recommendations"
-                icon={<Sparkles className="w-4 h-4 text-aura-gold" />}
+                icon={<Sparkles className="w-4 h-4 text-[#38BDF8]" />}
                 items={chefSpecials}
                 onItemClick={(it) => {
                   setSelectedItem(it);
@@ -323,7 +323,7 @@ export const MenuPage: React.FC = () => {
             {todaysSpecials.length > 0 && (
               <RecommendationSection
                 title="Today's Most Popular Specials"
-                icon={<Flame className="w-4 h-4 text-amber-400" />}
+                icon={<Flame className="w-4 h-4 text-[#38BDF8]" />}
                 items={todaysSpecials}
                 onItemClick={(it) => {
                   setSelectedItem(it);
@@ -335,7 +335,7 @@ export const MenuPage: React.FC = () => {
         )}
 
         {/* Main Food Items Grid */}
-        <div className="px-3 sm:px-4 py-4 sm:py-6 max-w-7xl mx-auto">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto">
           {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -348,7 +348,7 @@ export const MenuPage: React.FC = () => {
               <p className="font-serif text-base text-aura-ivory">{fetchError}</p>
               <button
                 onClick={fetchMenuData}
-                className="px-5 py-2.5 bg-aura-gold text-aura-obsidian font-bold text-xs rounded-xl flex items-center justify-center space-x-2 mx-auto"
+                className="px-5 py-2.5 bg-aura-cyan text-aura-obsidian font-bold text-xs rounded-xl flex items-center justify-center space-x-2 mx-auto"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Retry Connection</span>
@@ -361,7 +361,7 @@ export const MenuPage: React.FC = () => {
               <p className="text-xs text-aura-slate leading-relaxed">Try clearing your dietary filters or searching for another dish.</p>
               <button
                 onClick={handleResetFilters}
-                className="px-5 py-2.5 bg-aura-gold text-aura-obsidian font-bold text-xs rounded-xl shadow-lg transition-transform hover:scale-105"
+                className="px-5 py-2.5 bg-aura-cyan text-aura-obsidian font-bold text-xs rounded-xl shadow-lg transition-transform hover:scale-105"
               >
                 Reset All Filters
               </button>
@@ -385,8 +385,8 @@ export const MenuPage: React.FC = () => {
               {/* Sentinel Div for Infinite Scroll Batch Loading */}
               {visibleCount < filteredItems.length && (
                 <div ref={sentinelRef} className="py-6 text-center flex items-center justify-center space-x-2">
-                  <div className="w-2 h-2 bg-aura-gold rounded-full animate-ping" />
-                  <span className="text-[11px] text-aura-gold font-mono uppercase font-bold tracking-wider">
+                  <div className="w-2 h-2 bg-aura-cyan rounded-full animate-ping" />
+                  <span className="text-[11px] text-aura-cyan font-mono uppercase font-bold tracking-wider">
                     Loading More Dishes ({visibleCount} of {filteredItems.length})...
                   </span>
                 </div>
@@ -404,18 +404,18 @@ export const MenuPage: React.FC = () => {
 
       {/* Floating Active Cart Bar (Desktop & Mobile) */}
       {getItemCount() > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-40">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full py-3.5 px-5 sm:px-6 bg-gradient-to-r from-aura-gold via-amber-400 to-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-2xl text-xs sm:text-sm transition-all duration-200 shadow-2xl flex items-center justify-between border border-aura-gold/50 active:scale-95 cursor-pointer"
+            className="w-full py-3.5 px-5 sm:px-6 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl text-xs sm:text-sm transition-all duration-200 shadow-[0_4px_25px_rgba(14,165,233,0.5)] flex items-center justify-between border-2 border-[#7DD3FC] active:scale-95 cursor-pointer"
           >
             <div className="flex items-center space-x-2.5">
-              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-aura-obsidian text-aura-gold rounded-full text-xs flex items-center justify-center font-black">
+              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-[#090A0F] text-[#38BDF8] rounded-full text-xs flex items-center justify-center font-black shrink-0">
                 {getItemCount()}
               </span>
-              <span className="font-serif tracking-wide uppercase font-bold">View Active Table Cart</span>
+              <span className="font-serif tracking-wide uppercase font-black text-[#090A0F] text-xs sm:text-sm">View Active Table Cart</span>
             </div>
-            <span className="font-mono font-black text-sm sm:text-base">₹{getGrandTotal().toFixed(2)}</span>
+            <span className="font-mono font-black text-sm sm:text-base text-[#090A0F] shrink-0">₹{getGrandTotal().toFixed(2)}</span>
           </button>
         </div>
       )}

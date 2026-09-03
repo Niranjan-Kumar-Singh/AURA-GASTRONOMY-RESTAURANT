@@ -65,12 +65,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         {/* Left: Brand Logo & Role Nav Chips */}
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-9 h-9 bg-aura-gold/10 border border-aura-gold/30 rounded-xl flex items-center justify-center shadow-md">
-              <Utensils className="w-5 h-5 text-aura-gold" />
+            <div className="w-9 h-9 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-xl flex items-center justify-center shadow-md">
+              <Utensils className="w-5 h-5 text-[#38BDF8]" />
             </div>
             <div>
-              <h1 className="font-serif text-base font-bold text-aura-ivory tracking-wide leading-none">AURA</h1>
-              <p className="text-[9px] text-aura-gold tracking-widest uppercase font-mono font-bold mt-0.5">{userRole} PORTAL</p>
+              <h1 className="font-serif text-base font-bold text-white tracking-wide leading-none">AURA</h1>
+              <p className="text-[9px] text-[#38BDF8] tracking-widest uppercase font-mono font-bold mt-0.5">{userRole} PORTAL</p>
             </div>
           </div>
 
@@ -87,8 +87,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   onClick={() => navigate(link.path)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer border ${
                     isActive
-                      ? 'bg-aura-gold text-aura-obsidian border-aura-gold shadow-md font-black'
-                      : 'bg-aura-obsidian/60 text-aura-slate border-aura-border hover:text-aura-ivory hover:border-aura-gold/40'
+                      ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-md font-black'
+                      : 'bg-[#090A0F]/60 text-aura-slate border-aura-border hover:text-white hover:border-[#38BDF8]/40'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -103,24 +103,24 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setIsCommandOpen(true)}
-            className="px-3 py-1.5 bg-aura-obsidian border border-aura-border hover:border-aura-gold rounded-xl text-xs text-aura-slate flex items-center space-x-2 transition-colors cursor-pointer"
+            className="px-3 py-1.5 bg-[#090A0F] border border-aura-border hover:border-[#38BDF8] rounded-xl text-xs text-aura-slate flex items-center space-x-2 transition-colors cursor-pointer"
           >
-            <Search className="w-3.5 h-3.5 text-aura-gold" />
+            <Search className="w-3.5 h-3.5 text-[#38BDF8]" />
             <span className="hidden lg:inline">Search...</span>
-            <kbd className="bg-aura-container px-1.5 py-0.5 rounded text-[9px] font-mono border border-aura-border text-aura-gold">
+            <kbd className="bg-aura-container px-1.5 py-0.5 rounded text-[9px] font-mono border border-aura-border text-[#38BDF8]">
               Ctrl+K
             </kbd>
           </button>
 
           {/* Live Clock */}
-          <div className="px-3 py-1.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs font-mono text-aura-gold flex items-center space-x-1.5 hidden sm:flex">
-            <Clock className="w-3.5 h-3.5 text-aura-gold" />
+          <div className="px-3 py-1.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs font-mono text-[#38BDF8] flex items-center space-x-1.5 hidden sm:flex">
+            <Clock className="w-3.5 h-3.5 text-[#38BDF8]" />
             <span>{currentTime}</span>
           </div>
 
           {/* User Account Badge & Logout */}
           <div className="flex items-center space-x-2 pl-2 border-l border-aura-border/60">
-            <div className="w-8 h-8 rounded-full bg-aura-gold/10 border border-aura-gold/30 flex items-center justify-center font-bold text-aura-gold text-xs shadow-md">
+            <div className="w-8 h-8 rounded-full bg-[#38BDF8]/10 border border-[#38BDF8]/30 flex items-center justify-center font-bold text-[#38BDF8] text-xs shadow-md">
               {userName.substring(0, 2).toUpperCase()}
             </div>
             <button

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,8 +11,13 @@
   }
 
   body {
-    @apply bg-aura-obsidian text-aura-ivory font-sans antialiased selection:bg-aura-gold selection:text-aura-obsidian;
+    @apply bg-aura-obsidian text-aura-ivory font-sans antialiased;
     overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: #38BDF8;
+    color: #090A0F;
   }
 
   html.modal-open,
@@ -34,17 +39,88 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0B0F;
+  background: #090A0F;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1C1C24;
+  background: #161A28;
   border-radius: 9999px;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #D4AF37;
+  background: #38BDF8;
+}
+
+/* Hide scrollbar for Chrome, Safari, Opera, Edge and Firefox */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+/* Sleek custom horizontal scrollbar with breathing room and Cyan glow */
+.luxury-scrollbar-x::-webkit-scrollbar {
+  height: 3.5px;
+}
+.luxury-scrollbar-x::-webkit-scrollbar-track {
+  background: rgba(18, 21, 32, 0.75);
+  border-radius: 9999px;
+  margin-left: 12px;
+  margin-right: 12px;
+}
+.luxury-scrollbar-x::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.4);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+.luxury-scrollbar-x::-webkit-scrollbar-thumb:hover {
+  background: #38BDF8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+.luxury-scrollbar-x {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.4) rgba(18, 21, 32, 0.75);
+}
+
+/* Glassmorphism & Card Utilities */
+.glass-panel {
+  background: rgba(22, 26, 40, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.glass-card {
+  background: rgba(30, 35, 54, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.cyan-glow {
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+}
+
+.cyan-text-gradient {
+  background: linear-gradient(135deg, #7DD3FC 0%, #38BDF8 50%, #0284C7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.card-hover-effect {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.2);
 }
 
 /* Print Media Styles — Thermal & GST Tax Receipts Only */

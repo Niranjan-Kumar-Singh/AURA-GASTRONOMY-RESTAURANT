@@ -42,19 +42,19 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-aura-container border border-aura-gold/40 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200">
+      <div className="bg-[#121520] border border-[#38BDF8]/40 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-aura-ivory rounded-full"
+          className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-white rounded-full cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="text-center space-y-1">
-          <div className="w-12 h-12 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl flex items-center justify-center mx-auto mb-2">
-            <User className="w-6 h-6 text-aura-gold" />
+          <div className="w-12 h-12 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl flex items-center justify-center mx-auto mb-2">
+            <User className="w-6 h-6 text-[#38BDF8]" />
           </div>
-          <h3 className="font-serif text-xl font-bold text-aura-ivory">
+          <h3 className="font-serif text-xl font-bold text-white">
             {mode === 'LOGIN' ? 'Customer Sign In' : 'Create Account'}
           </h3>
           <p className="text-xs text-aura-slate">Unlock loyalty rewards, past history & personalized recommendations</p>
@@ -70,7 +70,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full pl-10 pr-4 py-3 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory placeholder:text-aura-slate focus:outline-none focus:border-aura-gold"
+                className="w-full pl-10 pr-4 py-3 bg-[#090A0F] border border-[#38BDF8]/20 rounded-xl text-xs text-white placeholder:text-aura-slate focus:outline-none focus:border-[#38BDF8]"
               />
             </div>
           )}
@@ -83,7 +83,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Mobile Number (+91)"
-              className="w-full pl-10 pr-4 py-3 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory placeholder:text-aura-slate focus:outline-none focus:border-aura-gold"
+              className="w-full pl-10 pr-4 py-3 bg-[#090A0F] border border-[#38BDF8]/20 rounded-xl text-xs text-white placeholder:text-aura-slate focus:outline-none focus:border-[#38BDF8]"
             />
           </div>
 
@@ -95,13 +95,13 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full pl-10 pr-4 py-3 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory placeholder:text-aura-slate focus:outline-none focus:border-aura-gold"
+              className="w-full pl-10 pr-4 py-3 bg-[#090A0F] border border-[#38BDF8]/20 rounded-xl text-xs text-white placeholder:text-aura-slate focus:outline-none focus:border-[#38BDF8]"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg"
+            className="w-full py-3.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg border border-[#7DD3FC]/50 cursor-pointer"
           >
             {mode === 'LOGIN' ? 'SIGN IN' : 'REGISTER NOW'}
           </button>
@@ -111,14 +111,14 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
           {mode === 'LOGIN' ? (
             <p className="text-aura-slate">
               Don't have an account?{' '}
-              <button onClick={() => setMode('REGISTER')} className="text-aura-gold font-bold hover:underline">
+              <button onClick={() => setMode('REGISTER')} className="text-[#38BDF8] font-bold hover:underline cursor-pointer">
                 Register Now
               </button>
             </p>
           ) : (
             <p className="text-aura-slate">
               Already registered?{' '}
-              <button onClick={() => setMode('LOGIN')} className="text-aura-gold font-bold hover:underline">
+              <button onClick={() => setMode('LOGIN')} className="text-[#38BDF8] font-bold hover:underline cursor-pointer">
                 Sign In
               </button>
             </p>

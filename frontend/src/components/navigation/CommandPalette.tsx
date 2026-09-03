@@ -63,7 +63,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       <div className="bg-aura-container border border-aura-border text-aura-ivory w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
         {/* Search Header */}
         <div className="p-4 border-b border-aura-border flex items-center space-x-3">
-          <Search className="w-5 h-5 text-aura-gold" />
+          <Search className="w-5 h-5 text-[#38BDF8]" />
           <input
             type="text"
             autoFocus
@@ -73,9 +73,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
               setSelectedIndex(0);
             }}
             placeholder="Type a command, search pages, or trigger action... (Esc to close)"
-            className="flex-1 bg-transparent text-sm text-aura-ivory placeholder:text-aura-slate focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-white placeholder:text-aura-slate focus:outline-none font-mono"
           />
-          <button onClick={onClose} className="text-aura-slate hover:text-aura-ivory">
+          <button onClick={onClose} className="text-aura-slate hover:text-white cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -92,11 +92,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                   key={item.id}
                   onClick={item.action}
                   className={`p-3 rounded-xl cursor-pointer flex items-center justify-between transition-all text-xs ${
-                    index === selectedIndex ? 'bg-aura-gold/10 text-aura-gold font-bold border border-aura-gold/30' : 'hover:bg-aura-obsidian/60 text-aura-ivory'
+                    index === selectedIndex ? 'bg-[#38BDF8]/10 text-[#38BDF8] font-bold border border-[#38BDF8]/30' : 'hover:bg-aura-obsidian/60 text-white'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <Icon className="w-4 h-4 text-aura-gold" />
+                    <Icon className="w-4 h-4 text-[#38BDF8]" />
                     <span>{item.title}</span>
                   </div>
                   <span className="text-[10px] text-aura-slate font-mono uppercase bg-aura-obsidian px-2 py-0.5 rounded border border-aura-border">
@@ -115,7 +115,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             <span>↵ Select</span>
             <span>Esc Close</span>
           </div>
-          <span className="text-aura-gold font-bold">AURA Command Bar</span>
+          <span className="text-[#38BDF8] font-bold">AURA Command Bar</span>
         </div>
       </div>
     </div>

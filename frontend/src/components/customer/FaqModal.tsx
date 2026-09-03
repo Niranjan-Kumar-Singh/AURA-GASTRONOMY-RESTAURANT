@@ -61,17 +61,17 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
 
         <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
           {loading ? (
-            <div className="flex justify-center p-8"><Loader className="w-6 h-6 animate-spin text-aura-gold" /></div>
+            <div className="flex justify-center p-8"><Loader className="w-6 h-6 animate-spin text-[#38BDF8]" /></div>
           ) : (
             faqs.map((faq, i) => (
               <div 
                 key={i} 
                 onClick={() => setOpenIdx(openIdx === i ? null : i)}
-                className="bg-aura-container border border-aura-border rounded-2xl overflow-hidden cursor-pointer transition-all hover:border-aura-gold/40"
+                className="bg-aura-container border border-aura-border rounded-2xl overflow-hidden cursor-pointer transition-all hover:border-[#38BDF8]/40"
               >
                 <div className="p-4 flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-aura-ivory pr-4">{faq.question}</h3>
-                  {openIdx === i ? <ChevronUp className="w-4 h-4 text-aura-gold shrink-0" /> : <ChevronDown className="w-4 h-4 text-aura-slate shrink-0" />}
+                  <h3 className="font-bold text-sm text-white pr-4">{faq.question}</h3>
+                  {openIdx === i ? <ChevronUp className="w-4 h-4 text-[#38BDF8] shrink-0" /> : <ChevronDown className="w-4 h-4 text-aura-slate shrink-0" />}
                 </div>
                 {openIdx === i && (
                   <div className="px-4 pb-4 text-xs text-aura-slate leading-relaxed border-t border-aura-border/40 pt-3">
@@ -82,9 +82,9 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
             ))
           )}
           
-          <div className="mt-8 p-4 bg-aura-gold/5 border border-aura-gold/20 rounded-2xl text-center space-y-2">
-            <p className="text-xs text-aura-ivory font-bold uppercase tracking-wider">Need immediate help?</p>
-            <p className="text-lg font-mono text-aura-gold">+91 80 4912 3456</p>
+          <div className="mt-8 p-4 bg-[#38BDF8]/5 border border-[#38BDF8]/20 rounded-2xl text-center space-y-2">
+            <p className="text-xs text-white font-bold uppercase tracking-wider">Need immediate help?</p>
+            <p className="text-lg font-mono text-[#38BDF8] font-bold">+91 80 4912 3456</p>
             <p className="text-[10px] text-aura-slate">support@auradining.com</p>
           </div>
         </div>

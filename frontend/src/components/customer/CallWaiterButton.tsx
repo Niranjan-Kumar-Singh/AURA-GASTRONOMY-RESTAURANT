@@ -3,6 +3,7 @@ import { Bell, Droplet, UtensilsCrossed, Receipt, CheckCircle, X, ShieldAlert, U
 import { useToast } from '../feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useCartStore } from '../../store/use-cart-store';
 
 interface CallWaiterButtonProps {
   tableId?: string;
@@ -13,6 +14,8 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
   useBodyScrollLock(isOpen);
   const [sentReason, setSentReason] = useState<string | null>(null);
   const { showToast } = useToast();
+  const itemCount = useCartStore((state) => state.getItemCount());
+  const hasCart = itemCount > 0;
 
   const handleRequest = async (reason: string) => {
     setSentReason(reason);
@@ -44,9 +47,9 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
 
   const options = [
     { label: 'Request Final Bill & Checkout', reason: 'Request Final Bill / Settlement', icon: <Receipt className="w-4.5 h-4.5 text-emerald-400" />, isPrimary: true },
-    { label: 'Call Waiter to Table', reason: 'Call Waiter to Table', icon: <Bell className="w-4.5 h-4.5 text-aura-gold" /> },
+    { label: 'Call Waiter to Table', reason: 'Call Waiter to Table', icon: <Bell className="w-4.5 h-4.5 text-[#38BDF8]" /> },
     { label: 'Water Refill', reason: 'Water Refill Request', icon: <Droplet className="w-4.5 h-4.5 text-sky-400" /> },
-    { label: 'Extra Cutlery & Napkins', reason: 'Cutlery & Napkins Request', icon: <UtensilsCrossed className="w-4.5 h-4.5 text-amber-400" /> },
+    { label: 'Extra Cutlery & Napkins', reason: 'Cutlery & Napkins Request', icon: <UtensilsCrossed className="w-4.5 h-4.5 text-[#7DD3FC]" /> },
     { label: 'Speak to Floor Manager', reason: 'Request Manager Assistance', icon: <UserCheck className="w-4.5 h-4.5 text-purple-400" /> },
   ];
 
@@ -55,39 +58,43 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
       {/* Floating Action Trigger */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 p-3 sm:p-3.5 bg-aura-gold hover:bg-aura-gold-hover text-aura-obsidian font-bold rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 border border-aura-gold/40 cursor-pointer"
+        className={`fixed z-40 p-2.5 sm:p-3.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-full shadow-[0_4px_25px_rgba(14,165,233,0.5)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 border-2 border-[#7DD3FC] cursor-pointer ${
+          hasCart
+            ? 'bottom-20 right-4 sm:bottom-6 sm:right-6'
+            : 'bottom-5 right-4 sm:bottom-6 sm:right-6'
+        }`}
         title="Call Waiter"
       >
-        <Bell className="w-5 h-5 animate-pulse" />
-        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider">Call Waiter</span>
+        <Bell className="w-5 h-5 text-[#090A0F] animate-pulse" />
+        <span className="text-xs hidden sm:inline uppercase font-black tracking-wider text-[#090A0F]">Call Waiter</span>
       </button>
 
       {/* Modal Dialog */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-aura-container border border-aura-gold/30 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#10131E] border border-[#38BDF8]/40 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl relative animate-in fade-in zoom-in duration-200">
             <button
               onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-aura-ivory rounded-full hover:bg-white/10"
+              className="absolute top-4 right-4 p-1.5 text-[#94A3B8] hover:text-white rounded-full hover:bg-white/10"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-aura-gold/10 border border-aura-gold/30 rounded-2xl">
-                <Bell className="w-6 h-6 text-aura-gold" />
+              <div className="p-3 bg-[#38BDF8]/15 border border-[#38BDF8]/40 rounded-2xl">
+                <Bell className="w-6 h-6 text-[#38BDF8]" />
               </div>
               <div>
-                <h3 className="font-serif text-lg font-bold text-aura-ivory">Call Waiter</h3>
-                <p className="text-xs text-aura-slate">Table {tableId} • Request immediate table service</p>
+                <h3 className="font-serif text-lg font-bold text-white">Call Waiter</h3>
+                <p className="text-xs text-[#94A3B8]">Table {tableId} • Request immediate table service</p>
               </div>
             </div>
 
             {sentReason ? (
               <div className="py-8 text-center space-y-2">
-                <CheckCircle className="w-12 h-12 text-aura-emerald mx-auto animate-bounce" />
-                <p className="font-bold text-aura-ivory text-sm">Alert Sent to Waiter</p>
-                <p className="text-xs text-aura-slate">"{sentReason}" — Waiter will arrive shortly.</p>
+                <CheckCircle className="w-12 h-12 text-[#10B981] mx-auto animate-bounce" />
+                <p className="font-bold text-white text-sm">Alert Sent to Waiter</p>
+                <p className="text-xs text-[#94A3B8]">"{sentReason}" — Waiter will arrive shortly.</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
@@ -98,7 +105,7 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
                     className={`w-full p-3.5 rounded-xl flex items-center space-x-3 text-xs font-bold transition-all cursor-pointer ${
                       opt.isPrimary
                         ? 'bg-emerald-500/15 border-2 border-emerald-500/60 hover:border-emerald-400 text-emerald-300 shadow-md'
-                        : 'bg-aura-obsidian border border-aura-border/60 hover:border-aura-gold text-aura-ivory hover:translate-x-1'
+                        : 'bg-[#090A0F] border border-[#38BDF8]/30 hover:border-[#38BDF8] text-white hover:bg-[#161A28] hover:translate-x-1'
                     }`}
                   >
                     {opt.icon}

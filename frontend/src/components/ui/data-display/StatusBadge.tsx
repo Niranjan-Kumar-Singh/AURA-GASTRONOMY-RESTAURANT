@@ -24,7 +24,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = ''
       case 'CANCELLED':
         return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
       default:
-        return 'bg-aura-gold/10 text-aura-gold border-aura-gold/30';
+        return 'bg-[#38BDF8]/10 text-[#38BDF8] border-[#38BDF8]/30';
     }
   };
 
