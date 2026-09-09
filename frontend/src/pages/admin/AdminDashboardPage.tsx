@@ -347,93 +347,98 @@ export const AdminDashboardPage: React.FC = () => {
   const totalRefundedSum = realRefundedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
   return (
-    <div className="h-full overflow-y-auto p-6 font-sans text-aura-ivory">
+    <div className="page-theme-admin h-full overflow-y-auto p-6 font-sans text-theme-text bg-theme-bg">
       <div className="max-w-7xl mx-auto space-y-6 pb-24">
         {/* Header Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-aura-container border border-aura-border/80 p-6 rounded-3xl shadow-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-theme-surface border border-theme-border p-6 rounded-2xl shadow-xl">
           <div className="flex items-center space-x-4">
-            <div className="p-3.5 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl shadow-inner">
-              <TrendingUp className="w-8 h-8 text-[#38BDF8]" />
+            <div className="p-3.5 bg-theme-primary-light border border-theme-primary/30 rounded-xl shadow-inner">
+              <TrendingUp className="w-7 h-7 text-theme-primary" />
             </div>
             <div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-wide text-white">
-                ADMIN MISSION CONTROL
-              </h1>
-              <p className="text-xs text-aura-slate mt-0.5">Live Menu Catalog Management & Enterprise Operations Audit</p>
+              <div className="flex items-center space-x-2">
+                <h1 className="font-serif text-2xl font-black tracking-wide text-white">
+                  ADMIN MISSION CONTROL
+                </h1>
+                <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-theme-primary-light text-theme-primary border border-theme-primary/30 uppercase">
+                  ENTERPRISE
+                </span>
+              </div>
+              <p className="text-xs text-theme-muted mt-0.5">Live Menu Catalog Management &amp; Enterprise Operations Audit</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center space-x-2.5 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 font-mono text-xs shadow-inner">
-              <span className="relative flex h-2.5 w-2.5">
+            <div className="flex items-center space-x-2 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 font-mono text-xs shadow-inner">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="font-bold tracking-wider uppercase text-[11px]">Real-Time DB Sync</span>
+              <span className="font-bold tracking-wider uppercase text-[10px]">Real-Time DB Sync</span>
             </div>
 
             <button
               onClick={() => fetchMetricsAndOrders(true)}
               disabled={isLoadingRealOrders}
-              className="px-4 py-2.5 bg-aura-obsidian hover:bg-aura-container border border-aura-border text-aura-ivory rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer shadow-md"
+              className="px-3.5 py-2 bg-[#07090E] hover:bg-slate-900 border border-slate-800 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer shadow-sm"
             >
-              <RefreshCw className={`w-4 h-4 text-[#38BDF8] ${isLoadingRealOrders ? 'animate-spin' : ''}`} />
-              <span>Refresh Stream</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isLoadingRealOrders ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
             </button>
 
             <a
               href="/owner"
-              className="px-4 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs rounded-xl shadow-lg shadow-[#0EA5E9]/20 transition-all flex items-center space-x-2 cursor-pointer border border-[#7DD3FC]/50"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-900/30 transition-all flex items-center space-x-2 cursor-pointer border border-indigo-400/40"
             >
-              <Award className="w-4 h-4" />
-              <span>Owner CEO Analytics →</span>
+              <Award className="w-3.5 h-3.5" />
+              <span>Executive Cockpit →</span>
             </a>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2 text-xs border-b border-aura-border/60 pb-3">
+        <div className="flex flex-wrap items-center gap-2 text-xs border-b border-slate-800/80 pb-3">
           <button
             onClick={() => setActiveTab('OVERVIEW')}
-            className={`px-4 py-2 rounded-xl font-bold transition-all border cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all border cursor-pointer ${
               activeTab === 'OVERVIEW'
-                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
+                ? 'bg-slate-800 text-white border-slate-600 shadow-md font-black'
+                : 'bg-[#0A0D15] text-slate-400 border-slate-800/80 hover:text-white hover:border-slate-700'
             }`}
           >
             Operational Overview
           </button>
           <button
             onClick={() => setActiveTab('MENU_CATALOG')}
-            className={`px-4 py-2 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
               activeTab === 'MENU_CATALOG'
-                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
+                ? 'bg-slate-800 text-white border-slate-600 shadow-md font-black'
+                : 'bg-[#0A0D15] text-slate-400 border-slate-800/80 hover:text-white hover:border-slate-700'
             }`}
           >
-            <ChefHat className="w-4 h-4" />
-            <span>Manage Menu Dishes ({menuItems.length})</span>
+            <ChefHat className="w-4 h-4 text-amber-400" />
+            <span>Manage Menu Catalog ({menuItems.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('CATEGORIES')}
-            className={`px-4 py-2 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
               activeTab === 'CATEGORIES'
-                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
+                ? 'bg-slate-800 text-white border-slate-600 shadow-md font-black'
+                : 'bg-[#0A0D15] text-slate-400 border-slate-800/80 hover:text-white hover:border-slate-700'
             }`}
           >
-            <Layers className="w-4 h-4" />
+            <Layers className="w-4 h-4 text-cyan-400" />
             <span>Categories ({categories.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('AUDIT_LOGS')}
-            className={`px-4 py-2 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
               activeTab === 'AUDIT_LOGS'
-                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
+                ? 'bg-slate-800 text-white border-slate-600 shadow-md font-black'
+                : 'bg-[#0A0D15] text-slate-400 border-slate-800/80 hover:text-white hover:border-slate-700'
             }`}
           >
-            <ShieldCheck className="w-4 h-4" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Security Audit Stream</span>
           </button>
         </div>

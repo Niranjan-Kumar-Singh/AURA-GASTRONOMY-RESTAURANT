@@ -1,17 +1,22 @@
-# ✨ AURA Gastronomy & Botanical Bar — Enterprise Digital Dining & POS Platform
+# 🌿 AURA Gastronomy — Enterprise Digital Dining & Restaurant OS
 
 <div align="center">
 
-  ![AURA Gastronomy Banner](https://img.shields.io/badge/AURA-Luxury%20Digital%20Dining-D4AF37?style=for-the-badge&logoColor=fff)
-  ![License](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-  ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-  ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-  ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+  <img src="https://img.shields.io/badge/RASA-Modern%20Indian%20Kitchen-0C831F?style=for-the-badge&logoColor=fff" alt="RASA" />
+  <img src="https://img.shields.io/badge/AURA-Digital%20Dining%20Platform-0F0F11?style=for-the-badge&logoColor=fff" alt="AURA" />
+  <img src="https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge" alt="MIT License" />
+  <br />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+
+  <br /><br />
 
   <p align="center">
     <b>A state-of-the-art, real-time luxury restaurant management ecosystem.</b><br />
-    Designed for high-speed fine dining operations: Contactless QR Ordering, AI Gastronomy Concierge, Kitchen Display System (KDS), Waiter Floor Management, Cashier POS Billing, and Executive Analytics.
+    Contactless QR Ordering · AI Gastronomy Concierge · Kitchen Display System · Waiter Floor Terminal · Cashier POS · Executive Analytics
   </p>
 
   <p align="center">
@@ -26,116 +31,180 @@
 
 ## 📖 Table of Contents
 - [✨ Project Overview](#-project-overview)
-- [👤 Author & Contact Information](#-author--contact-information)
-- [🖥️ Core Terminals & Dashboard Links](#%EF%B8%8F-core-terminals--dashboard-links)
-- [🔄 Complete End-to-End Operating Workflow](#-complete-end-to-end-operating-workflow)
-- [💎 Key System Features & Accomplishments](#-key-system-features--accomplishments)
+- [🆕 What's New — Latest Updates](#-whats-new--latest-updates)
+- [🖥️ Core Terminals & Dashboard Links](#️-core-terminals--dashboard-links)
+- [🔄 End-to-End Operating Workflow](#-end-to-end-operating-workflow)
+- [💎 Key Features & Accomplishments](#-key-features--accomplishments)
 - [🛠 Tech Stack & Architecture](#-tech-stack--architecture)
 - [🚀 Quickstart Installation Guide](#-quickstart-installation-guide)
-- [🌐 SEO & Social Metadata](#-seo--social-metadata)
+- [👤 Author & Contact](#-author--contact)
 - [📜 License](#-license)
 
 ---
 
 ## ✨ Project Overview
 
-**AURA Gastronomy** is an enterprise-grade, highly scalable full-stack digital dining platform built to deliver an uncompromised luxury experience for guests while streamlining multi-department restaurant operations.
+**AURA Gastronomy** is an enterprise-grade, full-stack **Digital Dining & Restaurant Operating System** — built to deliver an uncompromised luxury experience for guests while streamlining every department of a modern restaurant in seamless real-time.
 
-From table-side QR menu browsing with **AURA AI HelpBot Concierge** to kitchen preparation queues, live waiter floor dispatch, and cashier tax invoice settlement, **AURA** connects customers, kitchen chefs, floor waiters, cashiers, and restaurant owners in seamless real-time synchronization.
+> 🌿 *The restaurant brand powering this platform is* **RASA** *— Sanskrit for "essence, flavor & emotion". The name reflects the philosophy that every great dish tells a story.*
+
+From a guest's first QR scan to a chef's final ticket mark, waiter dispatch, cashier settlement, and table reset — **AURA** connects customers, kitchen chefs, floor waiters, cashiers, and restaurant owners in one synchronized real-time ecosystem.
 
 ---
 
-## 👤 Author & Contact Information
+## 🆕 What's New — Latest Updates
 
-| Attribute | Details |
-| :--- | :--- |
-| **Lead Creator & Architect** | **Niranjan Kumar Singh** |
-| **Email Address** | [**`niranjansingh1419@gmail.com`**](mailto:niranjansingh1419@gmail.com) |
-| **Instagram Profile** | [**`@niranjan.ks.in`**](https://instagram.com/niranjan.ks.in) |
-| **GitHub Repository** | [**`AURA-GASTRONOMY-RESTAURANT`**](https://github.com/Niranjan-Kumar-Singh/AURA-GASTRONOMY-RESTAURANT) |
-| **Project Role** | Systems Architect & Lead Full-Stack Engineer |
+### ✦ Customer Experience Overhaul
+- **Order Tracking Page** completely rebuilt with customer engagement features:
+  - 🍳 **Chef's Wisdom** — rotating curated culinary quotes from the kitchen
+  - 💡 **Did You Know?** — rotating dining knowledge facts carousel
+  - 🛒 **While You Wait** — quick-add prompts for salads, drinks, breads, desserts
+  - ⭐ **You Might Also Love** — live recommended dishes fetched from the real menu
+  - 📶 **Amenities Card** — WiFi password, Live Music schedule, Help CTA
+  - 🌟 **Star Rating Teaser** — inline experience feedback prompt
+
+### ✦ Cart Engagement (CartDrawer)
+- Replaced static prep-time banner with **rotating contextual tips** (5 smart dining suggestions)
+- Added **AI-Powered "Pairs Perfectly" strip** — horizontal carousel of recommended pairings from the `aiPairingEngine`
+
+### ✦ Menu Cards (DishCard)
+- **Removed prep time overlay** from dish card image — cleaner, less cluttered UI
+- More image real estate; timing expectation now managed by the Order Tracker instead
+
+### ✦ Auto Table Cleanup Lifecycle
+- After bill payment, table auto-enters `CLEANING` status
+- **Timer reduced from 5 minutes → 2.5 minutes** for faster table turnaround
+- At 2.5 min, table automatically transitions `CLEANING → AVAILABLE` on next API poll
+- Zero manual intervention needed from floor staff
+
+### ✦ Typography System — Complete Overhaul
+Full 4-font premium restaurant typography stack:
+
+| Font | Role | Context |
+|:---|:---|:---|
+| **Poppins** | Primary UI body | Customer menu, cart, tracking — perfect ₹ glyph rendering |
+| **Sora** | Display headings | Section titles, page headers — geometric, premium |
+| **Inter** | Staff dashboards | Kitchen, Waiter, Cashier, Admin — compact, data-dense |
+| **JetBrains Mono** | POS terminal numbers | Cashier & Kitchen IDs only — terminal precision |
+
+> **Key fix:** Prices on customer screens now use **Poppins + `font-variant-numeric: tabular-nums`** instead of a monospace font — the same approach used by Blinkit, Swiggy, and Zomato. The ₹ symbol now renders at the correct optical weight alongside digits.
 
 ---
 
 ## 🖥️ Core Terminals & Dashboard Links
 
-| Terminal / Portal | Access Role | Description |
-| :--- | :--- | :--- |
-| 📱 **Customer Table Menu** | Guest / Customer | Contactless digital menu with dish customizations, category filters, cart drawer, AI Chatbot, and table-side ordering. |
-| 📊 **Live Order Tracker** | Guest / Customer | Real-time preparation timeline tracking, countdown timers, itemized receipt breakdown, and service call requests. |
-| 🍳 **Kitchen Display System (KDS)** | Kitchen Staff / Chef | Real-time ticket queue for incoming orders with urgency timers, dish item checks, and status toggles (`Received` ➔ `Preparing` ➔ `Ready`). |
-| 🤵 **Waiter Floor Terminal** | Waiter / Floor Staff | Interactive 30-table floor grid showing live occupancy, active order totals, ready food pickup alerts, call-waiter assistance notifications, and status transitions. |
-| 💳 **Cashier POS & Tax Terminal** | Cashier / Billing | Live billing queue, itemized tax invoice compilation, bill splitting, payment settlement (`UPI_QR`, `CARD`, `CASH`), and searchable settlement archives. |
-| 👑 **Owner Executive Portal** | Owner / Manager | Real-time shift revenue analytics, popular dish sales leaderboards, table occupancy statistics, and menu item availability controls. |
+| Terminal / Portal | Role | Description |
+|:---|:---|:---|
+| 📱 **Customer Table Menu** | Guest | Contactless QR menu, category filters, dish cards, AI Chatbot concierge, cart drawer with spend rewards |
+| 📊 **Live Order Tracker** | Guest | Real-time 4-step preparation timeline, chef wisdom, dish suggestions, amenity info |
+| 🍳 **Kitchen Display (KDS)** | Chef | Ticket queue with urgency timers, `Received → Preparing → Ready` status toggles |
+| 🤵 **Waiter Floor Terminal** | Waiter | 30-table interactive floor map, occupancy status, food pickup chime alerts, call-waiter notifications |
+| 💳 **Cashier POS Terminal** | Cashier | Live billing queue, GST tax invoices, multi-payment settlement (`UPI`, `CARD`, `CASH`), archive search |
+| 👑 **Owner Executive Portal** | Owner | Real-time revenue, popular dish leaderboards, occupancy stats, menu availability controls |
 
 ---
 
-## 🔄 Complete End-to-End Operating Workflow
+## 🔄 End-to-End Operating Workflow
 
 ```mermaid
 flowchart TD
-    A[📱 Customer Scans Table QR] --> B[📖 Browses Menu & Consults AI HelpBot]
-    B --> C[🛒 Places Order -> Real-Time Synced]
-    C --> D[🍳 Kitchen Display System receives Order]
-    D --> E[👨‍🍳 Chef marks Order PREPARING -> READY]
-    E --> F[🔔 Waiter Terminal receives Hot Pickup Chime Alert]
-    F --> G[🤵 Waiter Serves Food to Guest Table]
-    G --> H[💳 Guest / Waiter Requests Final Bill]
-    H --> I[💰 Cashier POS Settles Session Tax Invoice]
-    I --> J[🧹 Table Auto-Transitions to CLEANING -> AVAILABLE]
+    A[📱 Guest Scans Table QR Code] --> B[📖 Browses RASA Menu & Consults AI HelpBot]
+    B --> C[🛒 Adds Dishes to Cart — Spend Rewards Unlock]
+    C --> D[✅ Confirms Order — Sent to Kitchen]
+    D --> E[🍳 KDS receives ticket instantly]
+    E --> F[👨‍🍳 Chef: Received → Preparing → Ready]
+    F --> G[🔔 Waiter Terminal gets hot-food chime alert]
+    G --> H[🤵 Waiter serves food to table]
+    H --> I[📊 Guest tracks live status on Order Tracker]
+    I --> J[💳 Guest requests bill — Cashier settles invoice]
+    J --> K[🧹 Table auto-transitions: BILLING → CLEANING]
+    K --> L[⏱️ 2.5 min timer → Table marked AVAILABLE]
+    L --> A
 ```
 
-1. **Guest Seating & QR Ordering**:
-   * Customer scans table QR code (e.g. Table 17), browses the rich visual menu with 10+ categories and dozens of dishes, adds modifiers, and places an order (`ORD-8901`).
-2. **AI Gastronomy Concierge**:
-   * Integrated **AURA AI HelpBot** assists guests with wine pairings, dietary preferences, spice adjustments, and recipe recommendations.
-3. **Kitchen Preparation (KDS)**:
-   * Order appears instantly on the Kitchen KDS board with prep countdown timer.
-   * Chef updates ticket status: **Received ➔ Preparing ➔ Ready for Pickup**.
-4. **Waiter Dispatch & Service**:
-   * Waiter Dashboard plays an audio chime alert: *"Hot Food Ready at Kitchen Pass!"*.
-   * Waiter delivers dish and marks order **`Served`**.
-5. **Session Multi-Ordering**:
-   * Guests can place additional orders during their session. All orders are automatically linked to the table session.
-6. **Bill Settlement & Cleaning**:
-   * Upon requesting the bill, Cashier POS compiles all session orders into **1 Unique Tax Invoice** (`INV-50B7FD`).
-   * Once payment is settled, the table status automatically transitions to **`CLEANING`**, ready for busboy reset.
+**Step-by-step:**
+
+1. **Guest Arrival & QR Ordering** — Customer scans table QR, browses the visual menu with 10+ categories, adds dishes with cooking notes and customizations, unlocks spend-tier rewards, and places order.
+2. **AI Gastronomy Concierge** — AURA HelpBot assists guests with wine pairings, dietary preferences, spice levels, and recipe stories in real-time chat.
+3. **Kitchen Preparation (KDS)** — Order appears on KDS board with urgency timer. Chef progresses status: `Received → Preparing → Ready`.
+4. **Waiter Dispatch** — Waiter terminal plays audio chime. Waiter picks up dish and marks `Served`.
+5. **Live Order Tracking** — Customer sees 4-step progress tracker, chef wisdom, and menu suggestions while waiting.
+6. **Multi-Order Sessions** — Guests can place additional orders anytime during their session. All orders aggregate to the table session.
+7. **Bill Settlement** — Cashier compiles all session orders into one GST tax invoice. Payment settled via UPI/Card/Cash.
+8. **Auto Table Reset** — Table enters `CLEANING` automatically. After **2.5 minutes**, it transitions to `AVAILABLE` — ready for the next guest.
 
 ---
 
-## 💎 Key System Features & Accomplishments
+## 💎 Key Features & Accomplishments
 
-- ⚡ **Virtualization & DOM Batching**: Implemented `LazyDishCard` with `IntersectionObserver` and 12-dish batch virtual windowing, reducing initial DOM node count by 94% (~4,000 to ~250 nodes).
-- 🖼️ **Native Image Optimization**: Added `loading="lazy"`, `decoding="async"`, and skeleton shimmer blur-up transitions across all dish cards and modal hero images.
-- 🧾 **Synchronized Order IDs & Tax Invoices**: 100% order ID consistency (`ORD-8901`) and GST Tax Invoice numbers (`INV-50B7FD`) across Customer Receipts, Cashier POS, and Admin Reports.
-- 🔍 **Omni-Search Engine**: Cashier POS archive search matches instantly across Table #, Order ID, Invoice Code, Customer Phone, Customer Name, Dish Names, and Bill Amounts.
-- 🤖 **AURA AI HelpBot**: Persistent session chat with intelligent recipe recommendations powered by Groq LLM API.
-- 📱 **100% Mobile & Desktop Responsiveness**: Custom viewport styling optimized for mobile phones (iPhone/Android), tablets, cashier POS screens, and desktop monitors.
+### ⚡ Performance
+- **`LazyDishCard` Virtual Windowing** — `IntersectionObserver` with 12-dish batch rendering reduces DOM nodes from ~4,000 to ~250 (94% reduction)
+- **Native Image Optimization** — `loading="lazy"`, `decoding="async"`, and shimmer skeleton transitions across all cards and modals
+
+### 🎯 Customer Experience
+- **AI Spend-Tier Rewards** — 3-tier free item reward system (₹500 / ₹1000 / ₹2000) with auto-revocation guards
+- **Coupon Engine** — Server-validated discount codes with minimum order enforcement and auto-revocation
+- **AI Pairing Engine** — Per-dish smart add-on recommendations using `aiPairingEngine.ts`
+- **Rotating Cart Tips** — 5 contextual engagement tips shown while reviewing the cart
+- **Engaging Order Tracker** — Chef wisdom, dining facts, suggested items, and WiFi info keep guests entertained during prep
+
+### 🧾 Operations & Accuracy
+- **100% Order ID Consistency** — `ORD-8901` and invoice codes `INV-50B7FD` stay in sync across Customer, Cashier, and Admin dashboards
+- **Omni-Search in Cashier POS** — Instant search across Table #, Order ID, Invoice Code, Customer Name/Phone, Dish Names, and Amounts
+- **Smart Status Guards** — Backend prevents invalid state transitions (e.g. cannot mark table `available` if unpaid orders exist)
+- **Auto-cancel Stale Orders** — Orders stuck in `received` for 15+ minutes are auto-cancelled by a background job
+
+### 📱 Design & Responsiveness
+- **Premium 4-Font Typography** — Poppins + Sora + Inter + JetBrains Mono, each assigned by screen context
+- **Per-Screen Design Tokens** — 7 unique CSS theme variables (customer, kitchen, waiter, cashier, admin, owner, login)
+- **100% Mobile + Desktop** — Optimized for iPhone, Android, tablets, widescreen POS monitors
 
 ---
 
 ## 🛠 Tech Stack & Architecture
 
-### **Frontend**
-* **Framework**: React 19 + TypeScript + Vite
-* **Styling**: Vanilla CSS Design System + Tailwind CSS
-* **Icons**: Lucide React Icons
-* **Networking**: Axios HTTP Client + Custom REST Services
-* **State Management**: Zustand Stores (`useCartStore`, `useAuthStore`, `useTableStore`)
+### Frontend
+| Layer | Technology |
+|:---|:---|
+| Framework | React 19 + TypeScript + Vite |
+| Styling | Tailwind CSS + Vanilla CSS Design System |
+| State | Zustand (`useCartStore`, `useAuthStore`, `useTableStore`, `useOrderStore`) |
+| Icons | Lucide React |
+| HTTP | Axios + centralized `apiClient` |
+| Fonts | Poppins · Sora · Inter · JetBrains Mono (Google Fonts) |
 
-### **Backend**
-* **Runtime**: Node.js + Express.js
-* **Database**: MongoDB Atlas + Mongoose ORM
-* **REST API**: Modular Controllers (`orderRoutes.js`, `tableRoutes.js`, `menuRoutes.js`)
+### Backend
+| Layer | Technology |
+|:---|:---|
+| Runtime | Node.js + Express.js |
+| Database | MongoDB Atlas + Mongoose ODM |
+| AI Chat | Groq LLM API (AURA HelpBot) |
+| API Design | RESTful modular routes (`orderRoutes`, `tableRoutes`, `menuRoutes`) |
+
+### Architecture Diagram
+```
+Guest Device           Staff Terminals          Server
+───────────────        ─────────────────        ──────────────────────
+Customer Menu    ─┐                             ┌─ Express REST API
+Order Tracker    ─┤─── Axios HTTP + WS ────────→│   /api/orders
+Cart Drawer      ─┘                             │   /api/tables
+                                                │   /api/menu
+Kitchen KDS      ─┐                             │   /api/coupon
+Waiter Terminal  ─┤─── Polling (3-5s) ─────────│   /api/chat (Groq)
+Cashier POS      ─┤                             └─ MongoDB Atlas
+Owner Analytics  ─┘                                  (orders, tables,
+                                                       sessions, menu)
+```
 
 ---
 
 ## 🚀 Quickstart Installation Guide
 
 ### Prerequisites
-* **Node.js**: `v18+` or `v20+`
-* **npm**: `v9+`
-* **MongoDB**: Local MongoDB instance or MongoDB Atlas Connection URI
+- **Node.js** `v18+` or `v20+`
+- **npm** `v9+`
+- **MongoDB** — Local instance or [MongoDB Atlas](https://cloud.mongodb.com) connection URI
+- **Groq API Key** — Free from [console.groq.com](https://console.groq.com) (for AI HelpBot)
 
 ### 1. Clone the Repository
 ```bash
@@ -143,13 +212,13 @@ git clone https://github.com/Niranjan-Kumar-Singh/AURA-GASTRONOMY-RESTAURANT.git
 cd AURA-GASTRONOMY-RESTAURANT
 ```
 
-### 2. Backend Environment & Setup
+### 2. Backend Setup
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend` directory (copied from `.env.example`):
+Create `backend/.env` (copy from `.env.example`):
 ```env
 PORT=5000
 MONGODB_URI=your_mongodb_atlas_connection_string
@@ -157,32 +226,54 @@ GROQ_API_KEY=your_groq_api_key
 NODE_ENV=development
 ```
 
-Start the Backend Server:
+Start the backend:
 ```bash
 npm start
-# Server will run on http://localhost:5000
+# → Running on http://localhost:5000
 ```
 
-### 3. Frontend Setup & Run
+### 3. Frontend Setup
 ```bash
 cd ../frontend
 npm install
 npm run dev
-# Vite dev server will run on http://localhost:5173
+# → Running on http://localhost:5173
 ```
 
+### 4. Access the Terminals
+
+| Terminal | URL |
+|:---|:---|
+| 📱 Customer Menu (Table 10) | `http://localhost:5173/table/10/menu` |
+| 🍳 Kitchen Display | `http://localhost:5173/kitchen` |
+| 🤵 Waiter Dashboard | `http://localhost:5173/waiter` |
+| 💳 Cashier POS | `http://localhost:5173/cashier` |
+| 👑 Owner Analytics | `http://localhost:5173/owner` |
+| 🔐 Staff Login | `http://localhost:5173/login` |
+
 ---
 
-## 🌐 SEO & Social Metadata
+## 👤 Author & Contact
 
-The project incorporates complete **SEO Best Practices**:
-* **Structured Data**: JSON-LD Schema markup for restaurant entity.
-* **Open Graph Tags**: Tailored `og:title`, `og:description`, and `og:image` tags.
-* **Twitter Cards**: Summary card configuration for social previews.
-* **Mobile Responsive Meta**: Optimized viewport settings and dynamic dark theme color (`#0F0F11`).
+| Attribute | Details |
+|:---|:---|
+| **Lead Creator & Architect** | **Niranjan Kumar Singh** |
+| **Email** | [niranjansingh1419@gmail.com](mailto:niranjansingh1419@gmail.com) |
+| **Instagram** | [@niranjan.ks.in](https://instagram.com/niranjan.ks.in) |
+| **GitHub Repository** | [AURA-GASTRONOMY-RESTAURANT](https://github.com/Niranjan-Kumar-Singh/AURA-GASTRONOMY-RESTAURANT) |
+| **Role** | Systems Architect & Lead Full-Stack Engineer |
 
 ---
 
-## 📜 License & Credits
+## 📜 License
 
-Distributed under the **MIT License**. Created with ❤️ by **Niranjan Kumar Singh** ([`@niranjan.ks.in`](https://instagram.com/niranjan.ks.in) • [niranjansingh1419@gmail.com](mailto:niranjansingh1419@gmail.com)).
+Distributed under the **MIT License**.
+
+Created with ❤️ and obsessive attention to detail by **Niranjan Kumar Singh**
+[`@niranjan.ks.in`](https://instagram.com/niranjan.ks.in) • [`niranjansingh1419@gmail.com`](mailto:niranjansingh1419@gmail.com)
+
+---
+
+<div align="center">
+  <sub>🌿 <em>RASA — "Where every dish tells an emotion."</em></sub>
+</div>

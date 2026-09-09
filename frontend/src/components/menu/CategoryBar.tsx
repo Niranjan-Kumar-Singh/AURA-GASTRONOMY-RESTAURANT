@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, X } from 'lucide-react';
+import React from 'react';
+import { Search, X, Sparkles, Utensils } from 'lucide-react';
 import { Category } from '../../types/menu.types';
 
 interface CategoryBarProps {
@@ -21,51 +21,51 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
 }) => {
   return (
     <div
-      className={`sticky z-20 w-full bg-[#090A0F] border-b border-[#38BDF8]/20 shadow-2xl transition-all duration-300 ${
-        isHeaderVisible ? 'top-[52px] sm:top-[57px]' : 'top-0'
+      className={`sticky z-20 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300 ${
+        isHeaderVisible ? 'top-[54px] sm:top-[58px]' : 'top-0'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 space-y-2.5">
-        {/* Mobile Search Bar & Category Navigation Header */}
+      <div className="max-w-[1560px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 space-y-2.5">
+        {/* Quick Search Bar */}
         <div className="flex items-center justify-between gap-3">
-          {/* Quick Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#38BDF8] absolute left-3.5 top-3 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-              placeholder="Search dishes, ingredients, drinks..."
-              className="w-full pl-10 pr-9 py-2.5 bg-[#161A28]/90 border border-[#38BDF8]/25 focus:border-[#38BDF8] hover:border-[#38BDF8]/50 rounded-xl text-white text-xs placeholder:text-slate-400 focus:outline-none shadow-inner transition-all font-sans"
+              placeholder="Search 'Paneer Butter Masala', 'Biryani', 'Desserts'..."
+              className="w-full pl-10 pr-9 py-2 bg-slate-100/90 border border-slate-200/90 focus:border-[#0C831F] focus:bg-white rounded-xl text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none shadow-sm transition-all font-sans"
             />
             {searchQuery && (
               <button
                 onClick={() => onSearchChange && onSearchChange('')}
-                className="absolute right-3 top-3 text-slate-400 hover:text-white p-0.5 rounded-full cursor-pointer"
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-0.5 rounded-full cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
           {searchQuery && (
-            <span className="text-[10px] font-mono font-bold px-3 py-1.5 bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 rounded-lg whitespace-nowrap shrink-0 animate-pulse">
+            <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg whitespace-nowrap shrink-0">
               Filtered
             </span>
           )}
         </div>
 
-        {/* Scrollable Categories Rail with Bespoke Spaced Luxury Horizontal Scrollbar */}
-        <div className="overflow-x-auto luxury-scrollbar-x flex items-center space-x-2.5 px-2 pt-1 pb-2.5 min-w-full select-none scroll-smooth">
+        {/* Scrollable Category Pills Rail */}
+        <div className="overflow-x-auto blinkit-scrollbar-x flex items-center space-x-2 px-1 pt-0.5 pb-2 min-w-full select-none scroll-smooth">
           <button
             onClick={() => onSelectCategory(null)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer ${
+            className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer flex items-center space-x-1.5 ${
               selectedCategoryId === null
-                ? 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] shadow-[0_0_15px_rgba(56,189,248,0.35)] font-extrabold scale-[1.02]'
-                : 'bg-[#161A28]/80 border border-[#38BDF8]/20 text-slate-300 hover:text-white hover:border-[#38BDF8]/50 hover:scale-[1.01]'
+                ? 'bg-[#0C831F] text-white shadow-sm font-black scale-[1.02]'
+                : 'bg-slate-100 hover:bg-slate-200/90 text-slate-700 border border-slate-200/80'
             }`}
           >
-            All Dishes
+            <Utensils className="w-3.5 h-3.5" />
+            <span>All Dishes</span>
           </button>
 
           {categories.map((category) => {
@@ -74,13 +74,13 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer ${
+                className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer flex items-center space-x-1.5 ${
                   isSelected
-                    ? 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] shadow-[0_0_15px_rgba(56,189,248,0.35)] font-extrabold scale-[1.02]'
-                    : 'bg-[#161A28]/80 border border-[#38BDF8]/20 text-slate-300 hover:text-white hover:border-[#38BDF8]/50 hover:scale-[1.01]'
+                    ? 'bg-[#0C831F] text-white shadow-sm font-black scale-[1.02]'
+                    : 'bg-slate-100 hover:bg-slate-200/90 text-slate-700 border border-slate-200/80'
                 }`}
               >
-                {category.name}
+                <span>{category.name}</span>
               </button>
             );
           })}
@@ -89,4 +89,4 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
     </div>
   );
 };
-
+export default CategoryBar;

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Flame, Clock, CheckCircle2, AlertCircle, RefreshCw, ChefHat, Filter, CheckSquare, Square, BellRing, BellOff, Sparkles, Lock, ArrowRight, Activity, Timer } from 'lucide-react';
+import {
+  Flame, Clock, CheckCircle2, AlertCircle, RefreshCw, ChefHat, Filter,
+  CheckSquare, Square, BellRing, BellOff, Sparkles, Lock, ArrowRight,
+  Activity, Timer, ShieldAlert, Check
+} from 'lucide-react';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
-
 import { OrderCancelModal } from '../../components/orders/OrderCancelModal';
 
 interface KDSItem {
@@ -97,7 +100,7 @@ export const KitchenDisplayPage: React.FC = () => {
 
       prevTicketsRef.current = newTicketList;
       setTickets(newTicketList);
-      if (isManual) showToast('Kitchen KDS board synced', 'info');
+      if (isManual) showToast('Kitchen KDS stream synced', 'info');
     } catch (error) {
       console.error('Failed to fetch kitchen orders:', error);
     } finally {
@@ -118,7 +121,7 @@ export const KitchenDisplayPage: React.FC = () => {
   const handleAcceptOrder = async (orderId: string) => {
     try {
       await orderService.updateOrderStatus(orderId, 'preparing');
-      showToast(`Order #${orderId} accepted — cooking started!`, 'success');
+      showToast(`Order #${orderId} accepted — cooking fired!`, 'success');
       fetchActiveOrders();
     } catch (error) {
       showToast(`Failed to start order #${orderId}`, 'error');
@@ -128,7 +131,7 @@ export const KitchenDisplayPage: React.FC = () => {
   const handleConfirmAllReady = async (orderId: string) => {
     try {
       await orderService.updateOrderStatus(orderId, 'ready');
-      showToast(`Order #${orderId} dispatched to service pass!`, 'success');
+      showToast(`Order #${orderId} ready — dispatched to service pass!`, 'success');
       fetchActiveOrders();
     } catch (error) {
       showToast(`Failed to confirm order #${orderId}`, 'error');
@@ -159,11 +162,30 @@ export const KitchenDisplayPage: React.FC = () => {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const getTimerBadgeStyle = (totalSeconds: number) => {
+  const getUrgencyConfig = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
-    if (mins < 8) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-    if (mins < 15) return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-    return 'bg-rose-500/20 text-rose-400 border-rose-500/50 animate-pulse';
+    if (mins < 8) {
+      return {
+        badgeStyle: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+        cardBorder: 'border-slate-800 hover:border-emerald-500/50',
+        accentColor: 'text-emerald-400',
+        label: 'ON TIME'
+      };
+    }
+    if (mins < 15) {
+      return {
+        badgeStyle: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+        cardBorder: 'border-amber-500/40 hover:border-amber-500',
+        accentColor: 'text-amber-400',
+        label: 'RUSH'
+      };
+    }
+    return {
+      badgeStyle: 'bg-rose-500/20 text-rose-300 border-rose-500/50 animate-pulse font-black',
+      cardBorder: 'border-rose-500 ring-2 ring-rose-500/30',
+      accentColor: 'text-rose-400',
+      label: 'CRITICAL OVERDUE'
+    };
   };
 
   const filteredTickets = tickets.filter(
@@ -175,195 +197,180 @@ export const KitchenDisplayPage: React.FC = () => {
   const preparingCount = tickets.filter((t) => t.status === 'preparing').length;
   const overdueCount = tickets.filter((t) => getElapsedSeconds(t.createdAt) > 900).length;
 
-  // Current time display
   const now = new Date(nowTimestamp);
   const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const dateStr = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-
   return (
-    <div className="flex h-full min-h-0 w-full font-sans text-aura-ivory">
-
+    <div className="page-theme-kitchen flex flex-col h-full min-h-0 w-full font-sans text-theme-text bg-theme-bg overflow-hidden">
       {/* ─────────────────────────────────────────────────────────────────
-          LEFT SIDEBAR — Fixed, non-scrolling, full viewport height
+          TOP STATION CONTROL BAR (Compact, Glare-Resistant, Full Width)
       ───────────────────────────────────────────────────────────────── */}
-      <aside className="w-72 flex-shrink-0 h-full flex flex-col bg-aura-container border-r border-aura-border/80 overflow-hidden">
-
-        {/* Station Identity Header */}
-        <div className="p-5 border-b border-aura-border/60 space-y-1">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-xl">
-              <ChefHat className="w-6 h-6 text-[#38BDF8]" />
+      <div className="bg-theme-surface/95 backdrop-blur-md border-b border-theme-border px-3 sm:px-6 py-2.5 space-y-2.5 flex-shrink-0 z-20 shadow-sm">
+        {/* Row 1: Station Identity, Live Station Clock, Audio Alarm & Sync */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center flex-shrink-0">
+              <ChefHat className="w-4 h-4 text-theme-primary" />
             </div>
-            <div>
-              <h1 className="font-serif text-base font-bold text-white leading-tight tracking-wide">
-                KITCHEN DISPLAY
-              </h1>
-              <div className="flex items-center space-x-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="text-[10px] text-emerald-400 font-mono font-bold">LIVE — 3s Sync</span>
+            <div className="min-w-0">
+              <div className="flex items-center space-x-1.5">
+                <h1 className="font-serif text-sm sm:text-base font-black text-white tracking-wide truncate">
+                  KITCHEN DISPLAY
+                </h1>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
               </div>
+              <p className="text-[10px] text-emerald-400 font-mono font-bold hidden sm:block">LIVE • 3s Stream • MAIN PASS</p>
             </div>
           </div>
 
-          {/* Live Clock */}
-          <div className="mt-3 p-3 bg-aura-obsidian/60 rounded-xl border border-aura-border/50 text-center">
-            <p className="font-mono text-xl font-black text-[#38BDF8] tracking-widest">{timeStr}</p>
-            <p className="text-[10px] text-aura-slate font-mono mt-0.5">{dateStr}</p>
+          {/* Station Clock */}
+          <div className="px-3 py-1 bg-theme-bg rounded-xl border border-theme-border text-center hidden md:flex items-center space-x-2 shadow-inner">
+            <Clock className="w-3.5 h-3.5 text-theme-primary" />
+            <span className="font-mono text-base font-black text-theme-primary tracking-widest">{timeStr}</span>
+            <span className="text-[10px] text-theme-muted font-mono uppercase">• {dateStr}</span>
           </div>
-        </div>
 
-        {/* KPI Stats */}
-        <div className="p-4 space-y-2 border-b border-aura-border/60">
-          <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block">Live Kitchen Stats</span>
+          {/* Right Controls: Alarm & Refresh */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 border cursor-pointer transition-colors ${
+                soundEnabled
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-theme-bg text-slate-400 border-slate-800'
+              }`}
+              title={soundEnabled ? 'Kitchen Alarm ON' : 'Alarm Muted'}
+            >
+              {soundEnabled ? (
+                <BellRing className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              ) : (
+                <BellOff className="w-3.5 h-3.5 text-slate-500" />
+              )}
+              <span className="hidden sm:inline text-[11px]">{soundEnabled ? 'Alarm ON' : 'Muted'}</span>
+            </button>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-aura-obsidian/60 rounded-xl p-3 border border-aura-border/50 space-y-1">
-              <span className="text-[9px] font-mono text-aura-slate uppercase block">Queue</span>
-              <div className="flex items-center justify-between">
-                <span className="font-serif text-xl font-black text-white">{activeCount}</span>
-                <Activity className="w-4 h-4 text-[#38BDF8]" />
-              </div>
-            </div>
-
-            <div className="bg-aura-obsidian/60 rounded-xl p-3 border border-blue-500/30 space-y-1">
-              <span className="text-[9px] font-mono text-blue-400/80 uppercase block">New</span>
-              <div className="flex items-center justify-between">
-                <span className="font-serif text-xl font-black text-blue-400">{receivedCount}</span>
-                <Sparkles className="w-4 h-4 text-blue-400" />
-              </div>
-            </div>
-
-            <div className="bg-aura-obsidian/60 rounded-xl p-3 border border-amber-500/30 space-y-1">
-              <span className="text-[9px] font-mono text-amber-400/80 uppercase block">Cooking</span>
-              <div className="flex items-center justify-between">
-                <span className="font-serif text-xl font-black text-amber-400">{preparingCount}</span>
-                <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
-              </div>
-            </div>
-
-            <div className={`bg-aura-obsidian/60 rounded-xl p-3 border space-y-1 ${overdueCount > 0 ? 'border-rose-500/50' : 'border-aura-border/50'}`}>
-              <span className="text-[9px] font-mono text-aura-slate uppercase block">Overdue</span>
-              <div className="flex items-center justify-between">
-                <span className={`font-serif text-xl font-black ${overdueCount > 0 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
-                  {overdueCount}
-                </span>
-                <Timer className={`w-4 h-4 ${overdueCount > 0 ? 'text-rose-400' : 'text-emerald-400'}`} />
-              </div>
-            </div>
+            <button
+              onClick={() => fetchActiveOrders(true)}
+              disabled={isLoading}
+              className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-600 text-slate-300 hover:text-white rounded-xl transition-all flex items-center space-x-1.5 text-xs font-bold cursor-pointer shadow-sm"
+              title="Sync Kitchen Pass"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : ''}`} />
+              <span className="hidden sm:inline text-[11px]">Sync</span>
+            </button>
           </div>
         </div>
 
-        {/* Filter Navigation */}
-        <div className="p-4 space-y-2 border-b border-aura-border/60">
-          <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block">Filter Queue</span>
-
+        {/* Row 2: Queue Filter Tabs & Live Station Metrics */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {/* Filter Pills */}
           <button
             onClick={() => setFilterStatus('ALL')}
-            className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left border flex items-center justify-between ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border cursor-pointer ${
               filterStatus === 'ALL'
-                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
+                ? 'bg-slate-800 text-white border-slate-600 shadow-md font-black'
+                : 'bg-theme-bg text-slate-400 border-slate-800 hover:text-white'
             }`}
           >
-            <span>All Active Queue</span>
-            <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${filterStatus === 'ALL' ? 'bg-aura-obsidian/20' : 'bg-aura-obsidian'}`}>
+            <span>All Active</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-slate-900 border border-slate-800 font-bold">
               {activeCount}
             </span>
           </button>
 
           <button
             onClick={() => setFilterStatus('received')}
-            className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left border flex items-center justify-between ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border cursor-pointer ${
               filterStatus === 'received'
-                ? 'bg-blue-500 text-white border-blue-400 shadow-lg'
-                : 'bg-aura-obsidian text-blue-400 border-blue-500/30 hover:bg-blue-500/10'
+                ? 'bg-blue-600 text-white border-blue-400 shadow-md font-black'
+                : 'bg-theme-bg text-blue-400 border-blue-500/30 hover:bg-blue-500/10'
             }`}
           >
-            <span>New Orders</span>
-            <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${filterStatus === 'received' ? 'bg-blue-900/40' : 'bg-aura-obsidian'}`}>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>New Incoming</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-950/60 border border-blue-800 text-blue-300 font-bold">
               {receivedCount}
             </span>
           </button>
 
           <button
             onClick={() => setFilterStatus('preparing')}
-            className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left border flex items-center justify-between ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border cursor-pointer ${
               filterStatus === 'preparing'
-                ? 'bg-amber-500 text-aura-obsidian border-amber-400 shadow-lg'
-                : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                ? 'bg-amber-600 text-white border-amber-400 shadow-md font-black'
+                : 'bg-theme-bg text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
             }`}
           >
-            <span>In Preparation</span>
-            <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${filterStatus === 'preparing' ? 'bg-amber-900/30' : 'bg-aura-obsidian'}`}>
+            <Flame className="w-3.5 h-3.5" />
+            <span>Cooking Now</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-950/60 border border-amber-800 text-amber-300 font-bold">
               {preparingCount}
             </span>
           </button>
+
+          <div className="h-4 w-px bg-theme-border flex-shrink-0 mx-1" />
+
+          {/* Quick Metrics Badges */}
+          <div className="flex items-center space-x-1.5 text-[11px] font-mono whitespace-nowrap">
+            <span className="px-2 py-1 rounded-lg bg-theme-bg border border-theme-border text-slate-300 font-bold">
+              Orders: <strong className="text-white font-mono">{activeCount}</strong>
+            </span>
+            <span className="px-2 py-1 rounded-lg bg-theme-bg border border-blue-500/30 text-blue-400 font-bold">
+              New: <strong className="font-mono">{receivedCount}</strong>
+            </span>
+            <span className="px-2 py-1 rounded-lg bg-theme-bg border border-amber-500/30 text-amber-400 font-bold">
+              Cooking: <strong className="font-mono">{preparingCount}</strong>
+            </span>
+            {overdueCount > 0 && (
+              <span className="px-2 py-1 rounded-lg bg-rose-950/30 border border-rose-500/60 text-rose-400 font-bold animate-pulse">
+                Overdue: <strong className="font-mono">{overdueCount}</strong>
+              </span>
+            )}
+          </div>
         </div>
-
-        {/* Spacer pushes controls to bottom */}
-        <div className="flex-1" />
-
-        {/* Bottom Controls — always visible, pinned to bottom */}
-        <div className="p-4 space-y-2 border-t border-aura-border/60">
-          <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block">Station Controls</span>
-
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-2 transition-all border ${
-              soundEnabled
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border'
-            }`}
-          >
-            {soundEnabled
-              ? <BellRing className="w-4 h-4 text-emerald-400 animate-pulse" />
-              : <BellOff className="w-4 h-4 text-aura-slate" />
-            }
-            <span>{soundEnabled ? 'Audio Alerts ON' : 'Audio Muted'}</span>
-          </button>
-
-          <button
-            onClick={() => fetchActiveOrders(true)}
-            className="w-full px-4 py-2.5 bg-aura-obsidian border border-aura-border hover:border-[#38BDF8] text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all flex items-center space-x-2 text-xs font-bold cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#38BDF8]' : ''}`} />
-            <span>Sync Floor Plan</span>
-          </button>
-        </div>
-      </aside>
+      </div>
 
       {/* ─────────────────────────────────────────────────────────────────
-          RIGHT PANEL — Scrollable ticket grid
+          MAIN PANEL: High-Contrast Aviation Ticket Grid (Full Screen Width)
       ───────────────────────────────────────────────────────────────── */}
-      <main className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6">
-
-        {/* Top bar inside right panel */}
-        <div className="flex items-center justify-between">
-          <h2 className="font-serif text-xl font-bold text-aura-ivory flex items-center space-x-2">
+      <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Header Bar */}
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
+          <div className="flex items-center space-x-3">
             <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
-            <span>
-              {filterStatus === 'ALL' ? 'All Active Kitchen Tickets' :
-               filterStatus === 'received' ? 'New Incoming Orders' : 'In Preparation'}
+            <h2 className="font-serif text-lg font-bold text-white tracking-wide">
+              {filterStatus === 'ALL'
+                ? 'Live Cooking Pass'
+                : filterStatus === 'received'
+                ? 'New Incoming Orders'
+                : 'Active Cooking Line'}
+            </h2>
+            <span className="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-300 font-mono text-xs font-bold">
+              {filteredTickets.length} Tickets
             </span>
-          </h2>
-          <span className="text-xs text-aura-slate font-mono">
-            Showing {filteredTickets.length} ticket(s)
-          </span>
+          </div>
+
+          <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>High-Contrast Glare Resistant Terminal</span>
+          </div>
         </div>
 
-        {/* Ticket Grid */}
+        {/* Tickets Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="h-64 bg-aura-container/50 rounded-3xl animate-pulse border border-aura-border" />
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div key={n} className="h-64 bg-slate-900/60 rounded-2xl animate-pulse border border-slate-800" />
             ))}
           </div>
         ) : filteredTickets.length === 0 ? (
-          <div className="py-20 text-center space-y-4 bg-aura-container/40 rounded-3xl border border-aura-border/60 p-8 max-w-md mx-auto shadow-2xl">
-            <ChefHat className="w-12 h-12 text-[#38BDF8]/40 mx-auto" />
-            <h2 className="font-serif text-xl font-bold text-white">Kitchen Station Clear</h2>
-            <p className="text-xs text-aura-slate leading-relaxed">
-              No pending cooking tickets in the <span className="text-[#38BDF8] font-bold uppercase">{filterStatus}</span> queue. All dishes dispatched!
+          <div className="py-24 text-center space-y-4 bg-[#0A0D15] rounded-3xl border border-slate-800 p-8 max-w-md mx-auto shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-amber-400">
+              <ChefHat className="w-8 h-8" />
+            </div>
+            <h2 className="font-serif text-xl font-bold text-white">Kitchen Line Clear</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              No tickets in the <span className="text-amber-400 font-bold uppercase">{filterStatus}</span> queue. All dishes prepped and dispatched!
             </p>
           </div>
         ) : (
@@ -371,7 +378,7 @@ export const KitchenDisplayPage: React.FC = () => {
             {filteredTickets.map((ticket) => {
               const elapsedSecs = getElapsedSeconds(ticket.createdAt);
               const timerFormatted = formatTimer(elapsedSecs);
-              const timerStyle = getTimerBadgeStyle(elapsedSecs);
+              const urgency = getUrgencyConfig(elapsedSecs);
 
               const checkedCount = ticket.items.filter(
                 (it, idx) => checkedItems[`${ticket.id}-${idx}`] || it.status === 'served' || it.isPrepared
@@ -382,45 +389,45 @@ export const KitchenDisplayPage: React.FC = () => {
               return (
                 <div
                   key={ticket.id}
-                  className={`bg-aura-container border rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl relative overflow-hidden ${
+                  className={`bg-[#0A0D15] border rounded-2xl p-5 space-y-4 flex flex-col justify-between transition-all shadow-xl relative overflow-hidden ${
                     ticket.status === 'preparing'
                       ? isAllChecked
-                        ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-aura-container/95'
-                        : 'border-amber-500/60 ring-1 ring-amber-500/20'
-                      : 'border-aura-border hover:border-[#38BDF8]/60'
+                        ? 'border-emerald-500 ring-2 ring-emerald-500/30'
+                        : urgency.cardBorder
+                      : 'border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-4">
-                    {/* Ticket Header Bar */}
-                    <div className="flex items-center justify-between border-b border-aura-border/60 pb-3.5">
+                    {/* Ticket Header */}
+                    <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-serif text-2xl font-black text-white">
+                          <span className="font-serif text-2xl font-black text-white tracking-tight">
                             Table {ticket.tableId}
                           </span>
                           <span
-                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
                               ticket.status === 'received'
-                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
-                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                                ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                                : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
                             }`}
                           >
-                            {ticket.status === 'received' ? 'NEW ORDER' : 'IN PREP'}
+                            {ticket.status === 'received' ? 'NEW' : 'IN PREP'}
                           </span>
                         </div>
-                        <span className="font-mono text-[11px] font-bold text-[#38BDF8]">
-                          Order #{ticket.id}
+                        <span className="font-mono text-xs text-slate-400 font-bold">
+                          #{ticket.id}
                         </span>
                       </div>
 
                       <div className="text-right space-y-1">
                         <div
-                          className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold border ${timerStyle}`}
+                          className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${urgency.badgeStyle}`}
                         >
                           <Clock className="w-3.5 h-3.5" />
                           <span>{timerFormatted}</span>
                         </div>
-                        <span className="text-[10px] text-aura-slate block font-mono">
+                        <span className="text-[10px] text-slate-500 block font-mono">
                           {new Date(ticket.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -429,125 +436,120 @@ export const KitchenDisplayPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Item-Level Checklists */}
+                    {/* Item Checklist */}
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-[10px] text-aura-slate font-mono uppercase tracking-wider px-1">
-                        <span>Recipe Items ({totalItems})</span>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono uppercase tracking-wider px-1">
+                        <span>Items ({totalItems})</span>
                         <span className={isAllChecked ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                          {checkedCount}/{totalItems} Prepared
+                          {checkedCount}/{totalItems} Done
                         </span>
                       </div>
 
-                      {ticket.items.map((item, idx) => {
-                        const itemKey = `${ticket.id}-${idx}`;
-                        const isServed = item.status === 'served';
-                        const isDone = isServed || item.isPrepared || !!checkedItems[itemKey];
+                      <div className="space-y-1.5">
+                        {ticket.items.map((item, idx) => {
+                          const itemKey = `${ticket.id}-${idx}`;
+                          const isServed = item.status === 'served';
+                          const isDone = isServed || item.isPrepared || !!checkedItems[itemKey];
 
-                        return (
-                          <div
-                            key={idx}
-                            onClick={() => {
-                              if (ticket.status !== 'received' && !isServed) {
-                                toggleItemDone(ticket.id, idx, item.status, item.isPrepared);
-                              }
-                            }}
-                            className={`p-3 rounded-2xl border transition-all flex items-start justify-between space-x-2 ${
-                              isServed
-                                ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300/80 cursor-default opacity-85'
-                                : ticket.status === 'received'
-                                ? 'bg-aura-obsidian/40 border-aura-border/40 text-aura-ivory cursor-not-allowed opacity-80'
-                                : isDone
-                                ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200 line-through cursor-pointer'
-                                : 'bg-aura-obsidian border-aura-border/70 text-aura-ivory hover:border-[#38BDF8]/60 cursor-pointer'
-                            }`}
-                          >
-                            <div className="space-y-0.5 flex-1">
-                              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                                <span className="w-5 h-5 bg-[#38BDF8]/20 text-[#38BDF8] text-xs font-bold rounded-lg flex items-center justify-center font-mono">
-                                  {item.quantity}x
-                                </span>
-                                <span className="font-bold text-xs leading-snug">{item.name}</span>
-                                {isServed && (
-                                  <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/40 uppercase">
-                                    Served to Guest
+                          return (
+                            <div
+                              key={idx}
+                              onClick={() => {
+                                if (ticket.status !== 'received' && !isServed) {
+                                  toggleItemDone(ticket.id, idx, item.status, item.isPrepared);
+                                }
+                              }}
+                              className={`p-3 rounded-xl border transition-all flex items-start justify-between space-x-2 select-none ${
+                                isServed
+                                  ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300/80 cursor-default opacity-80'
+                                  : ticket.status === 'received'
+                                  ? 'bg-[#07090E] border-slate-800 text-slate-300 cursor-not-allowed opacity-90'
+                                  : isDone
+                                  ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200 line-through cursor-pointer'
+                                  : 'bg-[#07090E] border-slate-800/90 text-white hover:border-slate-700 cursor-pointer'
+                              }`}
+                            >
+                              <div className="space-y-0.5 flex-1 min-w-0">
+                                <div className="flex items-center space-x-2">
+                                  <span className="w-5 h-5 bg-amber-500/15 text-amber-400 text-xs font-mono font-bold rounded flex items-center justify-center flex-shrink-0 border border-amber-500/30">
+                                    {item.quantity}x
                                   </span>
+                                  <span className="font-bold text-xs leading-tight truncate">{item.name}</span>
+                                </div>
+                                {item.notes && (
+                                  <div className="flex items-center space-x-1 pt-1 text-[10px] text-amber-400 font-medium italic">
+                                    <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                                    <span>Note: {item.notes}</span>
+                                  </div>
                                 )}
                               </div>
-                              {item.notes && (
-                                <div className="flex items-center space-x-1 pt-1 text-[10px] text-amber-400 font-medium italic">
-                                  <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                                  <span>Note: {item.notes}</span>
-                                </div>
-                              )}
-                            </div>
 
-                            {isServed ? (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                            ) : (
-                              ticket.status !== 'received' && (
-                                <button className="text-aura-slate hover:text-[#38BDF8] transition-colors mt-0.5">
+                              {isServed ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                              ) : ticket.status !== 'received' ? (
+                                <div className="mt-0.5 flex-shrink-0">
                                   {isDone ? (
                                     <CheckSquare className="w-4 h-4 text-emerald-400" />
                                   ) : (
-                                    <Square className="w-4 h-4 text-aura-slate/50" />
+                                    <Square className="w-4 h-4 text-slate-600" />
                                   )}
-                                </button>
-                              )
-                            )}
-                          </div>
-                        );
-                      })}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Workflow Execution Control Buttons */}
-                  <div className="pt-3 border-t border-aura-border/60 space-y-2">
-                    {/* Step 1: Accept Order Ticket */}
+                  {/* Operational Action Controls */}
+                  <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                    {/* Accept Order */}
                     {ticket.status === 'received' && (
                       <button
                         onClick={() => handleAcceptOrder(ticket.id)}
-                        className="w-full py-3.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-[#0EA5E9]/10 cursor-pointer border border-[#7DD3FC]/50"
+                        className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
                       >
                         <Flame className="w-4 h-4" />
-                        <span>Accept &amp; Start Cooking</span>
+                        <span>Accept &amp; Fire Cook</span>
                       </button>
                     )}
 
-                    {/* Step 2: In-Prep Protection Gate & Confirmation */}
+                    {/* Dispatch Order */}
                     {ticket.status === 'preparing' && (
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         {!isAllChecked ? (
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             <button
                               disabled
-                              className="w-full py-3.5 bg-aura-obsidian border border-aura-border text-aura-slate font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 cursor-not-allowed opacity-65"
+                              className="w-full py-3 bg-slate-900 border border-slate-800 text-slate-500 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed opacity-70"
                             >
                               <Lock className="w-4 h-4 text-amber-400" />
-                              <span>Check All Items ({checkedCount}/{totalItems})</span>
+                              <span>Check Off All ({checkedCount}/{totalItems})</span>
                             </button>
-                            <p className="text-[10px] text-amber-400/90 text-center italic font-medium">
-                              Check off all {totalItems} item(s) above to unlock confirm button
+                            <p className="text-[10px] text-amber-400/90 text-center font-mono">
+                              Check off all dishes above to unlock dispatch
                             </p>
                           </div>
                         ) : (
                           <button
                             onClick={() => handleConfirmAllReady(ticket.id)}
-                            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-emerald-500/20 animate-pulse cursor-pointer"
+                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-emerald-900/30 animate-pulse cursor-pointer"
                           >
-                            <CheckCircle2 className="w-4 h-4 font-bold" />
-                            <span>Confirm All Dishes Ready &amp; Dispatch</span>
+                            <Check className="w-4 h-4 font-black" />
+                            <span>Dispatch to Waiter Pass</span>
                           </button>
                         )}
                       </div>
                     )}
 
-                    {/* Authority Cancel Order Button */}
+                    {/* Cancel Order */}
                     <button
                       onClick={() => setCancelModalTicket({ id: ticket.id, tableId: ticket.tableId })}
-                      className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                      className="w-full py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-300 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all cursor-pointer flex items-center justify-center space-x-1.5"
                     >
-                      <AlertCircle className="w-3.5 h-3.5 text-red-400" />
-                      <span>Cancel Order (Authority)</span>
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Void / Cancel Ticket</span>
                     </button>
                   </div>
                 </div>
@@ -571,3 +573,5 @@ export const KitchenDisplayPage: React.FC = () => {
     </div>
   );
 };
+
+export default KitchenDisplayPage;

@@ -400,17 +400,17 @@ export const WaiterDashboardPage: React.FC = () => {
   // Visual Badging for Table Statuses
   const getStatusBadgeStyle = (status: TableState['status'], orderStatus?: string) => {
     if (orderStatus === 'ready') {
-      return 'bg-emerald-500/20 border-emerald-400 text-emerald-300 ring-2 ring-emerald-400 animate-pulse';
+      return 'bg-cyan-500/20 border-cyan-400 text-cyan-300 ring-2 ring-cyan-400/50 animate-pulse';
     }
     switch (status) {
       case 'available':
-        return 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 hover:border-emerald-400';
+        return 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:border-emerald-400';
       case 'occupied':
-        return 'bg-[#38BDF8]/10 border-[#38BDF8]/50 text-[#38BDF8] hover:border-[#38BDF8]';
+        return 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:border-amber-400';
       case 'billing':
-        return 'bg-amber-500/20 border-amber-400 text-amber-300 ring-2 ring-amber-400/50 animate-pulse';
+        return 'bg-purple-500/20 border-purple-400 text-purple-300 ring-2 ring-purple-400/50 animate-pulse';
       case 'cleaning':
-        return 'bg-slate-500/10 border-slate-500/50 text-slate-400 hover:border-slate-400';
+        return 'bg-slate-800/40 border-slate-700 text-slate-400 hover:border-slate-500';
     }
   };
 
@@ -439,180 +439,211 @@ export const WaiterDashboardPage: React.FC = () => {
   const billingCount = tables.filter((t) => t.status === 'billing').length;
 
   return (
-    <div className="flex h-full min-h-0 w-full font-sans text-aura-ivory">
-      {/* ========================================================================= */}
-      {/* DEDICATED WAITER DISPATCH CONTROL SIDEBAR */}
-      {/* ========================================================================= */}
-      <aside className="w-72 flex-shrink-0 h-full flex flex-col bg-aura-container border-r border-aura-border/80 overflow-hidden">
-        <div className="flex-1 overflow-y-auto space-y-5 p-5">
-          {/* Header Widget with Green Pulsing Dot */}
-          <div className="flex items-center space-x-3.5 border-b border-aura-border/60 pb-4">
-            <div className="p-3 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl shadow-inner flex items-center justify-center">
-              <Utensils className="w-7 h-7 text-[#38BDF8]" />
+    <div className="page-theme-waiter flex flex-col h-full min-h-0 w-full font-sans text-theme-text bg-theme-bg overflow-hidden">
+      {/* ─────────────────────────────────────────────────────────────────
+          COMPACT TOP CONTROL & DISPATCH RAIL (Full Width, Mobile-First)
+      ───────────────────────────────────────────────────────────────── */}
+      <div className="bg-theme-surface/95 backdrop-blur-md border-b border-theme-border px-3 sm:px-6 py-2.5 space-y-2.5 flex-shrink-0 z-20 shadow-sm">
+        {/* Row 1: Station Title, Stats Summary, Quick Actions */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center flex-shrink-0">
+              <Utensils className="w-4 h-4 text-theme-primary" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="font-serif text-lg font-bold text-white tracking-wide">
-                  WAITER DISPATCH
+            <div className="min-w-0">
+              <div className="flex items-center space-x-1.5">
+                <h1 className="font-serif text-sm sm:text-base font-black text-theme-text tracking-wide truncate">
+                  FLOOR PASS
                 </h1>
-                <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/50" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
               </div>
-              <p className="text-[11px] text-aura-slate">Floor & Kitchen Pass Hub</p>
+              <p className="text-[10px] text-theme-muted font-mono hidden sm:block">Tactical 30-Table Realtime Grid</p>
             </div>
           </div>
 
-          {/* WORKSPACE NAVIGATION */}
-          <div className="space-y-2.5">
-            <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block px-1 font-bold">
-              WORKSPACE NAVIGATION
-            </span>
-
-            {/* TAB 1: 30-TABLE FLOOR GRID */}
+          {/* Quick Controls: Alerts Sound & Refresh */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
             <button
-              onClick={() => setActiveTab('TABLE_STATUS')}
-              className={`w-full py-3.5 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-between border cursor-pointer ${
-                activeTab === 'TABLE_STATUS'
-                  ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-xl font-black scale-[1.02]'
-                  : 'bg-aura-obsidian/80 text-aura-slate border-aura-border hover:text-white hover:border-[#38BDF8]/40'
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 border cursor-pointer transition-colors ${
+                soundEnabled
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-theme-bg text-theme-muted border-theme-border'
               }`}
+              title={soundEnabled ? 'Floor Alerts ON' : 'Alerts Muted'}
             >
-              <div className="flex items-center space-x-3">
-                <Grid className="w-4 h-4" />
-                <span>30-Table Floor Grid</span>
-              </div>
-              <span className="font-mono text-xs font-bold">30</span>
+              {soundEnabled ? <BellRing className="w-3.5 h-3.5 text-emerald-400 animate-pulse" /> : <BellOff className="w-3.5 h-3.5 text-theme-muted" />}
+              <span className="hidden sm:inline text-[11px]">{soundEnabled ? 'Audio ON' : 'Muted'}</span>
             </button>
 
-            {/* TAB 2: CUSTOMER CALLS */}
             <button
-              onClick={() => setActiveTab('WAITER_CALLS')}
-              className={`w-full py-3.5 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-between border cursor-pointer relative ${
-                activeTab === 'WAITER_CALLS'
-                  ? 'bg-rose-500 text-white border-rose-400 shadow-xl font-black scale-[1.02]'
-                  : activePendingAlerts.length > 0
-                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 animate-pulse font-bold'
-                  : 'bg-aura-obsidian/80 text-rose-400 border-rose-500/30 hover:bg-rose-500/10'
-              }`}
+              onClick={() => fetchFloorState(true)}
+              disabled={isLoading}
+              className="px-2.5 py-1.5 bg-theme-bg border border-theme-border hover:border-theme-border-strong text-theme-text rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center space-x-1.5"
+              title="Sync Floor State"
             >
-              <div className="flex items-center space-x-3">
-                <Bell className={`w-4 h-4 ${activePendingAlerts.length > 0 ? 'animate-bounce text-rose-400' : ''}`} />
-                <span>Customer Calls</span>
-              </div>
-              <span className="font-mono text-xs font-bold">
-                {activePendingAlerts.length}
-              </span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-theme-primary' : ''}`} />
+              <span className="hidden sm:inline text-[11px]">Sync</span>
             </button>
-
-            {/* TAB 3: FOOD READY PASS */}
-            <button
-              onClick={() => setActiveTab('FOOD_READY')}
-              className={`w-full py-3.5 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-between border cursor-pointer relative ${
-                activeTab === 'FOOD_READY'
-                  ? 'bg-emerald-500 text-aura-obsidian border-emerald-400 shadow-xl font-black scale-[1.02]'
-                  : readyToServeTables.length > 0
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/60 animate-pulse font-bold'
-                  : 'bg-aura-obsidian/80 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <Flame className={`w-4 h-4 ${readyToServeTables.length > 0 ? 'animate-spin text-emerald-400' : ''}`} />
-                <span>Food Ready Pass</span>
-              </div>
-              <span className="font-mono text-xs font-bold">
-                {readyToServeTables.length}
-              </span>
-            </button>
-
-            {/* TAB 4: BILL CHECKOUT QUEUE */}
-            <button
-              onClick={() => setActiveTab('BILL_REQUESTS')}
-              className={`w-full py-3.5 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-between border cursor-pointer relative ${
-                activeTab === 'BILL_REQUESTS'
-                  ? 'bg-amber-500 text-aura-obsidian border-amber-400 shadow-xl font-black scale-[1.02]'
-                  : billingCount > 0
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-400/50 animate-pulse font-bold'
-                  : 'bg-aura-obsidian/80 text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <Receipt className="w-4 h-4" />
-                <span>Bill Checkout Queue</span>
-              </div>
-              <span className="font-mono text-xs font-bold">
-                {billingCount}
-              </span>
-            </button>
-          </div>
-
-          {/* FLOOR SUMMARY OVERVIEW BOX */}
-          <div className="p-4 bg-aura-obsidian/70 border border-aura-border/60 rounded-2xl space-y-3 font-mono">
-            <span className="text-[10px] font-bold text-[#38BDF8] uppercase block tracking-wider font-mono">
-              FLOOR SUMMARY OVERVIEW
-            </span>
-            <div className="flex justify-between items-center text-xs text-emerald-400 font-bold">
-              <span>Available Free:</span>
-              <span className="font-mono">{availableCount} Tables</span>
-            </div>
-            <div className="flex justify-between items-center text-xs text-[#38BDF8] font-bold">
-              <span>Occupied Dining:</span>
-              <span className="font-mono">{occupiedCount} Tables</span>
-            </div>
-            <div className="flex justify-between items-center text-xs text-amber-400 font-bold">
-              <span>Bill Requested:</span>
-              <span className="font-mono">{billingCount} Tables</span>
-            </div>
           </div>
         </div>
 
-      {/* Bottom Controls — pinned to bottom of sidebar */}
-      <div className="space-y-2 border-t border-aura-border/60 p-5">
+        {/* Row 2: Queue Tabs + Quick Status Filters (Horizontal Swipeable Rail) */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {/* Main Dispatch Queues */}
           <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all border cursor-pointer ${
-              soundEnabled
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-aura-obsidian text-aura-slate border-aura-border'
+            onClick={() => setActiveTab('TABLE_STATUS')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border cursor-pointer ${
+              activeTab === 'TABLE_STATUS'
+                ? 'bg-theme-primary text-black border-theme-primary shadow-md font-black'
+                : 'bg-theme-bg text-theme-muted border-theme-border hover:text-theme-text'
             }`}
           >
-            {soundEnabled ? <BellRing className="w-4 h-4 text-emerald-400 animate-pulse" /> : <BellOff className="w-4 h-4 text-aura-slate" />}
-            <span>{soundEnabled ? 'Audio Alerts ON' : 'Audio Muted'}</span>
+            <Grid className="w-3.5 h-3.5" />
+            <span>Tables</span>
+            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-black">30</span>
           </button>
 
           <button
-            onClick={() => fetchFloorState(true)}
-            className="w-full py-2.5 bg-aura-obsidian border border-aura-border hover:border-[#38BDF8] text-aura-slate hover:text-[#38BDF8] rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer flex items-center justify-center space-x-2"
+            onClick={() => setActiveTab('FOOD_READY')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border cursor-pointer ${
+              activeTab === 'FOOD_READY'
+                ? 'bg-cyan-500 text-black border-cyan-400 shadow-md font-black'
+                : readyToServeTables.length > 0
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 animate-pulse font-bold'
+                : 'bg-theme-bg text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/10'
+            }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#38BDF8]' : ''}`} />
-            <span>Sync Floor Plan</span>
+            <Flame className={`w-3.5 h-3.5 ${readyToServeTables.length > 0 ? 'animate-spin text-cyan-300' : ''}`} />
+            <span>Ready Pass</span>
+            {readyToServeTables.length > 0 && (
+              <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-cyan-900/60 font-black text-cyan-200">
+                {readyToServeTables.length}
+              </span>
+            )}
           </button>
-      </div>
-    </aside>
 
-      {/* ========================================================================= */}
-      {/* MAIN CONTENT WORKSPACE (Right Panel — scrollable) */}
-      {/* ========================================================================= */}
-      <main className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6 min-w-0">
+          <button
+            onClick={() => setActiveTab('WAITER_CALLS')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border cursor-pointer ${
+              activeTab === 'WAITER_CALLS'
+                ? 'bg-rose-500 text-white border-rose-400 shadow-md font-black'
+                : activePendingAlerts.length > 0
+                ? 'bg-rose-500/20 text-rose-300 border-rose-400 animate-pulse font-bold'
+                : 'bg-theme-bg text-rose-400 border-rose-500/30 hover:bg-rose-500/10'
+            }`}
+          >
+            <Bell className={`w-3.5 h-3.5 ${activePendingAlerts.length > 0 ? 'animate-bounce text-rose-300' : ''}`} />
+            <span>Calls</span>
+            {activePendingAlerts.length > 0 && (
+              <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-rose-900/60 font-black text-rose-200">
+                {activePendingAlerts.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('BILL_REQUESTS')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border cursor-pointer ${
+              activeTab === 'BILL_REQUESTS'
+                ? 'bg-purple-500 text-white border-purple-400 shadow-md font-black'
+                : billingCount > 0
+                ? 'bg-purple-500/20 text-purple-300 border-purple-400 animate-pulse font-bold'
+                : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
+            }`}
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            <span>Bills</span>
+            {billingCount > 0 && (
+              <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-purple-900/60 font-black text-purple-200">
+                {billingCount}
+              </span>
+            )}
+          </button>
+
+          <div className="h-4 w-px bg-theme-border flex-shrink-0 mx-1" />
+
+          {/* Inline Status Filter Pills (when on TABLE_STATUS) */}
+          {activeTab === 'TABLE_STATUS' && (
+            <>
+              <button
+                onClick={() => setStatusFilter('ALL')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border cursor-pointer ${
+                  statusFilter === 'ALL'
+                    ? 'bg-theme-surface-hover text-theme-text border-theme-border-strong font-black'
+                    : 'bg-theme-bg text-theme-muted border-theme-border'
+                }`}
+              >
+                All ({totalTables})
+              </button>
+              <button
+                onClick={() => setStatusFilter('AVAILABLE')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border cursor-pointer ${
+                  statusFilter === 'AVAILABLE'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400 font-black'
+                    : 'bg-theme-bg text-emerald-400/80 border-theme-border'
+                }`}
+              >
+                Free ({availableCount})
+              </button>
+              <button
+                onClick={() => setStatusFilter('OCCUPIED')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border cursor-pointer ${
+                  statusFilter === 'OCCUPIED'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-400 font-black'
+                    : 'bg-theme-bg text-amber-400/80 border-theme-border'
+                }`}
+              >
+                Dine ({occupiedCount})
+              </button>
+              <button
+                onClick={() => setStatusFilter('BILLING')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border cursor-pointer ${
+                  statusFilter === 'BILLING'
+                    ? 'bg-purple-500/20 text-purple-300 border-purple-400 font-black'
+                    : 'bg-theme-bg text-purple-400/80 border-theme-border'
+                }`}
+              >
+                Bill ({billingCount})
+              </button>
+              <button
+                onClick={() => setStatusFilter('CLEANING')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border cursor-pointer ${
+                  statusFilter === 'CLEANING'
+                    ? 'bg-slate-700/60 text-slate-200 border-slate-500 font-black'
+                    : 'bg-theme-bg text-slate-400 border-theme-border'
+                }`}
+              >
+                Clean
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Workspace — Page controls its own scroll */}
+      <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-4 min-w-0">
         {/* Top Banner Alert on Main Content */}
         {(readyToServeTables.length > 0 || activePendingAlerts.length > 0) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {readyToServeTables.length > 0 && (
               <div
                 onClick={() => setActiveTab('FOOD_READY')}
-                className="p-4 bg-emerald-500/10 border border-emerald-500/40 hover:border-emerald-400 rounded-2xl flex items-center justify-between shadow-xl cursor-pointer transition-all hover:scale-[1.01]"
+                className="p-3 sm:p-4 bg-cyan-500/10 border border-cyan-400/50 hover:border-cyan-400 rounded-2xl flex items-center justify-between shadow-lg cursor-pointer transition-all hover:scale-[1.01]"
               >
                 <div className="flex items-center space-x-3">
-                  <Flame className="w-6 h-6 text-emerald-400 animate-bounce" />
+                  <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 animate-bounce" />
                   <div>
-                    <span className="font-bold text-xs text-emerald-300 uppercase tracking-wider block">
+                    <span className="font-bold text-[11px] text-cyan-300 uppercase tracking-wider block">
                       Hot Food Pickup Alert!
                     </span>
-                    <p className="text-xs text-aura-ivory font-bold">
+                    <p className="text-xs text-white font-bold">
                       {readyToServeTables.length} Table(s) ready at Kitchen Pass
                     </p>
                   </div>
                 </div>
-                <span className="px-3.5 py-1.5 bg-emerald-500 text-aura-obsidian font-black text-xs uppercase rounded-xl shadow-md">
-                  Tap to Serve &rarr;
+                <span className="px-3 py-1 bg-cyan-500 text-black font-black text-xs uppercase rounded-xl shadow-md">
+                  Serve &rarr;
                 </span>
               </div>
             )}
@@ -620,21 +651,21 @@ export const WaiterDashboardPage: React.FC = () => {
             {activePendingAlerts.length > 0 && (
               <div
                 onClick={() => setActiveTab('WAITER_CALLS')}
-                className="p-4 bg-rose-500/10 border border-rose-500/40 hover:border-rose-400 rounded-2xl flex items-center justify-between shadow-xl cursor-pointer transition-all hover:scale-[1.01]"
+                className="p-3 sm:p-4 bg-rose-500/10 border border-rose-500/50 hover:border-rose-400 rounded-2xl flex items-center justify-between shadow-lg cursor-pointer transition-all hover:scale-[1.01]"
               >
                 <div className="flex items-center space-x-3">
-                  <Bell className="w-6 h-6 text-rose-400 animate-bounce" />
+                  <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-rose-400 animate-bounce" />
                   <div>
-                    <span className="font-bold text-xs text-rose-300 uppercase tracking-wider block">
+                    <span className="font-bold text-[11px] text-rose-300 uppercase tracking-wider block">
                       Customer Call Alert!
                     </span>
-                    <p className="text-xs text-aura-ivory font-bold">
+                    <p className="text-xs text-white font-bold">
                       {activePendingAlerts.length} Customer assistance call pending
                     </p>
                   </div>
                 </div>
-                <span className="px-3.5 py-1.5 bg-rose-500 text-white font-black text-xs uppercase rounded-xl shadow-md">
-                  View Call &rarr;
+                <span className="px-3 py-1 bg-rose-500 text-white font-black text-xs uppercase rounded-xl shadow-md">
+                  View &rarr;
                 </span>
               </div>
             )}
@@ -643,20 +674,20 @@ export const WaiterDashboardPage: React.FC = () => {
 
         {/* TAB 1: 30-TABLE FLOOR GRID */}
         {activeTab === 'TABLE_STATUS' && (
-          <div className="space-y-6">
-            {/* Filters Toolbar */}
-            <div className="bg-aura-container border border-aura-border/80 rounded-3xl p-5 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-3 sm:space-y-4">
+            {/* Zone Filter Chips & Quick Table Search */}
+            <div className="bg-theme-surface border border-theme-border rounded-2xl p-2.5 sm:p-3.5 shadow-sm space-y-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 {/* Zone Filter Chips */}
-                <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
+                <div className="flex items-center space-x-1.5 overflow-x-auto pb-0.5 no-scrollbar">
                   {['ALL', 'Main Hall', 'VIP Lounge', 'Outdoor Garden', 'Family Section'].map((zone) => (
                     <button
                       key={zone}
                       onClick={() => setSelectedZone(zone)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase whitespace-nowrap border cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all uppercase whitespace-nowrap border cursor-pointer ${
                         selectedZone === zone
-                          ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-lg font-black'
-                          : 'bg-aura-obsidian text-aura-slate border-aura-border hover:border-[#38BDF8]/50'
+                          ? 'bg-theme-primary text-black border-theme-primary font-black shadow-sm'
+                          : 'bg-theme-bg text-theme-muted border-theme-border hover:text-theme-text'
                       }`}
                     >
                       {zone}
@@ -665,172 +696,100 @@ export const WaiterDashboardPage: React.FC = () => {
                 </div>
 
                 {/* Table Search */}
-                <div className="relative w-full sm:w-64">
-                  <Search className="w-4 h-4 text-aura-slate absolute left-3 top-2.5" />
+                <div className="relative w-full sm:w-56">
+                  <Search className="w-3.5 h-3.5 text-theme-muted absolute left-3 top-2.5" />
                   <input
                     type="text"
                     value={searchTableQuery}
                     onChange={(e) => setSearchTableQuery(e.target.value)}
                     placeholder="Search Table #..."
-                    className="w-full pl-9 pr-3 py-2 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory placeholder:text-aura-slate/50 focus:outline-none focus:border-[#38BDF8] font-mono"
+                    className="w-full pl-8 pr-3 py-1.5 bg-theme-bg border border-theme-border rounded-xl text-xs text-theme-text placeholder:text-theme-muted/50 focus:outline-none focus:border-theme-primary font-mono"
                   />
                 </div>
               </div>
-
-              {/* Status Filter Chips */}
-              <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar border-t border-aura-border/50 pt-3">
-                <button
-                  onClick={() => setStatusFilter('ALL')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    statusFilter === 'ALL'
-                      ? 'bg-[#38BDF8]/20 text-[#38BDF8] border-[#38BDF8] font-bold'
-                      : 'bg-aura-obsidian text-aura-slate border-aura-border hover:text-aura-ivory'
-                  }`}
-                >
-                  All 30 Tables ({totalTables})
-                </button>
-
-                <button
-                  onClick={() => setStatusFilter('AVAILABLE')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    statusFilter === 'AVAILABLE'
-                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 font-bold'
-                      : 'bg-aura-obsidian text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10'
-                  }`}
-                >
-                  Available ({availableCount})
-                </button>
-
-                <button
-                  onClick={() => setStatusFilter('OCCUPIED')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    statusFilter === 'OCCUPIED'
-                      ? 'bg-[#38BDF8]/20 text-[#38BDF8] border-[#38BDF8] font-bold'
-                      : 'bg-aura-obsidian text-[#38BDF8] border-[#38BDF8]/30 hover:bg-[#38BDF8]/10'
-                  }`}
-                >
-                  Occupied ({occupiedCount})
-                </button>
-
-                <button
-                  onClick={() => setStatusFilter('READY')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    statusFilter === 'READY'
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400 font-bold'
-                      : 'bg-aura-obsidian text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10'
-                  }`}
-                >
-                  🔥 Food Ready ({readyToServeTables.length})
-                </button>
-
-                <button
-                  onClick={() => setStatusFilter('BILLING')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    statusFilter === 'BILLING'
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-400 font-bold'
-                      : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                  }`}
-                >
-                  Bill Requested ({billingCount})
-                </button>
-              </div>
             </div>
 
-            {/* 30 Table Grid */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-serif text-xl font-bold text-white flex items-center space-x-2">
-                  <Grid className="w-5 h-5 text-[#38BDF8]" />
-                  <span>30 Tables Status & Seat Capacity</span>
-                </h2>
-                <span className="text-xs text-[#38BDF8] font-mono font-bold">
-                  Showing {filteredTables.length} of 30 Tables
+            {/* 30 Table Grid — Compact, Mobile-First (2 cols on phones, up to 6 on ultra-wide) */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-mono font-bold text-theme-muted uppercase tracking-wider">
+                  Tables Grid ({filteredTables.length}/30)
+                </span>
+                <span className="text-[11px] font-mono text-theme-primary font-bold">
+                  Tap card for detail / actions
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
                 {filteredTables.map((table) => (
                   <div
                     key={table.tableNumber}
                     onClick={() => setSelectedTable(table)}
-                    className={`p-5 rounded-3xl border transition-all cursor-pointer hover:scale-[1.02] shadow-2xl flex flex-col justify-between space-y-4 relative overflow-hidden ${getStatusBadgeStyle(
+                    className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] shadow-md flex flex-col justify-between space-y-2.5 relative overflow-hidden ${getStatusBadgeStyle(
                       table.status,
                       table.orderStatus
                     )}`}
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="font-serif text-2xl font-black">Table {table.tableNumber}</span>
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-current">
-                          {table.orderStatus === 'ready' ? 'READY TO SERVE' : table.status}
+                        <span className="font-mono text-base sm:text-lg font-black tracking-tight">
+                          T-{table.tableNumber < 10 ? `0${table.tableNumber}` : table.tableNumber}
+                        </span>
+                        <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-current">
+                          {table.orderStatus === 'ready' ? 'READY' : table.status}
                         </span>
                       </div>
 
-                      {/* Seat Capacity & Seated Occupancy Badges */}
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center space-x-1 font-mono text-aura-ivory font-bold bg-aura-obsidian/70 px-2.5 py-1 rounded-xl border border-current/30">
-                          <Users className="w-3.5 h-3.5 text-[#38BDF8]" />
-                          <span>Cap: {table.capacity}</span>
-                        </div>
+                      {/* Capacity & Occupancy Badge */}
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-[10px] font-mono opacity-75">
+                          Cap: {table.capacity}
+                        </span>
 
                         {table.status === 'occupied' || table.status === 'billing' ? (
-                          <div className="flex items-center space-x-1 font-mono text-[#38BDF8] font-black bg-[#38BDF8]/20 px-2.5 py-1 rounded-xl border border-[#38BDF8]/50 animate-pulse">
-                            <Users className="w-3.5 h-3.5 text-[#38BDF8]" />
-                            <span>Seated: {table.guestCount || 2}/{table.capacity}</span>
-                          </div>
+                          <span className="font-mono text-[10px] font-black px-1.5 py-0.2 rounded bg-current/15 border border-current/30">
+                            👥 {table.guestCount || 2}
+                          </span>
                         ) : table.status === 'cleaning' ? (
-                          <div className="flex items-center space-x-1 font-mono text-rose-400 font-bold bg-rose-500/20 px-2.5 py-1 rounded-xl border border-rose-500/50 animate-pulse">
-                            <Clock className="w-3.5 h-3.5 text-rose-400" />
-                            <span>⏱️ 2:45 Turnaround Timer</span>
-                          </div>
+                          <span className="font-mono text-[10px] font-bold text-rose-400">
+                            Clean ⏱
+                          </span>
                         ) : (
-                          <span className="text-[10px] font-mono opacity-80 px-2 py-0.5 rounded-lg border border-current/20">
-                            {table.zone}
+                          <span className="text-[9px] font-mono opacity-70 truncate max-w-[65px]">
+                            {table.zone?.split(' ')[0]}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Active Order Details — only show for active tables */}
-                    {table.activeOrderId && table.status !== 'available' && (
-                      <div className="p-2.5 bg-aura-obsidian/70 rounded-xl border border-current/20 text-xs space-y-1 font-mono">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="opacity-70">Order</span>
-                          <span className="font-bold">{table.activeOrderId}</span>
-                        </div>
-
-                        {table.orderTotal !== undefined && table.orderTotal > 0 && (
-                          <div className="flex justify-between items-center text-xs font-bold text-[#38BDF8]">
-                            <span>Total</span>
-                            <span>₹{table.orderTotal.toLocaleString('en-IN')}</span>
-                          </div>
-                        )}
+                    {/* Active Order Total */}
+                    {table.orderTotal !== undefined && table.orderTotal > 0 && table.status !== 'available' && (
+                      <div className="py-1 px-2 bg-black/40 rounded-lg border border-current/20 text-[11px] flex justify-between items-center font-mono">
+                        <span className="opacity-70 text-[10px]">Total</span>
+                        <span className="font-bold font-mono">₹{Math.round(table.orderTotal).toLocaleString('en-IN')}</span>
                       </div>
                     )}
 
                     {/* Quick Mark Served if Hot Food is Ready */}
                     {table.orderStatus === 'ready' && table.activeOrderId && (
                       <button
-                        onClick={(e) => handleMarkServed(e, table.activeOrderId!)}
-                        className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1.5"
+                        onClick={(e) => handleMarkServed(e, table.activeOrderId!, table.tableNumber)}
+                        className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1"
                       >
-                        <Check className="w-4 h-4 font-bold" />
-                        <span>Mark Food Served</span>
+                        <Check className="w-3.5 h-3.5 font-bold" />
+                        <span>Serve</span>
                       </button>
                     )}
 
                     {/* DIRECT 1-TAP STATUS SWITCHER TOOLBAR ON CARD */}
-                    <div className="pt-3 border-t border-current/20 space-y-1.5">
-                      <span className="text-[9px] font-mono uppercase tracking-wider block opacity-70">
-                        Quick Status Switch:
-                      </span>
+                    <div className="pt-2 border-t border-current/20">
                       <div className="grid grid-cols-4 gap-1">
                         <button
                           onClick={(e) => handleUpdateTableStatus(e, table._id, table.tableNumber, 'available')}
-                          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border cursor-pointer ${
+                          className={`py-1 text-[9px] font-bold rounded-lg transition-all border cursor-pointer text-center ${
                             table.status === 'available'
-                              ? 'bg-emerald-500 text-aura-obsidian border-emerald-400 font-black shadow-md'
-                              : 'bg-aura-obsidian/80 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                              ? 'bg-emerald-500 text-black border-emerald-400 font-black shadow-sm'
+                              : 'bg-black/30 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
                           }`}
                           title="Mark Available"
                         >
@@ -839,36 +798,36 @@ export const WaiterDashboardPage: React.FC = () => {
 
                         <button
                           onClick={(e) => handleUpdateTableStatus(e, table._id, table.tableNumber, 'occupied')}
-                          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border cursor-pointer ${
+                          className={`py-1 text-[9px] font-bold rounded-lg transition-all border cursor-pointer text-center ${
                             table.status === 'occupied'
-                              ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] font-black shadow-md'
-                              : 'bg-aura-obsidian/80 text-[#38BDF8] border-[#38BDF8]/30 hover:bg-[#38BDF8]/20'
+                              ? 'bg-amber-500 text-black border-amber-400 font-black shadow-sm'
+                              : 'bg-black/30 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
                           }`}
                           title="Mark Occupied"
                         >
-                          Dining
+                          Dine
                         </button>
 
                         <button
                           onClick={(e) => handleUpdateTableStatus(e, table._id, table.tableNumber, 'billing')}
-                          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border ${
+                          className={`py-1 text-[9px] font-bold rounded-lg transition-all border text-center ${
                             table.status === 'available' || table.status === 'cleaning'
-                              ? 'bg-aura-obsidian/40 text-amber-500/40 border-amber-500/20 cursor-not-allowed'
+                              ? 'bg-black/20 text-purple-500/30 border-purple-500/10 cursor-not-allowed'
                               : table.status === 'billing'
-                              ? 'bg-amber-500 text-aura-obsidian border-amber-400 font-black shadow-md cursor-pointer'
-                              : 'bg-aura-obsidian/80 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 cursor-pointer'
+                              ? 'bg-purple-500 text-white border-purple-400 font-black shadow-sm cursor-pointer'
+                              : 'bg-black/30 text-purple-400 border-purple-500/30 hover:bg-purple-500/20 cursor-pointer'
                           }`}
                           title={table.status === 'available' ? 'Cannot bill empty table' : 'Mark Bill Requested'}
                         >
-                          Billing
+                          Bill
                         </button>
 
                         <button
                           onClick={(e) => handleUpdateTableStatus(e, table._id, table.tableNumber, 'cleaning')}
-                          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border cursor-pointer ${
+                          className={`py-1 text-[9px] font-bold rounded-lg transition-all border cursor-pointer text-center ${
                             table.status === 'cleaning'
-                              ? 'bg-slate-500 text-white border-slate-400 font-black shadow-md'
-                              : 'bg-aura-obsidian/80 text-slate-400 border-slate-500/30 hover:bg-slate-500/20'
+                              ? 'bg-slate-600 text-white border-slate-400 font-black shadow-sm'
+                              : 'bg-black/30 text-slate-400 border-slate-500/30 hover:bg-slate-500/20'
                           }`}
                           title="Mark Cleaning"
                         >
@@ -1074,305 +1033,307 @@ export const WaiterDashboardPage: React.FC = () => {
         )}
       </main>
 
-      {/* Table Detail Modal / Drawer */}
+      {/* Table Detail Modal / Mobile Bottom Sheet */}
       {selectedTable && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedTable(null); }}
         >
-          <div className="bg-aura-container border border-aura-border/80 rounded-3xl max-w-md w-full shadow-2xl relative flex flex-col" style={{ maxHeight: 'calc(100vh - 96px)' }}>
-            {/* Fixed header */}
-            <div className="p-6 pb-0 flex-shrink-0">
-            <button
-              onClick={() => setSelectedTable(null)}
-              className="absolute top-5 right-5 text-aura-slate hover:text-aura-ivory p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-theme-surface border border-theme-border rounded-t-3xl sm:rounded-3xl max-w-lg w-full shadow-2xl relative flex flex-col h-[94vh] sm:h-[88vh] max-h-[96vh] animate-in slide-in-from-bottom-4 duration-200 overflow-hidden">
+            {/* Mobile Drag Indicator Bar */}
+            <div className="w-12 h-1 bg-theme-border rounded-full mx-auto mt-3 sm:hidden" />
 
-            <div className="space-y-1">
-              <div className="flex items-center space-x-3">
-                <span className="font-serif text-2xl font-black text-aura-ivory">
-                  Table {selectedTable.tableNumber}
-                </span>
-                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${getStatusBadgeStyle(selectedTable.status, selectedTable.orderStatus)}`}>
-                  {selectedTable.orderStatus === 'ready' ? 'READY TO SERVE' : selectedTable.status}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-aura-slate">{selectedTable.zone}</p>
-                <div className="flex items-center space-x-3 text-xs font-mono">
-                  <span className="text-aura-slate">
-                    <span className="text-aura-ivory font-bold">Max:</span> {selectedTable.capacity} seats
+            {/* Fixed header */}
+            <div className="p-4 sm:p-6 pb-3 border-b border-theme-border flex-shrink-0">
+              <button
+                onClick={() => setSelectedTable(null)}
+                className="absolute top-4 sm:top-5 right-4 sm:right-5 text-theme-muted hover:text-theme-text p-1.5 rounded-lg hover:bg-theme-surface-hover cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center space-x-3">
+                  <span className="font-mono text-xl sm:text-2xl font-black text-theme-text">
+                    Table {selectedTable.tableNumber}
                   </span>
-                  {(selectedTable.status === 'occupied' || selectedTable.status === 'billing') && (
-                    <span className="px-2.5 py-0.5 bg-[#38BDF8]/20 text-[#38BDF8] font-black rounded-full border border-[#38BDF8]/50">
-                      👥 {selectedTable.guestCount || 2}/{selectedTable.capacity} Seated
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${getStatusBadgeStyle(selectedTable.status, selectedTable.orderStatus)}`}>
+                    {selectedTable.orderStatus === 'ready' ? 'READY TO SERVE' : selectedTable.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-theme-muted">{selectedTable.zone}</p>
+                  <div className="flex items-center space-x-3 text-xs font-mono">
+                    <span className="text-theme-muted">
+                      <span className="text-theme-text font-bold">Max:</span> {selectedTable.capacity} seats
                     </span>
-                  )}
+                    {(selectedTable.status === 'occupied' || selectedTable.status === 'billing') && (
+                      <span className="px-2.5 py-0.5 bg-cyan-500/20 text-cyan-400 font-black rounded-full border border-cyan-400/50">
+                        👥 {selectedTable.guestCount || 2}/{selectedTable.capacity} Seated
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
             </div>
 
             {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto p-6 pt-4 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+              {/* Quick Seating Action for Available Tables */}
+              {selectedTable.status === 'available' && (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">
+                  <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1.5">
+                    <UserPlus className="w-4 h-4" />
+                    <span>Seat Walk-In Guests</span>
+                  </span>
+                  
+                  <div className="flex items-center justify-between text-xs text-theme-muted">
+                    <span>Select party size (Max: {selectedTable.capacity})</span>
+                    <div className="flex space-x-2">
+                      {[2, 4, 6, 8].filter(n => n <= selectedTable.capacity).concat(
+                        selectedTable.capacity > 8 ? [selectedTable.capacity] : []
+                      ).map((num) => (
+                        <button
+                          key={num}
+                          onClick={() => setSeatGuestCount(num)}
+                          className={`w-9 h-9 rounded-xl font-bold text-xs font-mono transition-all cursor-pointer ${
+                            seatGuestCount === num
+                              ? 'bg-emerald-500 text-black shadow-md font-black'
+                              : 'bg-theme-bg text-theme-muted border border-theme-border hover:text-theme-text'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-            {/* Quick Seating Action for Available Tables */}
-            {selectedTable.status === 'available' && (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1.5">
-                  <UserPlus className="w-4 h-4" />
-                  <span>Seat Walk-In Guests</span>
-                </span>
-                
-                <div className="flex items-center justify-between text-xs text-aura-slate">
-                  <span>How many guests? (Max: {selectedTable.capacity})</span>
-                  <div className="flex space-x-2">
-                    {[2, 4, 6, 8].filter(n => n <= selectedTable.capacity).concat(
-                      selectedTable.capacity > 8 ? [selectedTable.capacity] : []
-                    ).map((num) => (
-                      <button
-                        key={num}
-                        onClick={() => setSeatGuestCount(num)}
-                        className={`w-8 h-8 rounded-xl font-bold text-xs font-mono transition-all cursor-pointer ${
-                          seatGuestCount === num
-                            ? 'bg-emerald-500 text-aura-obsidian'
-                            : 'bg-aura-obsidian text-aura-slate border border-aura-border'
-                        }`}
-                      >
-                        {num}
-                      </button>
+                  <button
+                    onClick={() => handleSeatWalkInGuests(selectedTable._id, selectedTable.tableNumber)}
+                    className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    Confirm &amp; Seat {seatGuestCount} Guests
+                  </button>
+                </div>
+              )}
+
+              {/* Digital Menu Link Launcher */}
+              <div>
+                <a
+                  href={`/table/${selectedTable.tableNumber}/menu`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2.5 bg-theme-bg border border-theme-border hover:border-theme-primary text-theme-primary text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-sm"
+                >
+                  <QrCode className="w-4 h-4 text-theme-primary" />
+                  <span>Open Digital Menu for Table {selectedTable.tableNumber}</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-theme-muted" />
+                </a>
+              </div>
+
+              {/* Active Items */}
+              {selectedTable.items && selectedTable.items.length > 0 && (
+                <div className="space-y-2 border-t border-b border-theme-border py-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-theme-muted uppercase tracking-wider block font-bold">
+                      Active Dining Order ({selectedTable.activeOrderId})
+                    </span>
+                    {selectedTable.orderStatus && (
+                      <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase">
+                        Kitchen: {selectedTable.orderStatus}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {selectedTable.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between text-xs p-2.5 bg-theme-bg/80 border border-theme-border rounded-xl">
+                        <span className="font-bold text-theme-text">{item.quantity}x {item.name}</span>
+                      </div>
                     ))}
                   </div>
-                </div>
 
-                <button
-                  onClick={() => handleSeatWalkInGuests(selectedTable._id, selectedTable.tableNumber)}
-                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
-                >
-                  Confirm & Seat Guests
-                </button>
-              </div>
-            )}
-
-            {/* Digital Menu Link Launcher */}
-            <div className="pt-2">
-              <a
-                href={`/table/${selectedTable.tableNumber}/menu`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2.5 bg-aura-obsidian border border-aura-border hover:border-[#38BDF8] text-[#38BDF8] text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all"
-              >
-                <QrCode className="w-4 h-4 text-[#38BDF8]" />
-                <span>Open Digital Menu for Table {selectedTable.tableNumber}</span>
-                <ExternalLink className="w-3.5 h-3.5 text-aura-slate" />
-              </a>
-            </div>
-
-            {/* Active Items */}
-            {selectedTable.items && selectedTable.items.length > 0 && (
-              <div className="space-y-2 border-t border-b border-aura-border/60 py-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block">
-                    Active Dining Order ({selectedTable.activeOrderId})
-                  </span>
-                  {selectedTable.orderStatus && (
-                    <span className="text-[10px] font-mono font-bold text-[#38BDF8] uppercase">
-                      Kitchen: {selectedTable.orderStatus}
-                    </span>
+                  {selectedTable.orderTotal !== undefined && selectedTable.orderTotal > 0 && (
+                    <div className="flex justify-between text-sm font-bold pt-2 text-theme-primary font-mono">
+                      <span>Session Bill Total:</span>
+                      <span>₹{Math.round(selectedTable.orderTotal).toLocaleString('en-IN')}</span>
+                    </div>
                   )}
                 </div>
+              )}
 
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                  {selectedTable.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-xs p-2.5 bg-aura-obsidian/60 border border-aura-border/40 rounded-xl">
-                      <span className="font-bold text-aura-ivory">{item.quantity}x {item.name}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {selectedTable.orderTotal !== undefined && selectedTable.orderTotal > 0 && (
-                  <div className="flex justify-between text-sm font-bold pt-2 text-[#38BDF8] font-mono">
-                    <span>Session Bill Total:</span>
-                    <span>₹{selectedTable.orderTotal.toLocaleString('en-IN')}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Payment Settlement Terminal — only when status is billing */}
-            {selectedTable.status === 'billing' && selectedTable.orderTotal !== undefined && selectedTable.orderTotal > 0 && (
-              <div className="p-4 bg-amber-500/10 border border-amber-500/40 rounded-2xl space-y-4">
-                <div className="flex items-center justify-between border-b border-amber-500/30 pb-2">
-                  <span className="text-xs font-bold text-amber-300 flex items-center space-x-1.5 font-mono">
-                    <Receipt className="w-4 h-4 text-amber-400" />
-                    <span>SETTLE BILL & COLLECT PAYMENT</span>
-                  </span>
-                  <span className="text-xs font-mono font-black text-amber-400">
-                    ₹{(selectedTable.orderTotal || 0).toLocaleString('en-IN')}
-                  </span>
-                </div>
-
-                {/* Payment Method Selector */}
-                <div className="space-y-2">
-                  <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block">
-                    Select Payment Collection Method:
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      onClick={() => setSelectedPaymentMethod('UPI_QR')}
-                      className={`p-2.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
-                        selectedPaymentMethod === 'UPI_QR'
-                          ? 'bg-amber-500 text-aura-obsidian border-amber-400 font-black shadow-md'
-                          : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                      }`}
-                    >
-                      <QrCode className="w-4 h-4" />
-                      <span>UPI QR</span>
-                    </button>
-
-                    <button
-                      onClick={() => setSelectedPaymentMethod('CARD_SWIPE')}
-                      className={`p-2.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
-                        selectedPaymentMethod === 'CARD_SWIPE'
-                          ? 'bg-amber-500 text-aura-obsidian border-amber-400 font-black shadow-md'
-                          : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                      }`}
-                    >
-                      <Receipt className="w-4 h-4" />
-                      <span>Card POS</span>
-                    </button>
-
-                    <button
-                      onClick={() => setSelectedPaymentMethod('CASH')}
-                      className={`p-2.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
-                        selectedPaymentMethod === 'CASH'
-                          ? 'bg-amber-500 text-aura-obsidian border-amber-400 font-black shadow-md'
-                          : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                      }`}
-                    >
-                      <DollarSign className="w-4 h-4" />
-                      <span>Cash</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Display Live UPI QR Code Image if UPI selected */}
-                {selectedPaymentMethod === 'UPI_QR' && (
-                  <div className="p-3 bg-white/95 rounded-2xl text-center space-y-2 text-aura-obsidian border border-amber-400/50 shadow-inner">
-                    <span className="text-[10px] font-mono font-bold text-gray-700 uppercase block tracking-wider">
-                      Scan UPI QR to Pay ₹{(selectedTable.orderTotal || 0).toLocaleString('en-IN')}
+              {/* Payment Settlement Terminal — only when status is billing */}
+              {selectedTable.status === 'billing' && selectedTable.orderTotal !== undefined && selectedTable.orderTotal > 0 && (
+                <div className="p-4 bg-purple-500/10 border border-purple-500/40 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-purple-500/30 pb-2">
+                    <span className="text-xs font-bold text-purple-300 flex items-center space-x-1.5 font-mono">
+                      <Receipt className="w-4 h-4 text-purple-400" />
+                      <span>SETTLE BILL &amp; COLLECT PAYMENT</span>
                     </span>
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=aura.restaurant@upi%26pn=AURA%20Gastronomy%26am=${selectedTable.orderTotal || 0}%26cu=INR`}
-                      alt="UPI Payment QR"
-                      className="w-32 h-32 mx-auto rounded-xl shadow-md border border-gray-200"
-                    />
-                    <p className="text-[10px] text-gray-600 font-mono">Accepts GPay, PhonePe, Paytm, BHIM</p>
+                    <span className="text-xs font-mono font-black text-purple-300">
+                      ₹{Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')}
+                    </span>
                   </div>
-                )}
 
-                <button
-                  onClick={() => handleSettlePayment(selectedTable.tableNumber)}
-                  disabled={isProcessingPayment}
-                  className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-aura-obsidian font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-amber-500/20 cursor-pointer flex items-center justify-center space-x-2"
-                >
-                  <Check className="w-4 h-4 font-bold" />
-                  <span>{isProcessingPayment ? 'Processing Settlement...' : `Confirm Payment & Settle Bill (₹${(selectedTable.orderTotal || 0).toLocaleString('en-IN')})`}</span>
-                </button>
-              </div>
-            )}
+                  {/* Payment Method Selector */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-mono text-theme-muted uppercase tracking-wider block font-bold">
+                      Select Payment Collection Method:
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={() => setSelectedPaymentMethod('UPI_QR')}
+                        className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
+                          selectedPaymentMethod === 'UPI_QR'
+                            ? 'bg-purple-500 text-white border-purple-400 font-black shadow-md'
+                            : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
+                        }`}
+                      >
+                        <QrCode className="w-4 h-4" />
+                        <span>UPI QR</span>
+                      </button>
 
-            {/* Cleaning / Settled Status Banner */}
-            {selectedTable.status === 'cleaning' && (
-              <div className="p-4 bg-slate-500/15 border border-slate-400/40 rounded-2xl text-center space-y-3">
-                <div className="flex items-center justify-center space-x-2 text-slate-300 font-bold text-xs uppercase tracking-wider font-mono">
-                  <Sparkles className="w-4 h-4 text-sky-400" />
-                  <span>BILL PAID &amp; CLOSED — CLEANING REQUIRED</span>
+                      <button
+                        onClick={() => setSelectedPaymentMethod('CARD_SWIPE')}
+                        className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
+                          selectedPaymentMethod === 'CARD_SWIPE'
+                            ? 'bg-purple-500 text-white border-purple-400 font-black shadow-md'
+                            : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
+                        }`}
+                      >
+                        <Receipt className="w-4 h-4" />
+                        <span>Card POS</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedPaymentMethod('CASH')}
+                        className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
+                          selectedPaymentMethod === 'CASH'
+                            ? 'bg-purple-500 text-white border-purple-400 font-black shadow-md'
+                            : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
+                        }`}
+                      >
+                        <DollarSign className="w-4 h-4" />
+                        <span>Cash</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Display Live UPI QR Code Image if UPI selected */}
+                  {selectedPaymentMethod === 'UPI_QR' && (
+                    <div className="p-3 bg-white rounded-2xl text-center space-y-2 text-slate-900 border border-purple-400/50 shadow-inner">
+                      <span className="text-[10px] font-mono font-bold text-gray-700 uppercase block tracking-wider">
+                        Scan UPI QR to Pay ₹{Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')}
+                      </span>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=aura.restaurant@upi%26pn=AURA%20Gastronomy%26am=${Math.round(selectedTable.orderTotal || 0)}%26cu=INR`}
+                        alt="UPI Payment QR"
+                        className="w-32 h-32 mx-auto rounded-xl shadow-md border border-gray-200"
+                      />
+                      <p className="text-[10px] text-gray-600 font-mono">Accepts GPay, PhonePe, Paytm, BHIM</p>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleSettlePayment(selectedTable.tableNumber)}
+                    disabled={isProcessingPayment}
+                    className="w-full py-3.5 bg-purple-500 hover:bg-purple-600 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-purple-500/20 cursor-pointer flex items-center justify-center space-x-2"
+                  >
+                    <Check className="w-4 h-4 font-bold" />
+                    <span>{isProcessingPayment ? 'Processing Settlement...' : `Confirm Payment & Settle Bill (₹${Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')})`}</span>
+                  </button>
                 </div>
-                <p className="text-[11px] text-aura-slate">
-                  This session is settled. Please sanitize table &amp; reset utensils for next guests.
-                </p>
-                <button
-                  onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'available')}
-                  className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center space-x-2"
-                >
-                  <Check className="w-4 h-4 font-bold" />
-                  <span>Mark Table Cleaned &amp; Ready for Guests</span>
-                </button>
-              </div>
-            )}
+              )}
 
-            {/* Mark Served Action if Order is Ready */}
-            {selectedTable.orderStatus === 'ready' && selectedTable.activeOrderId && (
+              {/* Cleaning / Settled Status Banner */}
+              {selectedTable.status === 'cleaning' && (
+                <div className="p-4 bg-slate-500/15 border border-slate-400/40 rounded-2xl text-center space-y-3">
+                  <div className="flex items-center justify-center space-x-2 text-slate-300 font-bold text-xs uppercase tracking-wider font-mono">
+                    <Sparkles className="w-4 h-4 text-sky-400" />
+                    <span>BILL PAID &amp; CLOSED — CLEANING REQUIRED</span>
+                  </div>
+                  <p className="text-[11px] text-theme-muted">
+                    This session is settled. Please sanitize table &amp; reset utensils for next guests.
+                  </p>
+                  <button
+                    onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'available')}
+                    className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center space-x-2"
+                  >
+                    <Check className="w-4 h-4 font-bold" />
+                    <span>Mark Table Cleaned &amp; Ready for Guests</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Mark Served Action if Order is Ready */}
+              {selectedTable.orderStatus === 'ready' && selectedTable.activeOrderId && (
+                <button
+                  onClick={(e) => handleMarkServed(e, selectedTable.activeOrderId!, selectedTable.tableNumber)}
+                  className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-emerald-500/20 cursor-pointer animate-pulse"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Mark Food Served to Guest</span>
+                </button>
+              )}
+
+              {/* Quick Status Control Buttons */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono text-theme-muted uppercase tracking-wider block font-bold">
+                  Update Table Occupancy Status
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'available')}
+                    className={`py-3 px-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      selectedTable.status === 'available'
+                        ? 'bg-emerald-500 text-black border-emerald-400 font-black shadow-sm'
+                        : 'bg-theme-bg text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10'
+                    }`}
+                  >
+                    Available
+                  </button>
+
+                  <button
+                    onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'occupied')}
+                    className={`py-3 px-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      selectedTable.status === 'occupied'
+                        ? 'bg-amber-500 text-black border-amber-400 font-black shadow-sm'
+                        : 'bg-theme-bg text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                    }`}
+                  >
+                    Occupied
+                  </button>
+
+                  <button
+                    onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'billing')}
+                    className={`py-3 px-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      selectedTable.status === 'billing'
+                        ? 'bg-purple-500 text-white border-purple-400 font-black shadow-sm'
+                        : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
+                    }`}
+                  >
+                    Billing
+                  </button>
+
+                  <button
+                    onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'cleaning')}
+                    className={`py-3 px-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      selectedTable.status === 'cleaning'
+                        ? 'bg-slate-600 text-white border-slate-400 font-black shadow-sm'
+                        : 'bg-theme-bg text-slate-400 border-slate-500/30 hover:bg-slate-500/10'
+                    }`}
+                  >
+                    Cleaning
+                  </button>
+                </div>
+              </div>
+
               <button
-                onClick={(e) => handleMarkServed(e, selectedTable.activeOrderId!)}
-                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-emerald-500/20 cursor-pointer animate-pulse"
+                onClick={() => setSelectedTable(null)}
+                className="w-full py-3 bg-theme-bg border border-theme-border text-theme-muted font-bold text-xs uppercase rounded-xl hover:text-theme-text transition-all cursor-pointer flex-shrink-0"
               >
-                <Check className="w-4 h-4" />
-                <span>Mark Food Served to Guest</span>
+                Close Window
               </button>
-            )}
-
-            {/* Quick Status Control Buttons */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-mono text-aura-slate uppercase tracking-wider block">
-                Update Table Occupancy Status
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'available')}
-                  className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
-                    selectedTable.status === 'available'
-                      ? 'bg-emerald-500 text-aura-obsidian border-emerald-400'
-                      : 'bg-aura-obsidian text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10'
-                  }`}
-                >
-                  Set Available
-                </button>
-
-                <button
-                  onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'occupied')}
-                  className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
-                    selectedTable.status === 'occupied'
-                      ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8]'
-                      : 'bg-aura-obsidian text-[#38BDF8] border-[#38BDF8]/30 hover:bg-[#38BDF8]/10'
-                  }`}
-                >
-                  Set Occupied
-                </button>
-
-                <button
-                  onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'billing')}
-                  className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
-                    selectedTable.status === 'billing'
-                      ? 'bg-amber-500 text-aura-obsidian border-amber-400'
-                      : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
-                  }`}
-                >
-                  Set Billing
-                </button>
-
-                <button
-                  onClick={(e) => handleUpdateTableStatus(e, selectedTable._id, selectedTable.tableNumber, 'cleaning')}
-                  className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
-                    selectedTable.status === 'cleaning'
-                      ? 'bg-slate-500 text-white border-slate-400'
-                      : 'bg-aura-obsidian text-slate-400 border-slate-500/30 hover:bg-slate-500/10'
-                  }`}
-                >
-                  Set Cleaning
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setSelectedTable(null)}
-              className="w-full py-3 bg-aura-obsidian border border-aura-border text-aura-slate font-bold text-xs uppercase rounded-xl hover:text-aura-ivory transition-all cursor-pointer flex-shrink-0"
-            >
-              Close Window
-            </button>
             </div>
           </div>
         </div>
@@ -1380,3 +1341,4 @@ export const WaiterDashboardPage: React.FC = () => {
     </div>
   );
 };
+

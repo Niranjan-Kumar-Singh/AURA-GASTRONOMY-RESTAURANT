@@ -90,30 +90,30 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
       />
 
       {/* Main Chatbot Panel (Bottom Sheet on Mobile, Floating Widget on Desktop) */}
-      <div className="fixed inset-x-0 bottom-0 sm:bottom-20 sm:right-6 sm:left-auto z-[70] w-full sm:w-[400px] h-[85vh] sm:h-[550px] max-h-[90vh] flex flex-col bg-gradient-to-b from-[#090A0F] via-[#121520] to-[#090A0F] border-t sm:border border-[#38BDF8]/40 rounded-t-3xl sm:rounded-3xl shadow-2xl backdrop-blur-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-250">
+      <div className="fixed inset-x-0 bottom-0 sm:bottom-20 sm:right-6 sm:left-auto z-[70] w-full sm:w-[400px] h-[85vh] sm:h-[550px] max-h-[90vh] flex flex-col bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-250 text-slate-800">
         
         {/* Mobile Pull Handle Indicator */}
-        <div className="w-12 h-1 bg-[#38BDF8]/40 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
+        <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
 
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-4 py-3.5 bg-[#090A0F]/90 border-b border-[#38BDF8]/30 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3.5 bg-emerald-50/90 border-b border-emerald-200/80 shrink-0">
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#38BDF8] via-[#7DD3FC] to-[#0284C7] p-0.5 shadow-[0_0_15px_rgba(56,189,248,0.4)] flex items-center justify-center">
-                <div className="w-full h-full bg-[#090A0F] rounded-[14px] flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-[#38BDF8]" />
+              <div className="w-10 h-10 rounded-2xl bg-[#0C831F] p-0.5 shadow-md flex items-center justify-center">
+                <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-[#0C831F]" />
                 </div>
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#090A0F] rounded-full animate-pulse" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full animate-pulse" />
             </div>
 
             <div>
-              <h3 className="font-serif text-sm font-bold text-white tracking-wide flex items-center space-x-1.5">
-                <span>AURA Sommelier AI</span>
-                <Sparkles className="w-3.5 h-3.5 text-[#38BDF8] animate-spin-slow" />
+              <h3 className="font-extrabold text-sm text-slate-900 tracking-tight flex items-center space-x-1.5">
+                <span>AURA Food Concierge</span>
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               </h3>
-              <p className="text-[10px] text-[#38BDF8] font-mono font-bold uppercase tracking-wider">
-                Table {tableId} • 5-Star Master Sommelier
+              <p className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider">
+                Table {tableId} • Smart Dining Assistant
               </p>
             </div>
           </div>
@@ -121,7 +121,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
           <div className="flex items-center space-x-1">
             <button
               onClick={onClearMessages}
-              className="p-1.5 text-aura-slate hover:text-[#38BDF8] rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              className="p-1.5 text-slate-500 hover:text-slate-800 rounded-full hover:bg-emerald-100/50 transition-colors cursor-pointer"
               title="Reset Chat Session"
             >
               <RotateCcw className="w-4 h-4" />
@@ -129,7 +129,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 text-aura-slate hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              className="p-1.5 text-slate-500 hover:text-slate-800 rounded-full hover:bg-emerald-100/50 transition-colors cursor-pointer"
               title="Close Concierge"
             >
               <X className="w-5 h-5" />
@@ -138,17 +138,17 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
         </div>
 
         {/* Message Log Scroll Area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-50/60 custom-scrollbar">
           {messages.map((msg) =>
             msg.isTyping ? (
-              <div key={msg.id} className="flex items-center space-x-2 py-2.5 px-4 bg-[#161A28] border border-[#38BDF8]/30 rounded-2xl rounded-bl-sm w-24 shadow-md">
-                <Bot className="w-4 h-4 text-[#38BDF8] animate-bounce" />
-                <span className="w-1.5 h-1.5 bg-[#38BDF8] rounded-full animate-bounce [animation-delay:120ms]" />
-                <span className="w-1.5 h-1.5 bg-[#38BDF8] rounded-full animate-bounce [animation-delay:240ms]" />
+              <div key={msg.id} className="flex items-center space-x-2 py-2.5 px-4 bg-white border border-slate-200 rounded-2xl rounded-bl-sm w-24 shadow-sm">
+                <Bot className="w-4 h-4 text-[#0C831F] animate-bounce" />
+                <span className="w-1.5 h-1.5 bg-[#0C831F] rounded-full animate-bounce [animation-delay:120ms]" />
+                <span className="w-1.5 h-1.5 bg-[#0C831F] rounded-full animate-bounce [animation-delay:240ms]" />
               </div>
             ) : msg.role === 'bot' ? (
               <div key={msg.id} className="space-y-2.5 max-w-[95%]">
-                <div className="py-3 px-4 bg-[#090A0F]/95 border-l-4 border-l-[#38BDF8] border border-[#38BDF8]/20 rounded-2xl rounded-bl-sm text-xs text-white leading-relaxed whitespace-pre-line shadow-lg">
+                <div className="py-3 px-4 bg-white border border-slate-200/90 rounded-2xl rounded-bl-sm text-xs text-slate-800 leading-relaxed whitespace-pre-line shadow-sm">
                   {msg.text}
                 </div>
                 {msg.quickOptions && msg.quickOptions.length > 0 && (
@@ -157,7 +157,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
                       <button
                         key={opt.label}
                         onClick={() => sendMessage(opt.query, opt.label)}
-                        className="px-3 py-1.5 bg-[#38BDF8]/10 border border-[#38BDF8]/30 hover:border-[#38BDF8] hover:bg-[#0EA5E9] hover:text-[#090A0F] text-[#38BDF8] text-[11px] font-bold rounded-full transition-all cursor-pointer shadow-sm active:scale-95"
+                        className="px-3 py-1.5 bg-emerald-50 border border-emerald-300 hover:border-[#0C831F] hover:bg-[#0C831F] hover:text-white text-emerald-800 text-[11px] font-bold rounded-full transition-all cursor-pointer shadow-sm active:scale-95"
                       >
                         {opt.label}
                       </button>
@@ -166,7 +166,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
                 )}
               </div>
             ) : (
-              <div key={msg.id} className="py-2.5 px-4 bg-[#0EA5E9] text-[#090A0F] font-bold rounded-2xl rounded-br-sm text-xs ml-auto max-w-[85%] shadow-xl">
+              <div key={msg.id} className="py-2.5 px-4 bg-[#0C831F] text-white font-bold rounded-2xl rounded-br-sm text-xs ml-auto max-w-[85%] shadow-sm">
                 {msg.text}
               </div>
             )
@@ -174,19 +174,19 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
         </div>
 
         {/* Bottom Input Area */}
-        <div className="p-3 bg-[#121520]/95 border-t border-[#38BDF8]/20 shrink-0">
+        <div className="p-3 bg-white border-t border-slate-200 shrink-0">
           <div className="flex items-center space-x-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask about menu, prices, coupons, dietary options..."
-              className="flex-1 px-4 py-2.5 bg-[#090A0F] border border-[#38BDF8]/30 focus:border-[#38BDF8] text-white text-xs rounded-2xl outline-none placeholder:text-aura-slate shadow-inner"
+              className="flex-1 px-4 py-2.5 bg-slate-100 border border-slate-200 focus:border-[#0C831F] focus:bg-white text-slate-900 text-xs rounded-2xl outline-none placeholder:text-slate-400 shadow-inner"
             />
             <button
               onClick={() => sendMessage(input)}
               disabled={isSending || !input.trim()}
-              className="p-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] rounded-2xl disabled:opacity-40 transition-all hover:scale-105 cursor-pointer disabled:cursor-not-allowed shadow-md"
+              className="p-2.5 bg-[#0C831F] hover:bg-[#096918] text-white rounded-2xl disabled:opacity-40 transition-all hover:scale-105 cursor-pointer disabled:cursor-not-allowed shadow-md"
               title="Send Message"
             >
               <Send className="w-4 h-4 font-bold" />

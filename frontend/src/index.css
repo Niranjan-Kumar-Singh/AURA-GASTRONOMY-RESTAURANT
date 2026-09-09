@@ -1,8 +1,142 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500&family=Sora:wght@300;400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =========================================================================
+   PAGE-SPECIFIC COLOR VARIABLE COMBINATIONS (DESIGN TOKENS)
+   ========================================================================= */
+
+/* Default Fallback */
+:root {
+  --theme-bg: #07090E;
+  --theme-surface: #0A0D15;
+  --theme-surface-hover: #121726;
+  --theme-border: #1E2638;
+  --theme-border-strong: #334155;
+  --theme-primary: #10B981;
+  --theme-primary-hover: #059669;
+  --theme-primary-light: rgba(16, 185, 129, 0.15);
+  --theme-secondary: #38BDF8;
+  --theme-text: #F8FAFC;
+  --theme-text-muted: #94A3B8;
+  --theme-accent: #10B981;
+}
+
+/* 1. Customer Dining Portal (Fresh Blinkit Luminous Theme) */
+.page-theme-customer {
+  background-color: #F4F6F8 !important;
+  color: #1E293B !important;
+  --theme-bg: #F4F6F8;
+  --theme-surface: #FFFFFF;
+  --theme-surface-hover: #F8FAFC;
+  --theme-border: #E5E7EB;
+  --theme-border-strong: #CBD5E1;
+  --theme-primary: #0C831F;
+  --theme-primary-hover: #096918;
+  --theme-primary-light: #E8F7ED;
+  --theme-secondary: #F7D046;
+  --theme-text: #1E293B;
+  --theme-text-muted: #64748B;
+  --theme-accent: #0C831F;
+}
+
+/* 2. Kitchen Display Terminal (Industrial High-Contrast Amber / Flame Theme) */
+.page-theme-kitchen {
+  --theme-bg: #07090E;
+  --theme-surface: #0A0D15;
+  --theme-surface-hover: #121722;
+  --theme-border: #1E2638;
+  --theme-border-strong: #334155;
+  --theme-primary: #F59E0B;
+  --theme-primary-hover: #D97706;
+  --theme-primary-light: rgba(245, 158, 11, 0.15);
+  --theme-secondary: #EF4444;
+  --theme-text: #F8FAFC;
+  --theme-text-muted: #94A3B8;
+  --theme-accent: #F59E0B;
+}
+
+/* 3. Executive CEO Cockpit (Bloomberg Financial Emerald & Gold Yield) */
+.page-theme-owner {
+  --theme-bg: #080B11;
+  --theme-surface: #0E131F;
+  --theme-surface-hover: #141B2D;
+  --theme-border: #1F293D;
+  --theme-border-strong: #334155;
+  --theme-primary: #10B981;
+  --theme-primary-hover: #059669;
+  --theme-primary-light: rgba(16, 185, 129, 0.15);
+  --theme-secondary: #EAB308;
+  --theme-text: #F1F5F9;
+  --theme-text-muted: #94A3B8;
+  --theme-accent: #10B981;
+}
+
+/* 4. Admin Mission Control (Enterprise Operations Linear Indigo Theme) */
+.page-theme-admin {
+  --theme-bg: #07090E;
+  --theme-surface: #0A0D15;
+  --theme-surface-hover: #121726;
+  --theme-border: #1E293B;
+  --theme-border-strong: #334155;
+  --theme-primary: #6366F1;
+  --theme-primary-hover: #4F46E5;
+  --theme-primary-light: rgba(99, 102, 241, 0.15);
+  --theme-secondary: #818CF8;
+  --theme-text: #F8FAFC;
+  --theme-text-muted: #94A3B8;
+  --theme-accent: #6366F1;
+}
+
+/* 5. Waiter Floor Command (Tactical Cyan & Status Mosaic) */
+.page-theme-waiter {
+  --theme-bg: #07090E;
+  --theme-surface: #0A0D15;
+  --theme-surface-hover: #111827;
+  --theme-border: #1E2738;
+  --theme-border-strong: #334155;
+  --theme-primary: #06B6D4;
+  --theme-primary-hover: #0891B2;
+  --theme-primary-light: rgba(6, 182, 212, 0.15);
+  --theme-secondary: #F59E0B;
+  --theme-text: #F8FAFC;
+  --theme-text-muted: #94A3B8;
+  --theme-accent: #06B6D4;
+}
+
+/* 6. Cashier POS Terminal (Precision Banking Royal Purple Theme) */
+.page-theme-cashier {
+  --theme-bg: #07090E;
+  --theme-surface: #0A0D15;
+  --theme-surface-hover: #121626;
+  --theme-border: #1E263D;
+  --theme-border-strong: #334155;
+  --theme-primary: #8B5CF6;
+  --theme-primary-hover: #7C3AED;
+  --theme-primary-light: rgba(139, 92, 246, 0.15);
+  --theme-secondary: #10B981;
+  --theme-text: #F8FAFC;
+  --theme-text-muted: #94A3B8;
+  --theme-accent: #8B5CF6;
+}
+
+/* 7. Staff Login Terminal (High-Security Multi-Role Preset Slate) */
+.page-theme-login {
+  --theme-bg: #07090E;
+  --theme-surface: #0D121F;
+  --theme-surface-hover: #141B2D;
+  --theme-border: #1E293B;
+  --theme-border-strong: #334155;
+  --theme-primary: #10B981;
+  --theme-primary-hover: #059669;
+  --theme-primary-light: rgba(16, 185, 129, 0.15);
+  --theme-secondary: #F59E0B;
+  --theme-text: #F8FAFC;
+  --theme-text-muted: #94A3B8;
+  --theme-accent: #10B981;
+}
 
 @layer base {
   html {
@@ -10,14 +144,61 @@
     scroll-behavior: smooth;
   }
 
+  /* ===== BASE BODY — Poppins first (best ₹ glyph support) ===== */
   body {
-    @apply bg-aura-obsidian text-aura-ivory font-sans antialiased;
+    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.6;
+    @apply bg-[#F4F6F8] text-slate-900 antialiased;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ===== CUSTOMER PORTAL — Poppins: warm, friendly, perfect ₹ ===== */
+  .page-theme-customer {
+    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+  }
+
+  /* ===== STAFF DASHBOARDS — Inter: compact, data-dense ===== */
+  .page-theme-kitchen,
+  .page-theme-waiter,
+  .page-theme-cashier,
+  .page-theme-admin,
+  .page-theme-owner,
+  .page-theme-login {
+    font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+  }
+
+  /* ===== HEADINGS — Sora: premium geometric, confident ===== */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sora', 'Poppins', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+
+  /* On dark staff screens: Inter headings (sharp, no-nonsense) */
+  .page-theme-kitchen h1, .page-theme-kitchen h2, .page-theme-kitchen h3,
+  .page-theme-waiter h1, .page-theme-waiter h2, .page-theme-waiter h3,
+  .page-theme-cashier h1, .page-theme-cashier h2, .page-theme-cashier h3,
+  .page-theme-admin h1, .page-theme-admin h2, .page-theme-admin h3,
+  .page-theme-owner h1, .page-theme-owner h2, .page-theme-owner h3 {
+    font-family: 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  .dark {
+    background-color: #07090E;
+    color: #F8FAFC;
   }
 
   ::selection {
-    background-color: #38BDF8;
-    color: #090A0F;
+    background-color: #0C831F;
+    color: #FFFFFF;
   }
 
   html.modal-open,
@@ -26,10 +207,48 @@
     touch-action: none !important;
     overscroll-behavior: none !important;
   }
+}
 
-  h1, h2, h3, h4, .font-serif {
-    font-family: 'Playfair Display', Georgia, serif;
-  }
+/* =============================================================
+   TYPOGRAPHY UTILITIES — project-wide
+   ============================================================= */
+
+/* font-mono on CUSTOMER pages: Poppins + tabular nums (not monospace!)
+   This is how Blinkit / Swiggy / Zomato render prices — far more
+   polished than using a monospace font for ₹ amounts */
+.page-theme-customer .font-mono,
+.page-theme-customer [class*="font-mono"] {
+  font-family: 'Poppins', 'Inter', system-ui, sans-serif !important;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* font-mono on DARK STAFF screens: JetBrains Mono (terminal precision) */
+.page-theme-kitchen .font-mono,
+.page-theme-waiter .font-mono,
+.page-theme-cashier .font-mono,
+.page-theme-admin .font-mono,
+.page-theme-owner .font-mono,
+.page-theme-login .font-mono,
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+/* font-sans utility — Poppins on all screens */
+.font-sans {
+  font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+}
+
+/* font-serif — editorial/pull-quotes only */
+.font-serif {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+/* font-display — Sora for brand/landing hero text */
+.font-display {
+  font-family: 'Sora', 'Poppins', system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* Custom Luxury Scrollbar */
@@ -86,6 +305,40 @@
 .luxury-scrollbar-x {
   scrollbar-width: thin;
   scrollbar-color: rgba(56, 189, 248, 0.4) rgba(18, 21, 32, 0.75);
+}
+
+/* Blinkit Fresh Category Scrollbar */
+.blinkit-scrollbar-x::-webkit-scrollbar {
+  height: 4px;
+}
+.blinkit-scrollbar-x::-webkit-scrollbar-track {
+  background: #E5E7EB;
+  border-radius: 9999px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+.blinkit-scrollbar-x::-webkit-scrollbar-thumb {
+  background: #16A34A;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+.blinkit-scrollbar-x::-webkit-scrollbar-thumb:hover {
+  background: #0C831F;
+}
+.blinkit-scrollbar-x {
+  scrollbar-width: thin;
+  scrollbar-color: #16A34A #E5E7EB;
+}
+
+/* Blinkit Fresh Add Button Pulse & Stepper Animation */
+@keyframes blinkit-pop {
+  0% { transform: scale(0.92); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.blinkit-stepper-pop {
+  animation: blinkit-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Glassmorphism & Card Utilities */

@@ -1,10 +1,10 @@
 import React from 'react';
 import { MenuItem } from '../../types/menu.types';
-import { Heart, Share2, Eye, Plus, Minus, Star, Flame, Clock, Sparkles } from 'lucide-react';
+import { Heart, Plus, Minus, Star, Sparkles, Flame, Eye } from 'lucide-react';
 import { useCartStore } from '../../store/use-cart-store';
 import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useToast } from '../feedback/ToastContainer';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface DishCardProps {
   item: MenuItem;
@@ -22,33 +22,6 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
   const cartItem = items.find((it) => it.menuItem.id === item.id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
-  // 3D Tilt Logic
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
-  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
-
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["2deg", "-2deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-2deg", "2deg"]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const xPct = mouseX / width - 0.5;
-    const yPct = mouseY / height - 0.5;
-    x.set(xPct);
-    y.set(yPct);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
   const handleToggleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     const added = toggleWishlist(item);
@@ -58,25 +31,21 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
     );
   };
 
+  // Original price calculation for strikethrough retail discount feel
+  const originalPrice = Math.round(item.price * 1.22);
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d",
-      }}
+      viewport={{ once: true, margin: "-40px" }}
       onClick={() => onClick(item)}
-      className="bg-[#121520] border border-[#38BDF8]/30 hover:border-[#38BDF8] rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_10px_30px_rgba(0,0,0,0.85)] hover:shadow-[0_20px_45px_rgba(56,189,248,0.25)] group relative perspective-1000 transition-all duration-300 hover:-translate-y-1"
+      className="bg-white border border-slate-200/90 hover:border-[#0C831F]/50 rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(12,131,31,0.12)] group relative transition-all duration-200 hover:-translate-y-1"
     >
       {/* Top Image Box */}
-      <div className="relative h-36 sm:h-52 w-full bg-aura-obsidian overflow-hidden" style={{ transform: "translateZ(30px)" }}>
+      <div className="relative h-36 sm:h-48 w-full bg-slate-100/80 overflow-hidden">
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-r from-aura-obsidian via-aura-container to-aura-obsidian animate-pulse" />
+          <div className="absolute inset-0 bg-slate-200/70 animate-pulse" />
         )}
         <img
           src={item.imageUrl}
@@ -84,178 +53,168 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           loading="lazy"
           decoding="async"
           onLoad={() => setImageLoaded(true)}
-          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
-            imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         />
+
+        {/* Out of Stock Overlay */}
         {item.isAvailable === false && (
-          <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px] flex items-center justify-center z-10">
-            <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-rose-500 text-white text-[8px] sm:text-[10px] font-black tracking-widest uppercase rounded-full shadow-lg border border-rose-400">
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center z-10">
+            <span className="px-2.5 py-1 bg-rose-600 text-white text-[9px] sm:text-[10px] font-black tracking-wider uppercase rounded-full shadow-md">
               OUT OF STOCK
             </span>
           </div>
         )}
 
-        {/* Veg / Non-Veg Indicator */}
-        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center space-x-1 z-10">
+        {/* Veg / Non-Veg Indicator & Special Badges (Top Left) */}
+        <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 flex items-center space-x-1.5 z-10">
           <span
-            className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-sm border-2 flex items-center justify-center bg-aura-obsidian/90 backdrop-blur-md shadow-md ${
-              item.isVegetarian ? 'border-emerald-500' : 'border-rose-500'
+            className={`w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-md border-2 flex items-center justify-center bg-white/95 backdrop-blur-md shadow-sm ${
+              item.isVegetarian ? 'border-emerald-600' : 'border-rose-600'
             }`}
           >
             <span
-              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
-                item.isVegetarian ? 'bg-emerald-500' : 'bg-rose-500'
+              className={`w-2 h-2 rounded-full ${
+                item.isVegetarian ? 'bg-emerald-600' : 'bg-rose-600'
               }`}
             />
           </span>
 
-          {item.isGlutenFree && (
-            <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 backdrop-blur-md">
-              GF
+          {item.isChefSpecial && (
+            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-[#F7D046] text-slate-900 flex items-center space-x-1 shadow-sm">
+              <Sparkles className="w-2.5 h-2.5 text-slate-900" />
+              <span>SPECIAL</span>
             </span>
           )}
-          {item.isJain && (
-            <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 backdrop-blur-md">
-              Jain
+
+          {item.isBestSeller && !item.isChefSpecial && (
+            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-[#0C831F] text-white shadow-sm">
+              BESTSELLER
             </span>
           )}
         </div>
 
-        {/* Action Controls Overlay (Wishlist, Share, Quick View) */}
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center space-x-1 sm:space-x-1.5 z-10">
+        {/* Top Right Controls (Wishlist & Quick View) */}
+        <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 flex items-center space-x-1 z-10">
           <button
             onClick={handleToggleLike}
-            className={`p-1.5 sm:p-2 rounded-full backdrop-blur-md border transition-all ${
+            className={`p-1.5 rounded-full backdrop-blur-md shadow-sm border transition-all ${
               isLiked
                 ? 'bg-rose-500 text-white border-rose-500'
-                : 'bg-aura-obsidian/70 text-aura-ivory border-white/20 hover:border-aura-cyan'
+                : 'bg-white/90 text-slate-600 border-slate-200/80 hover:text-rose-500'
             }`}
             title="Add to Wishlist"
           >
-            <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isLiked ? 'fill-white' : ''}`} />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick(item);
-            }}
-            className="p-1.5 sm:p-2 rounded-full bg-aura-obsidian/70 backdrop-blur-md border border-white/20 text-aura-ivory hover:border-aura-cyan transition-all"
-            title="Quick View"
-          >
-            <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-white' : ''}`} />
           </button>
         </div>
 
-        {/* Badges Bar */}
-        <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex flex-wrap gap-1 z-10">
-          {item.isChefSpecial && (
-            <span className="text-[8px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0EA5E9] text-[#090A0F] flex items-center space-x-1 shadow-md">
-              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#090A0F]" />
-              <span className="hidden sm:inline">Chef Special</span>
-              <span className="inline sm:hidden">Special</span>
-            </span>
-          )}
-          {item.isBestSeller && (
-            <span className="text-[8px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7DD3FC] text-[#090A0F] shadow-md">
-              <span className="hidden sm:inline">Best Seller</span>
-              <span className="inline sm:hidden">Best</span>
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Dish Content Body */}
-      <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 flex-1 flex flex-col justify-between">
+      <div className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col justify-between bg-white">
         <div className="space-y-1">
           <div className="flex items-start justify-between gap-1.5">
-            <h3 className="font-serif text-xs sm:text-sm md:text-base font-bold text-white group-hover:text-[#38BDF8] transition-colors line-clamp-2 leading-snug min-h-[28px] sm:min-h-[36px]">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#0C831F] transition-colors line-clamp-2 leading-snug">
               {item.name}
             </h3>
-            <span className="font-mono text-xs sm:text-sm md:text-base font-black text-[#38BDF8] shrink-0 pt-0.5">₹{item.price}</span>
           </div>
 
-          <p className="text-[10px] sm:text-xs text-[#94A3B8] line-clamp-2 leading-tight sm:leading-relaxed">
+          <p className="text-[11px] text-slate-500 line-clamp-1 leading-normal">
             {item.description}
           </p>
         </div>
 
-        {/* Metadata Rail (Rating, Calories, Prep Time, Spice Meter) */}
-        <div className="pt-1.5 sm:pt-2 border-t border-[#38BDF8]/20 flex items-center justify-between text-[9px] sm:text-[11px] text-[#94A3B8]">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            <div className="flex items-center space-x-0.5 text-[#38BDF8] font-bold">
-              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-[#38BDF8] text-[#38BDF8]" />
-              <span>{item.rating || 4.9}</span>
-              <span className="text-[8px] sm:text-[9px] text-[#94A3B8] font-normal hidden sm:inline">({item.reviewCount || 120})</span>
-            </div>
-
-            <div className="flex items-center space-x-0.5">
-              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#38BDF8]" />
-              <span>{item.preparationTimeMinutes}m</span>
-            </div>
-
-            {item.calories && (
-              <span className="font-mono hidden sm:inline">{item.calories} kcal</span>
-            )}
+        {/* Metadata & Rating Row */}
+        <div className="flex items-center justify-between text-[10px] text-slate-600 pt-1">
+          <div className="flex items-center space-x-1 bg-amber-50 px-1.5 py-0.5 rounded text-amber-800 font-bold border border-amber-200/60">
+            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+            <span>{item.rating || 4.8}</span>
+            <span className="text-[9px] text-amber-700 font-normal">({item.reviewCount || 95})</span>
           </div>
 
-          {/* Spice Meter */}
+          {item.calories && (
+            <span className="text-[10px] text-slate-400 font-medium">
+              {item.calories} kcal
+            </span>
+          )}
+
           {item.spiceLevel !== undefined && item.spiceLevel > 0 && (
-            <div className="flex items-center space-x-0.5" title={`Spice Level: ${item.spiceLevel}/3`}>
+            <div className="flex items-center space-x-0.5" title={`Spice: ${item.spiceLevel}/3`}>
               {Array.from({ length: item.spiceLevel }).map((_, i) => (
-                <Flame key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-500 fill-rose-500" />
+                <Flame key={i} className="w-2.5 h-2.5 text-rose-500 fill-rose-500" />
               ))}
             </div>
           )}
         </div>
 
-        {/* Quantity Stepper / Add Button / Out of Stock */}
-        <div className="pt-1.5 sm:pt-3">
-          {item.isAvailable === false ? (
-            <button
-              disabled
-              className="w-full py-2 sm:py-2.5 px-2 sm:px-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold uppercase tracking-wider rounded-xl sm:rounded-2xl text-[10px] sm:text-xs flex items-center justify-center space-x-1 cursor-not-allowed opacity-80"
-            >
-              <span>OUT OF STOCK</span>
-            </button>
-          ) : quantity === 0 ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAdd(item);
-              }}
-              className="w-full py-2 sm:py-2.5 px-2 sm:px-4 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black uppercase tracking-wider rounded-xl sm:rounded-2xl text-[10px] sm:text-xs transition-all flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-[0_4px_20px_rgba(14,165,233,0.4)] hover:shadow-[0_6px_25px_rgba(14,165,233,0.55)] border border-[#7DD3FC]/60 active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#090A0F]" />
-              <span className="text-[#090A0F]">ADD</span>
-            </button>
-          ) : (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="w-full py-0.5 sm:py-1 px-1 bg-[#0EA5E9]/20 backdrop-blur-md border-2 border-[#0EA5E9] rounded-full flex items-center justify-between shadow-[0_0_15px_rgba(56,189,248,0.3)] animate-in zoom-in-95 duration-150"
-            >
-              <button
-                onClick={() => updateQuantity(item.id, quantity - 1)}
-                className="w-7 h-7 sm:w-9 sm:h-9 bg-[#090A0F] hover:bg-black rounded-full flex items-center justify-center font-bold text-[#38BDF8] shadow-inner transition-transform active:scale-90"
-              >
-                <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-              
-              <div className="flex flex-col items-center justify-center leading-none">
-                <span className="font-mono text-xs sm:text-sm font-black text-[#38BDF8]">{quantity}</span>
-              </div>
-              
-              <button
-                onClick={() => addItem(item, 1)}
-                className="w-7 h-7 sm:w-9 sm:h-9 bg-[#090A0F] hover:bg-black rounded-full flex items-center justify-center font-bold text-[#38BDF8] shadow-inner transition-transform active:scale-90"
-              >
-                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
+        {/* Bottom Row: Price & Blinkit ADD Button */}
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="flex items-baseline space-x-1.5">
+              <span className="text-sm sm:text-base font-black text-slate-900 font-mono">
+                ₹{item.price}
+              </span>
+              <span className="text-[10px] sm:text-xs text-slate-400 line-through font-mono">
+                ₹{originalPrice}
+              </span>
             </div>
-          )}
+            <span className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider">
+              {Math.round(((originalPrice - item.price) / originalPrice) * 100)}% OFF
+            </span>
+          </div>
+
+          {/* Blinkit Green ADD Button / Stepper */}
+          <div>
+            {item.isAvailable === false ? (
+              <button
+                disabled
+                className="px-3 py-1 bg-slate-100 text-slate-400 font-bold text-[10px] rounded-lg cursor-not-allowed uppercase"
+              >
+                OUT
+              </button>
+            ) : quantity === 0 ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAdd(item);
+                }}
+                className="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-50 hover:bg-[#0C831F] border border-[#0C831F] text-[#0C831F] hover:text-white rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-150 active:scale-95 shadow-sm flex items-center space-x-1 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>ADD</span>
+              </button>
+            ) : (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="px-1 py-0.5 bg-[#0C831F] text-white rounded-lg flex items-center space-x-1.5 font-bold shadow-sm blinkit-stepper-pop"
+              >
+                <button
+                  onClick={() => updateQuantity(item.id, quantity - 1)}
+                  className="w-6 h-6 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer"
+                  title="Decrease"
+                >
+                  <Minus className="w-3.5 h-3.5 stroke-[3]" />
+                </button>
+
+                <span className="font-mono text-xs sm:text-sm font-black min-w-[16px] text-center">
+                  {quantity}
+                </span>
+
+                <button
+                  onClick={() => addItem(item, 1)}
+                  className="w-6 h-6 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer"
+                  title="Increase"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
   );
 };
+export default DishCard;

@@ -47,17 +47,25 @@ export const LandingPage: React.FC = () => {
           <a href="#experience" className="hover:text-[#38BDF8] transition-colors">The Experience</a>
           <a href="#menu" className="hover:text-[#38BDF8] transition-colors">Culinary Vision</a>
           <a href="#acclaim" className="hover:text-[#38BDF8] transition-colors">Acclaim</a>
-          <a href="#visit" className="hover:text-[#38BDF8] transition-colors">Location & Hours</a>
+          <a href="#visit" className="hover:text-white transition-colors">Location &amp; Hours</a>
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/table/10/menu')}
+            className="px-4 py-2 bg-[#0C831F] hover:bg-[#096918] text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center space-x-1.5 cursor-pointer"
+          >
+            <Utensils className="w-3.5 h-3.5" />
+            <span>Table Menu</span>
+          </button>
+
           <button
             onClick={() => navigate('/login')}
-            className="px-5 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs rounded-xl shadow-lg shadow-[#0EA5E9]/20 transition-all flex items-center space-x-2 border border-[#7DD3FC]/50 cursor-pointer"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer shadow-sm"
           >
-            <ShieldCheck className="w-4 h-4" />
-            <span className="hidden sm:inline">Staff Portal</span>
-            <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />
+            <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">Staff Terminal</span>
+            <ArrowRight className="w-3 h-3 hidden sm:inline" />
           </button>
         </div>
       </header>
@@ -74,41 +82,41 @@ export const LandingPage: React.FC = () => {
             backgroundAttachment: 'fixed'
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-aura-obsidian/95 via-aura-obsidian/80 to-aura-obsidian z-0" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#07090E]/95 via-[#07090E]/85 to-[#07090E] z-0" />
         </div>
 
         {/* Hero Content Box */}
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8 my-auto">
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#38BDF8]/10 border border-[#38BDF8]/30 text-[#38BDF8] text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-            <Sparkles className="w-4 h-4" />
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-emerald-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
             <span>Modern Fine Dining Redefined</span>
           </div>
 
           <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1] text-white drop-shadow-2xl">
             A Symphony of <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#38BDF8] via-[#7DD3FC] to-[#38BDF8] drop-shadow-[0_0_35px_rgba(56,189,248,0.4)]">
-              Taste & Elegance.
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-200 to-emerald-400">
+              Taste &amp; Elegance.
             </span>
           </h1>
 
-          <p className="text-aura-slate text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-light">
+          <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-light">
             Step into Mayfair's premier culinary destination where gastronomic mastery converges with table-side QR innovation and instant digital dispatch.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <a
-              href="#experience"
-              className="w-full sm:w-auto px-8 py-4 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl text-sm transition-transform hover:scale-105 shadow-xl shadow-[#0EA5E9]/20 flex items-center justify-center space-x-2 border border-[#7DD3FC]/50 cursor-pointer"
+            <button
+              onClick={() => navigate('/table/10/menu')}
+              className="w-full sm:w-auto px-8 py-4 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-sm transition-transform hover:scale-105 shadow-xl flex items-center justify-center space-x-2 cursor-pointer shadow-emerald-950/40"
             >
-              <Sparkles className="w-5 h-5" />
-              <span>Discover The Experience</span>
-            </a>
+              <Utensils className="w-5 h-5" />
+              <span>Explore Table Menu &amp; Order</span>
+            </button>
             <a
               href="#visit"
-              className="w-full sm:w-auto px-8 py-4 bg-aura-container/80 border border-[#38BDF8]/30 hover:border-[#38BDF8] text-white font-bold rounded-2xl text-sm transition-all flex items-center justify-center space-x-2 cursor-pointer"
+              className="w-full sm:w-auto px-8 py-4 bg-slate-900/80 border border-slate-700 hover:border-slate-500 text-white font-bold rounded-2xl text-sm transition-all flex items-center justify-center space-x-2 cursor-pointer backdrop-blur-sm"
             >
-              <MapPin className="w-5 h-5 text-[#38BDF8]" />
-              <span>Location & Hours</span>
+              <MapPin className="w-5 h-5 text-slate-400" />
+              <span>Location &amp; Hours</span>
             </a>
           </div>
         </div>

@@ -97,10 +97,10 @@ router.get('/', async (req, res) => {
 
     // For each table, attach active session details
     const tablesWithSessions = await Promise.all(tables.map(async (table) => {
-      // Auto-transition table from 'cleaning' to 'available' after 5 minutes (300,000ms)
+      // Auto-transition table from 'cleaning' to 'available' after 2.5 minutes (150,000ms)
       if (table.status === 'cleaning' && table.cleaningStartedAt) {
         const elapsedMs = Date.now() - new Date(table.cleaningStartedAt).getTime();
-        if (elapsedMs >= 5 * 60 * 1000) {
+        if (elapsedMs >= 2.5 * 60 * 1000) {
           table.status = 'available';
           table.cleaningStartedAt = null;
           table.guestCount = 0;

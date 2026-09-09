@@ -9,7 +9,7 @@ interface LazyDishCardProps {
 }
 
 export const LazyDishCard: React.FC<LazyDishCardProps> = ({ item, onAdd, onClick }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,18 +32,19 @@ export const LazyDishCard: React.FC<LazyDishCardProps> = ({ item, onAdd, onClick
   }, []);
 
   return (
-    <div ref={cardRef} className="min-h-[200px] sm:min-h-[280px]">
+    <div ref={cardRef} className="min-h-[220px] sm:min-h-[290px]">
       {isVisible ? (
         <DishCard item={item} onAdd={onAdd} onClick={onClick} />
       ) : (
-        <div className="w-full h-44 sm:h-72 bg-aura-container/40 border border-aura-border/60 rounded-3xl animate-pulse flex flex-col justify-between p-3.5 sm:p-4">
-          <div className="w-full h-24 sm:h-44 bg-aura-obsidian/70 rounded-2xl" />
+        <div className="w-full h-44 sm:h-72 bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl animate-pulse flex flex-col justify-between p-3.5 sm:p-4 shadow-sm">
+          <div className="w-full h-24 sm:h-44 bg-slate-100 rounded-xl" />
           <div className="space-y-2 pt-2">
-            <div className="w-3/4 h-3.5 bg-aura-border/60 rounded-full" />
-            <div className="w-1/2 h-3 bg-aura-border/40 rounded-full" />
+            <div className="w-3/4 h-3.5 bg-slate-200 rounded-full" />
+            <div className="w-1/2 h-3 bg-slate-100 rounded-full" />
           </div>
         </div>
       )}
     </div>
   );
 };
+export default LazyDishCard;

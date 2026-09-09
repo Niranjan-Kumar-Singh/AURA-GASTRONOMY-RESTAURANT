@@ -70,15 +70,15 @@ export const HelpBotLauncher: React.FC<HelpBotLauncherProps> = ({ tableId = '14'
       {/* Floating Launcher Button */}
       <button
         onClick={() => setIsOpen((open) => !open)}
-        className={`fixed z-40 p-2.5 sm:p-3.5 bg-[#10131E] border-2 border-[#38BDF8] hover:border-[#7DD3FC] text-[#38BDF8] rounded-full shadow-[0_4px_20px_rgba(56,189,248,0.3)] hover:shadow-[0_6px_25px_rgba(56,189,248,0.45)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 cursor-pointer backdrop-blur-xl ${
+        className={`fixed z-40 p-2.5 sm:p-3.5 bg-white border-2 border-[#0C831F] hover:bg-emerald-50 text-[#0C831F] rounded-full shadow-[0_4px_20px_rgba(12,131,31,0.25)] hover:shadow-[0_6px_25px_rgba(12,131,31,0.35)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 cursor-pointer ${
           hasCart
             ? 'bottom-32 right-4 sm:bottom-20 sm:right-6'
             : 'bottom-17 right-4 sm:bottom-20 sm:right-6'
         }`}
         title="Ask AURA Sommelier AI"
       >
-        {isOpen ? <X className="w-5 h-5 text-white" /> : <MessageCircle className="w-5 h-5 text-[#38BDF8]" />}
-        <span className="text-xs hidden sm:inline uppercase font-bold tracking-wider text-[#7DD3FC]">AI Concierge</span>
+        {isOpen ? <X className="w-5 h-5 text-slate-800" /> : <MessageCircle className="w-5 h-5 text-[#0C831F]" />}
+        <span className="text-xs hidden sm:inline uppercase font-extrabold tracking-wider text-slate-800">AI Concierge</span>
       </button>
 
       {isOpen && (

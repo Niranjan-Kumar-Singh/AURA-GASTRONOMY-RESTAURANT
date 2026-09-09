@@ -225,60 +225,63 @@ export const MenuPage: React.FC = () => {
   const todaysSpecials = applyDietaryFilter(menuItems.filter((it) => it.categoryId === 2 || it.isBestSeller));
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090A0F] text-aura-ivory font-sans selection:bg-[#0EA5E9] selection:text-[#090A0F]">
+    <div className="min-h-screen flex flex-col bg-[#F4F6F8] text-slate-800 font-sans selection:bg-[#0C831F] selection:text-white">
       {/* Sticky Top Navigation Header (Auto-Hides on Mobile Scroll Down) */}
       <header
-        className={`sticky top-0 z-30 bg-[#090A0F] border-b border-[#38BDF8]/20 px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between shadow-xl transition-transform duration-300 ${
+        className={`sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 shadow-sm transition-transform duration-300 ${
           isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-1.5 sm:p-2 text-aura-slate hover:text-aura-cyan rounded-xl hover:bg-aura-container transition-colors shrink-0 cursor-pointer"
-            title="Open Side Menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+        <div className="max-w-[1560px] mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-1.5 sm:p-2 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
+              title="Open Side Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-          <div className="flex items-center space-x-2 min-w-0">
-            <div className="w-8 h-8 bg-aura-cyan/10 border border-aura-cyan/30 rounded-xl flex items-center justify-center shadow-md shrink-0">
-              <Utensils className="w-4 h-4 text-aura-cyan" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-serif text-xs sm:text-sm font-bold text-aura-ivory tracking-wide truncate max-w-[130px] sm:max-w-none">
-                AURA GASTRONOMY
-              </h1>
-              <p className="text-[8px] sm:text-[9px] text-aura-cyan/90 font-semibold tracking-widest uppercase truncate max-w-[140px] sm:max-w-none">
-                FINE DINING • LUXURY EXPERIENCE
-              </p>
+            <div className="flex items-center space-x-2 min-w-0">
+              <div className="w-8 h-8 bg-emerald-100 border border-emerald-300 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                <Utensils className="w-4 h-4 text-[#0C831F]" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight leading-none flex items-center gap-1.5 truncate">
+                  <span>AURA GASTRONOMY</span>
+                  <span className="w-2 h-2 rounded-full bg-[#0C831F] inline-block shrink-0 animate-pulse" />
+                </h1>
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5 truncate">
+                  📍 Table {tableId} • {zoneName}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center space-x-2.5 sm:space-x-3">
-          {activeOrderId && (
-            <button
-              onClick={() => navigate(`/table/${tableId}/order/${activeOrderId}`)}
-              className="relative px-3 py-1.5 sm:py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all shadow-lg flex items-center space-x-1.5"
-            >
-              <Activity className="w-4 h-4 animate-pulse text-emerald-400" />
-              <span className="text-xs font-bold uppercase tracking-wider">Track</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-2.5 bg-aura-container border border-aura-border hover:border-aura-cyan text-aura-ivory rounded-xl transition-all shadow-lg cursor-pointer"
-            title="View Active Table Cart"
-          >
-            <ShoppingBag className="w-5 h-5 text-aura-cyan" />
-            {getItemCount() > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#0EA5E9] text-[#090A0F] text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                {getItemCount()}
-              </span>
+          <div className="flex items-center space-x-2.5 sm:space-x-3">
+            {activeOrderId && (
+              <button
+                onClick={() => navigate(`/table/${tableId}/order/${activeOrderId}`)}
+                className="relative px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-xl transition-all shadow-sm flex items-center space-x-1.5 cursor-pointer font-bold text-xs"
+              >
+                <Activity className="w-3.5 h-3.5 animate-pulse text-[#0C831F]" />
+                <span className="uppercase tracking-wider">Track Order</span>
+              </button>
             )}
-          </button>
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2.5 bg-white border border-slate-200 hover:border-[#0C831F] text-slate-800 rounded-xl transition-all shadow-sm cursor-pointer hover:bg-emerald-50/50"
+              title="View Active Table Cart"
+            >
+              <ShoppingBag className="w-5 h-5 text-slate-800" />
+              {getItemCount() > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#0C831F] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md">
+                  {getItemCount()}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -298,7 +301,7 @@ export const MenuPage: React.FC = () => {
         <CustomerHeroBanner tableId={tableId} zoneName={zoneName} />
 
         {/* Combinable Dietary Filter Chips */}
-        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto my-3 sm:my-4">
+        <div className="px-3 sm:px-6 lg:px-8 max-w-[1560px] mx-auto my-3 sm:my-4">
           <FilterChips
             selectedFilters={selectedFilters}
             onToggleFilter={handleToggleFilter}
@@ -307,11 +310,11 @@ export const MenuPage: React.FC = () => {
 
         {/* Dynamic Recommendation Rails */}
         {!searchQuery && !selectedCategoryId && (
-          <div className="space-y-6 my-4">
+          <div className="space-y-4 my-2">
             {chefSpecials.length > 0 && (
               <RecommendationSection
                 title="Chef's Signature Recommendations"
-                icon={<Sparkles className="w-4 h-4 text-[#38BDF8]" />}
+                icon={<Sparkles className="w-4 h-4 text-[#0C831F]" />}
                 items={chefSpecials}
                 onItemClick={(it) => {
                   setSelectedItem(it);
@@ -323,7 +326,7 @@ export const MenuPage: React.FC = () => {
             {todaysSpecials.length > 0 && (
               <RecommendationSection
                 title="Today's Most Popular Specials"
-                icon={<Flame className="w-4 h-4 text-[#38BDF8]" />}
+                icon={<Flame className="w-4 h-4 text-amber-500" />}
                 items={todaysSpecials}
                 onItemClick={(it) => {
                   setSelectedItem(it);
@@ -335,40 +338,40 @@ export const MenuPage: React.FC = () => {
         )}
 
         {/* Main Food Items Grid */}
-        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto">
+        <div className="px-3 sm:px-6 lg:px-8 py-3 sm:py-6 max-w-[1560px] mx-auto">
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="h-48 sm:h-64 bg-aura-container/50 rounded-2xl sm:rounded-3xl animate-pulse border border-aura-border" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <div key={n} className="h-48 sm:h-64 bg-white rounded-2xl sm:rounded-3xl animate-pulse border border-slate-200 shadow-sm" />
               ))}
             </div>
           ) : fetchError ? (
-            <div className="py-16 text-center space-y-4 bg-aura-container/40 rounded-3xl border border-red-500/30 p-8 max-w-md mx-auto">
-              <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
-              <p className="font-serif text-base text-aura-ivory">{fetchError}</p>
+            <div className="py-16 text-center space-y-4 bg-white rounded-3xl border border-rose-200 p-8 max-w-md mx-auto shadow-sm">
+              <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
+              <p className="font-bold text-base text-slate-800">{fetchError}</p>
               <button
                 onClick={fetchMenuData}
-                className="px-5 py-2.5 bg-aura-cyan text-aura-obsidian font-bold text-xs rounded-xl flex items-center justify-center space-x-2 mx-auto"
+                className="px-5 py-2.5 bg-[#0C831F] text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 mx-auto shadow-sm cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Retry Connection</span>
               </button>
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="py-16 text-center space-y-4 bg-aura-container/40 rounded-3xl border border-aura-border p-8 max-w-lg mx-auto">
-              <Utensils className="w-10 h-10 text-aura-slate/40 mx-auto" />
-              <p className="font-serif text-lg text-aura-ivory">No dishes match your active filter</p>
-              <p className="text-xs text-aura-slate leading-relaxed">Try clearing your dietary filters or searching for another dish.</p>
+            <div className="py-16 text-center space-y-4 bg-white rounded-3xl border border-slate-200 p-8 max-w-lg mx-auto shadow-sm">
+              <Utensils className="w-10 h-10 text-slate-300 mx-auto" />
+              <p className="font-extrabold text-lg text-slate-800">No dishes match your active filter</p>
+              <p className="text-xs text-slate-500 leading-relaxed">Try clearing your dietary filters or searching for another dish.</p>
               <button
                 onClick={handleResetFilters}
-                className="px-5 py-2.5 bg-aura-cyan text-aura-obsidian font-bold text-xs rounded-xl shadow-lg transition-transform hover:scale-105"
+                className="px-5 py-2.5 bg-[#0C831F] text-white font-bold text-xs rounded-xl shadow-md transition-transform hover:scale-105 cursor-pointer"
               >
                 Reset All Filters
               </button>
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
                 {filteredItems.slice(0, visibleCount).map((item) => (
                   <LazyDishCard
                     key={item.id}
@@ -385,8 +388,8 @@ export const MenuPage: React.FC = () => {
               {/* Sentinel Div for Infinite Scroll Batch Loading */}
               {visibleCount < filteredItems.length && (
                 <div ref={sentinelRef} className="py-6 text-center flex items-center justify-center space-x-2">
-                  <div className="w-2 h-2 bg-aura-cyan rounded-full animate-ping" />
-                  <span className="text-[11px] text-aura-cyan font-mono uppercase font-bold tracking-wider">
+                  <div className="w-2 h-2 bg-[#0C831F] rounded-full animate-ping" />
+                  <span className="text-[11px] text-[#0C831F] font-mono uppercase font-bold tracking-wider">
                     Loading More Dishes ({visibleCount} of {filteredItems.length})...
                   </span>
                 </div>
@@ -402,20 +405,23 @@ export const MenuPage: React.FC = () => {
       {/* Floating Help Bot for Users */}
       <HelpBotLauncher tableId={tableId} />
 
-      {/* Floating Active Cart Bar (Desktop & Mobile) */}
+      {/* Floating Active Cart Bar (Desktop & Mobile - Blinkit Green Style) */}
       {getItemCount() > 0 && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-40">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full py-3.5 px-5 sm:px-6 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl text-xs sm:text-sm transition-all duration-200 shadow-[0_4px_25px_rgba(14,165,233,0.5)] flex items-center justify-between border-2 border-[#7DD3FC] active:scale-95 cursor-pointer"
+            className="w-full py-3.5 px-5 sm:px-6 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-xs sm:text-sm transition-all duration-150 shadow-[0_8px_30px_rgba(12,131,31,0.5)] flex items-center justify-between border-2 border-emerald-400 active:scale-95 cursor-pointer"
           >
             <div className="flex items-center space-x-2.5">
-              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-[#090A0F] text-[#38BDF8] rounded-full text-xs flex items-center justify-center font-black shrink-0">
+              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-white text-[#0C831F] rounded-full text-xs flex items-center justify-center font-black shrink-0 shadow-sm">
                 {getItemCount()}
               </span>
-              <span className="font-serif tracking-wide uppercase font-black text-[#090A0F] text-xs sm:text-sm">View Active Table Cart</span>
+              <span className="tracking-wide uppercase font-black text-white text-xs sm:text-sm">View Table Cart</span>
             </div>
-            <span className="font-mono font-black text-sm sm:text-base text-[#090A0F] shrink-0">₹{getGrandTotal().toFixed(2)}</span>
+            <div className="flex items-center space-x-1.5 font-mono font-black text-sm sm:text-base text-white shrink-0">
+              <span>₹{getGrandTotal().toFixed(2)}</span>
+              <span className="text-white/80">➔</span>
+            </div>
           </button>
         </div>
       )}

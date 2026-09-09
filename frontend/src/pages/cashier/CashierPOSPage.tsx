@@ -434,64 +434,64 @@ export const CashierPOSPage: React.FC = () => {
 
   return (
     // Fixed Responsive Two-Column Height Layout
-    <div className="flex flex-col md:flex-row h-full min-h-0 w-full font-sans text-aura-ivory overflow-y-auto md:overflow-hidden">
+    <div className="page-theme-cashier flex flex-col md:flex-row h-full min-h-0 w-full font-sans text-theme-text bg-theme-bg overflow-y-auto md:overflow-hidden">
 
       {/* ─────────────────────────────────────────────────────────────────
           LEFT PANEL — Pending & Settled Table Bills Queue Sidebar
       ───────────────────────────────────────────────────────────────── */}
-      <aside className="w-full md:w-80 flex-shrink-0 h-auto md:h-full flex flex-col bg-aura-container border-b md:border-b-0 md:border-r border-aura-border/80">
+      <aside className="w-full md:w-80 flex-shrink-0 h-auto md:h-full flex flex-col bg-theme-surface border-b md:border-b-0 md:border-r border-theme-border">
 
         {/* POS Station Header */}
-        <div className="p-5 border-b border-aura-border/60 space-y-3">
+        <div className="p-5 border-b border-theme-border space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2.5 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-xl">
-                <Receipt className="w-6 h-6 text-[#38BDF8]" />
+              <div className="p-2.5 bg-theme-primary-light border border-theme-primary/30 rounded-xl">
+                <Receipt className="w-6 h-6 text-theme-primary" />
               </div>
               <div>
-                <h1 className="font-serif text-base font-bold text-white leading-tight">CASHIER POS</h1>
-                <p className="text-[10px] text-[#38BDF8] font-mono uppercase font-bold mt-0.5">Billing & Tax Terminal</p>
+                <h1 className="font-serif text-base font-black text-white leading-tight">CASHIER POS</h1>
+                <p className="text-[10px] text-theme-primary font-mono uppercase font-bold mt-0.5">Billing &amp; Tax Settlement</p>
               </div>
             </div>
 
             <button
               onClick={() => fetchLivePOSData(true)}
-              className="p-2 bg-aura-obsidian border border-aura-border hover:border-[#38BDF8] text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all cursor-pointer"
+              className="p-2 bg-[#07090E] border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer shadow-sm"
               title="Sync POS Floor Data"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#38BDF8]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-purple-400' : ''}`} />
             </button>
           </div>
 
           {/* Quick Search Input */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-aura-slate" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500" />
             <input
               type="text"
               placeholder="Search table #, order ID, phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-aura-obsidian border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8] font-mono"
+              className="w-full pl-8 pr-3 py-2 bg-[#07090E] border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 font-mono placeholder:text-slate-600"
             />
           </div>
 
           {/* Queue Filter Tabs */}
-          <div className="grid grid-cols-3 gap-1 p-1 bg-aura-obsidian/80 rounded-xl border border-aura-border/50 text-[10px] font-bold text-center">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-[#07090E] rounded-xl border border-slate-800 text-[10px] font-bold text-center">
             <button
               onClick={() => setFilterTab('PENDING')}
-              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'PENDING' ? 'bg-amber-500 text-aura-obsidian font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'PENDING' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white'}`}
             >
               Pending ({pendingCount})
             </button>
             <button
               onClick={() => setFilterTab('SETTLED_TODAY')}
-              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'SETTLED_TODAY' ? 'bg-emerald-500 text-aura-obsidian font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'SETTLED_TODAY' ? 'bg-emerald-600 text-white font-black shadow-md' : 'text-slate-400 hover:text-white'}`}
             >
               Settled ({settledCount})
             </button>
             <button
               onClick={() => setFilterTab('ALL')}
-              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'ALL' ? 'bg-[#0EA5E9] text-[#090A0F] font-black shadow-md' : 'text-aura-slate hover:text-aura-ivory'}`}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${filterTab === 'ALL' ? 'bg-slate-800 text-white font-black border border-slate-700 shadow-md' : 'text-slate-400 hover:text-white'}`}
             >
               All ({bills.length})
             </button>
@@ -499,54 +499,42 @@ export const CashierPOSPage: React.FC = () => {
         </div>
 
         {/* Scrollable Bills Queue */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
           {filteredBillsList.length === 0 ? (
-            <div className="py-12 text-center text-aura-slate space-y-3 bg-aura-obsidian/40 border border-aura-border/40 rounded-2xl p-4">
-              <CheckCircle className="w-8 h-8 mx-auto text-emerald-400/70 animate-bounce" />
+            <div className="py-12 text-center text-slate-400 space-y-3 bg-[#07090E] border border-slate-800/80 rounded-2xl p-4">
+              <CheckCircle className="w-8 h-8 mx-auto text-emerald-400/80 animate-bounce" />
               <div>
-                <p className="text-xs font-bold text-aura-ivory">
+                <p className="text-xs font-bold text-white">
                   {filterTab === 'PENDING' ? 'All Pending Bills Settled!' : 'No Bills Found'}
                 </p>
-                <p className="text-[10px] text-aura-slate mt-0.5">
+                <p className="text-[10px] text-slate-500 mt-0.5">
                   {filterTab === 'PENDING' ? 'No active tables awaiting checkout.' : 'Try changing search or tab filters.'}
                 </p>
               </div>
               {filterTab === 'PENDING' && settledCount > 0 && (
                 <button
                   onClick={() => setFilterTab('SETTLED_TODAY')}
-                  className="px-3 py-1.5 bg-aura-obsidian border border-emerald-500/40 text-emerald-400 text-[10px] font-bold rounded-xl hover:bg-emerald-500/10 transition-all cursor-pointer"
+                  className="px-3 py-1.5 bg-slate-900 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold rounded-xl hover:bg-emerald-500/10 transition-all cursor-pointer"
                 >
                   View Settled Bills ({settledCount})
                 </button>
               )}
             </div>
           ) : (
-            filteredBillsList.map((bill, index) => {
+            filteredBillsList.map((bill) => {
+              const isSelected = selectedBillId === bill.tableNumber || selectedBillId === bill.orderId;
               const isSettled = bill.status === 'settled' || !!settledBillsMap[bill.tableNumber];
-              const isSelected = currentBill ? (currentBill.orderId === bill.orderId || currentBill.tableId === bill.tableId) : false;
-
-              const uniqueKey = bill.tableId
-                ? `bill-${bill.tableId}-${index}`
-                : bill.invoiceNumber
-                ? `bill-inv-${bill.invoiceNumber}-${index}`
-                : `bill-${bill.tableNumber}-${index}`;
 
               return (
                 <div
-                  key={uniqueKey}
-                  onClick={() => {
-                    setSelectedBillId(bill.orderId || bill.tableId || bill.tableNumber);
-                    setSplitCount(1);
-                    setDiscountPercent(0);
-                    setCashTendered('');
-                    setCustomerMobileInput(bill.customerMobile || '');
-                  }}
-                  className={`p-4 rounded-2xl border cursor-pointer transition-all space-y-2 relative overflow-hidden ${
+                  key={bill.tableNumber}
+                  onClick={() => setSelectedBillId(bill.tableNumber)}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-2 ${
                     isSelected
-                      ? 'bg-[#38BDF8]/15 border-[#38BDF8] ring-1 ring-[#38BDF8]/40 shadow-xl'
+                      ? 'bg-purple-950/30 border-purple-500 shadow-lg ring-1 ring-purple-500/40'
                       : isSettled
-                      ? 'bg-emerald-950/20 border-emerald-500/40'
-                      : 'bg-aura-obsidian/80 border-aura-border/70 hover:border-[#38BDF8]/50'
+                      ? 'bg-[#07090E]/60 border-slate-800/80 hover:border-slate-700 opacity-80'
+                      : 'bg-[#07090E] border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -554,26 +542,26 @@ export const CashierPOSPage: React.FC = () => {
                       <h3 className="font-serif font-black text-white text-sm">
                         Table {bill.tableNumber}
                       </h3>
-                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-aura-container border border-aura-border text-aura-slate">
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
                         {bill.zone}
                       </span>
                     </div>
 
                     {isSettled ? (
-                      <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center space-x-1">
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center space-x-1">
                         <Check className="w-3 h-3" />
                         <span>PAID</span>
                       </span>
                     ) : (
-                      <span className="font-mono text-[#38BDF8] font-black text-sm">
+                      <span className="font-mono text-amber-400 font-black text-sm">
                         ₹{bill.total.toLocaleString('en-IN')}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex justify-between items-center text-[10px] font-mono text-aura-slate pt-1 border-t border-aura-border/40">
+                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800/70">
                     <span>{bill.orderId}</span>
-                    <span className={isSettled ? 'text-emerald-400 font-bold' : ''}>
+                    <span className={isSettled ? 'text-emerald-400 font-bold' : 'text-slate-400'}>
                       {isSettled ? `Settled ${bill.paidAt || 'Today'}` : `${bill.items.length} Recipe Dish(es)`}
                     </span>
                   </div>
@@ -584,13 +572,13 @@ export const CashierPOSPage: React.FC = () => {
         </div>
 
         {/* Footer Summary & Audit Archive Trigger */}
-        <div className="p-4 border-t border-aura-border/60 bg-aura-container/90 space-y-3 text-xs font-mono">
+        <div className="p-4 border-t border-slate-800/80 bg-[#07090E]/80 space-y-3 text-xs font-mono">
           <div className="space-y-1">
-            <div className="flex justify-between text-aura-slate text-[11px]">
+            <div className="flex justify-between text-slate-400 text-[11px]">
               <span>Shift Total Revenue:</span>
               <span className="text-emerald-400 font-black text-xs">₹{shiftTotalRevenue.toLocaleString('en-IN')}</span>
             </div>
-            <div className="flex justify-between text-[10px] text-aura-slate">
+            <div className="flex justify-between text-[10px] text-slate-500">
               <span>UPI: ₹{shiftUpiTotal.toLocaleString('en-IN')}</span>
               <span>Card: ₹{shiftCardTotal.toLocaleString('en-IN')}</span>
               <span>Cash: ₹{shiftCashTotal.toLocaleString('en-IN')}</span>
@@ -599,7 +587,7 @@ export const CashierPOSPage: React.FC = () => {
 
           <button
             onClick={() => setIsArchiveOpen(true)}
-            className="w-full py-2 bg-[#38BDF8]/15 hover:bg-[#38BDF8]/25 border border-[#38BDF8]/40 text-[#38BDF8] text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-md"
+            className="w-full py-2 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-sm"
           >
             <Search className="w-3.5 h-3.5" />
             <span>Search Invoices Archive ({settledCount})</span>
@@ -616,25 +604,25 @@ export const CashierPOSPage: React.FC = () => {
           <div className="max-w-4xl mx-auto space-y-6">
 
             {/* Bill Header Card */}
-            <div className="bg-aura-container border border-aura-border/80 rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
+            <div className="bg-[#0A0D15] border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
               <button
                 onClick={() => setSelectedBillId('')}
-                className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-aura-ivory rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
                 title="Close / Clear Selection"
               >
                 <X className="w-5 h-5" />
               </button>
               <div>
                 <div className="flex items-center space-x-3">
-                  <span className="font-mono text-xs font-bold text-[#38BDF8] px-3 py-1 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-full">
+                  <span className="font-mono text-xs font-bold text-purple-400 px-3 py-1 bg-purple-500/10 border border-purple-500/30 rounded-lg">
                     {currentBill.orderId}
                   </span>
-                  <span className="text-xs text-aura-slate font-mono">{currentBill.zone}</span>
+                  <span className="text-xs text-slate-400 font-mono">{currentBill.zone}</span>
                 </div>
                 <h2 className="font-serif text-2xl font-black text-white mt-1">
                   Table {currentBill.tableNumber} Itemized Receipt
                 </h2>
-                <p className="text-xs text-aura-slate mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5">
                   {currentBill.customerName} {currentBill.customerMobile && currentBill.customerMobile !== 'N/A' ? `• Ph: ${currentBill.customerMobile}` : ''}
                 </p>
               </div>
@@ -643,14 +631,14 @@ export const CashierPOSPage: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-xs rounded-xl flex items-center space-x-1.5 shadow-lg">
                     <CheckCircle className="w-4 h-4 text-emerald-400" />
-                    <span>SETTLED & PAID ({currentBill.paymentMethod || 'UPI'})</span>
+                    <span>SETTLED &amp; PAID ({currentBill.paymentMethod || 'UPI'})</span>
                   </div>
                   <button
                     onClick={() => {
                       setInvoiceBill(currentBill);
                       setIsInvoiceOpen(true);
                     }}
-                    className="px-4 py-2 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 shadow-lg border border-[#7DD3FC]/50"
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 shadow-lg border border-purple-400/40"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Print Tax Invoice</span>
@@ -668,14 +656,14 @@ export const CashierPOSPage: React.FC = () => {
 
               {/* Itemized Order Table */}
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-aura-container border border-aura-border/80 rounded-3xl p-6 space-y-4 shadow-xl">
-                  <h3 className="font-serif text-base font-bold text-white flex items-center space-x-2 border-b border-aura-border/60 pb-3">
-                    <Receipt className="w-4 h-4 text-[#38BDF8]" />
+                <div className="bg-[#0A0D15] border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                  <h3 className="font-serif text-base font-bold text-white flex items-center space-x-2 border-b border-slate-800/80 pb-3">
+                    <Receipt className="w-4 h-4 text-purple-400" />
                     <span>Ordered Dishes Breakdown</span>
                   </h3>
 
                   <div className="space-y-2">
-                    <div className="grid grid-cols-12 text-[10px] font-mono font-bold uppercase text-aura-slate pb-2 border-b border-aura-border/40 px-2">
+                    <div className="grid grid-cols-12 text-[10px] font-mono font-bold uppercase text-slate-400 pb-2 border-b border-slate-800/70 px-2">
                       <span className="col-span-6">Dish Description</span>
                       <span className="col-span-2 text-center">Qty</span>
                       <span className="col-span-2 text-right">Rate</span>
@@ -683,13 +671,13 @@ export const CashierPOSPage: React.FC = () => {
                     </div>
 
                     {currentBill.items.map((item, idx) => (
-                      <div key={idx} className="grid grid-cols-12 text-xs py-3 border-b border-aura-border/20 text-aura-ivory items-center px-2 hover:bg-aura-obsidian/40 rounded-xl transition-colors">
+                      <div key={idx} className="grid grid-cols-12 text-xs py-3 border-b border-slate-800/50 text-slate-200 items-center px-2 hover:bg-[#07090E] rounded-xl transition-colors">
                         <span className="col-span-6 font-bold leading-snug">{item.name}</span>
-                        <span className="col-span-2 text-center font-mono text-aura-slate bg-aura-obsidian py-1 rounded-lg border border-aura-border/50">
+                        <span className="col-span-2 text-center font-mono text-slate-400 bg-[#07090E] py-1 rounded-lg border border-slate-800">
                           {item.qty}x
                         </span>
-                        <span className="col-span-2 text-right font-mono text-aura-slate">₹{item.price.toLocaleString('en-IN')}</span>
-                        <span className="col-span-2 text-right font-mono text-[#38BDF8] font-bold">
+                        <span className="col-span-2 text-right font-mono text-slate-400">₹{item.price.toLocaleString('en-IN')}</span>
+                        <span className="col-span-2 text-right font-mono text-amber-400 font-bold">
                           ₹{(item.qty * item.price).toLocaleString('en-IN')}
                         </span>
                       </div>
@@ -698,40 +686,40 @@ export const CashierPOSPage: React.FC = () => {
 
                   {/* Customer Phone Number for Receipt & SMS */}
                   {!isCurrentSettled && (
-                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-2 mt-4">
-                      <label className="text-[10px] font-mono text-aura-slate uppercase block font-bold flex items-center space-x-1.5">
-                        <Phone className="w-3.5 h-3.5 text-[#38BDF8]" />
-                        <span>Customer Mobile Number (Optional for Tax Invoice / SMS):</span>
+                    <div className="p-4 bg-[#07090E] border border-slate-800 rounded-xl space-y-2 mt-4">
+                      <label className="text-[10px] font-mono text-slate-400 uppercase block font-bold flex items-center space-x-1.5">
+                        <Phone className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Customer Mobile (For Tax Invoice / SMS):</span>
                       </label>
                       <input
                         type="tel"
                         placeholder="e.g. 9876543210"
                         value={customerMobileInput}
                         onChange={(e) => setCustomerMobileInput(e.target.value)}
-                        className="w-full p-2 bg-aura-container border border-aura-border rounded-xl text-xs text-aura-ivory font-mono focus:border-[#38BDF8] outline-none"
+                        className="w-full p-2.5 bg-[#0A0D15] border border-slate-800 rounded-xl text-xs text-white font-mono focus:border-purple-500 outline-none placeholder:text-slate-600"
                       />
                     </div>
                   )}
 
                   {/* Split Bill N-Ways Calculator */}
                   {!isCurrentSettled && (
-                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-3">
-                      <div className="flex items-center justify-between text-xs font-semibold text-aura-ivory">
+                    <div className="p-4 bg-[#07090E] border border-slate-800 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between text-xs font-semibold text-white">
                         <div className="flex items-center space-x-2">
-                          <Split className="w-4 h-4 text-[#38BDF8]" />
+                          <Split className="w-4 h-4 text-purple-400" />
                           <span>Split Bill Equal N-Ways</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => setSplitCount(Math.max(1, splitCount - 1))}
-                            className="w-8 h-8 bg-aura-container border border-aura-border rounded-xl text-aura-ivory font-bold hover:border-[#38BDF8] transition-colors cursor-pointer"
+                            className="w-8 h-8 bg-slate-900 border border-slate-800 rounded-xl text-white font-bold hover:border-slate-700 transition-colors cursor-pointer"
                           >
                             -
                           </button>
-                          <span className="font-mono text-sm font-bold px-3 text-[#38BDF8]">{splitCount} Guests</span>
+                          <span className="font-mono text-sm font-bold px-3 text-purple-400">{splitCount} Guests</span>
                           <button
                             onClick={() => setSplitCount(splitCount + 1)}
-                            className="w-8 h-8 bg-aura-container border border-aura-border rounded-xl text-aura-ivory font-bold hover:border-[#38BDF8] transition-colors cursor-pointer"
+                            className="w-8 h-8 bg-slate-900 border border-slate-800 rounded-xl text-white font-bold hover:border-slate-700 transition-colors cursor-pointer"
                           >
                             +
                           </button>
@@ -739,7 +727,7 @@ export const CashierPOSPage: React.FC = () => {
                       </div>
 
                       {splitCount > 1 && (
-                        <div className="p-3 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-xl text-center text-xs font-bold text-[#38BDF8] font-mono flex items-center justify-between">
+                        <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-center text-xs font-bold text-purple-300 font-mono flex items-center justify-between">
                           <span>Share Per Guest ({splitCount}-Way Split):</span>
                           <span className="text-sm font-black">₹{perPersonTotal.toLocaleString('en-IN')} / person</span>
                         </div>
@@ -749,8 +737,8 @@ export const CashierPOSPage: React.FC = () => {
 
                   {/* Discount Selector */}
                   {!isCurrentSettled && (
-                    <div className="p-4 bg-aura-obsidian/80 border border-aura-border/60 rounded-2xl space-y-2">
-                      <span className="text-[10px] font-mono text-aura-slate uppercase block font-bold">
+                    <div className="p-4 bg-[#07090E] border border-slate-800 rounded-xl space-y-2">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase block font-bold">
                         Apply Executive Discount:
                       </span>
                       <div className="flex space-x-2">
@@ -760,8 +748,8 @@ export const CashierPOSPage: React.FC = () => {
                             onClick={() => setDiscountPercent(pct)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
                               discountPercent === pct
-                                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] shadow-md font-black'
-                                : 'bg-aura-container text-aura-slate border-aura-border hover:text-aura-ivory'
+                                ? 'bg-purple-600 text-white border-purple-400 shadow-md font-black'
+                                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
                             }`}
                           >
                             {pct === 0 ? 'None' : `${pct}% OFF`}
@@ -775,9 +763,9 @@ export const CashierPOSPage: React.FC = () => {
 
               {/* Settlement Payment Processing Panel */}
               <div className="space-y-6">
-                <div className="bg-aura-container border border-aura-border/80 rounded-3xl p-6 space-y-5 shadow-xl">
-                  <h3 className="font-serif text-base font-bold text-white flex items-center space-x-2 border-b border-aura-border/60 pb-3">
-                    <ShieldCheck className="w-4 h-4 text-[#38BDF8]" />
+                <div className="bg-[#0A0D15] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-xl">
+                  <h3 className="font-serif text-base font-bold text-white flex items-center space-x-2 border-b border-slate-800/80 pb-3">
+                    <ShieldCheck className="w-4 h-4 text-purple-400" />
                     <span>Payment Terminal</span>
                   </h3>
 
@@ -785,16 +773,16 @@ export const CashierPOSPage: React.FC = () => {
                     <>
                       {/* Payment Method Tabs */}
                       <div className="space-y-2">
-                        <span className="text-[10px] font-mono text-aura-slate uppercase block font-bold">
+                        <span className="text-[10px] font-mono text-slate-400 uppercase block font-bold">
                           Select Collection Mode:
                         </span>
                         <div className="grid grid-cols-3 gap-2">
                           <button
                             onClick={() => setPaymentMethod('UPI')}
-                            className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
+                            className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
                               paymentMethod === 'UPI'
-                                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] font-black shadow-lg'
-                                : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                                ? 'bg-emerald-600 text-white border-emerald-400 font-black shadow-lg'
+                                : 'bg-[#07090E] text-slate-400 border-slate-800 hover:border-slate-700'
                             }`}
                           >
                             <QrCode className="w-5 h-5" />
@@ -803,10 +791,10 @@ export const CashierPOSPage: React.FC = () => {
 
                           <button
                             onClick={() => setPaymentMethod('CARD')}
-                            className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
+                            className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
                               paymentMethod === 'CARD'
-                                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] font-black shadow-lg'
-                                : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                                ? 'bg-indigo-600 text-white border-indigo-400 font-black shadow-lg'
+                                : 'bg-[#07090E] text-slate-400 border-slate-800 hover:border-slate-700'
                             }`}
                           >
                             <CreditCard className="w-5 h-5" />
@@ -815,10 +803,10 @@ export const CashierPOSPage: React.FC = () => {
 
                           <button
                             onClick={() => setPaymentMethod('CASH')}
-                            className={`p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
+                            className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1.5 ${
                               paymentMethod === 'CASH'
-                                ? 'bg-[#0EA5E9] text-[#090A0F] border-[#38BDF8] font-black shadow-lg'
-                                : 'bg-aura-obsidian text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+                                ? 'bg-amber-600 text-white border-amber-400 font-black shadow-lg'
+                                : 'bg-[#07090E] text-slate-400 border-slate-800 hover:border-slate-700'
                             }`}
                           >
                             <DollarSign className="w-5 h-5" />
@@ -829,7 +817,7 @@ export const CashierPOSPage: React.FC = () => {
 
                       {/* Dynamic Mode Helper View */}
                       {paymentMethod === 'UPI' && (
-                        <div className="p-4 bg-white rounded-2xl text-center space-y-2 text-aura-obsidian border border-amber-400/50 shadow-inner">
+                        <div className="p-4 bg-white rounded-2xl text-center space-y-2 text-slate-900 border border-gray-200 shadow-inner">
                           <span className="text-[10px] font-mono font-bold text-gray-700 uppercase block tracking-wider">
                             Scan to Pay ₹{finalGrandTotal.toLocaleString('en-IN')}
                           </span>
@@ -843,20 +831,20 @@ export const CashierPOSPage: React.FC = () => {
                       )}
 
                       {paymentMethod === 'CASH' && (
-                        <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl space-y-3 text-xs font-mono">
-                          <span className="text-[10px] text-aura-slate uppercase block font-bold">Cash Calculator</span>
+                        <div className="p-4 bg-[#07090E] border border-slate-800 rounded-xl space-y-3 text-xs font-mono">
+                          <span className="text-[10px] text-slate-400 uppercase block font-bold">Cash Calculator</span>
                           <div className="space-y-1">
-                            <label className="text-[10px] text-aura-slate">Tendered Cash Amount (₹):</label>
+                            <label className="text-[10px] text-slate-400">Tendered Cash Amount (₹):</label>
                             <input
                               type="number"
                               placeholder={`e.g. ${finalGrandTotal}`}
                               value={cashTendered}
                               onChange={(e) => setCashTendered(e.target.value)}
-                              className="w-full p-2.5 bg-aura-container border border-aura-border rounded-xl text-[#38BDF8] font-mono text-sm font-bold outline-none focus:border-[#38BDF8]"
+                              className="w-full p-2.5 bg-[#0A0D15] border border-slate-800 rounded-xl text-amber-400 font-mono text-sm font-bold outline-none focus:border-amber-500"
                             />
                           </div>
                           {tenderedVal > 0 && (
-                            <div className="pt-1 border-t border-aura-border/40 font-bold">
+                            <div className="pt-1 border-t border-slate-800 font-bold">
                               {tenderedVal >= finalGrandTotal ? (
                                 <div className="flex justify-between text-xs text-emerald-400">
                                   <span>Return Change Due:</span>
@@ -874,8 +862,8 @@ export const CashierPOSPage: React.FC = () => {
                       )}
 
                       {/* Summary Totals */}
-                      <div className="border-t border-aura-border/60 pt-4 space-y-2 text-xs font-mono">
-                        <div className="flex justify-between text-aura-slate">
+                      <div className="border-t border-slate-800/80 pt-4 space-y-2 text-xs font-mono">
+                        <div className="flex justify-between text-slate-400">
                           <span>Subtotal</span>
                           <span>₹{rawSubtotal.toLocaleString('en-IN')}</span>
                         </div>
@@ -887,19 +875,19 @@ export const CashierPOSPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="flex justify-between text-aura-slate">
+                        <div className="flex justify-between text-slate-400">
                           <span>CGST (2.5%)</span>
                           <span>₹{netCgst.toLocaleString('en-IN')}</span>
                         </div>
 
-                        <div className="flex justify-between text-aura-slate">
+                        <div className="flex justify-between text-slate-400">
                           <span>SGST (2.5%)</span>
                           <span>₹{netSgst.toLocaleString('en-IN')}</span>
                         </div>
 
-                        <div className="flex justify-between text-base font-bold text-white pt-3 border-t border-aura-border">
+                        <div className="flex justify-between text-base font-bold text-white pt-3 border-t border-slate-800">
                           <span>Net Total Payable</span>
-                          <span className="font-mono text-[#38BDF8] text-lg font-black">
+                          <span className="font-mono text-amber-400 text-lg font-black">
                             ₹{finalGrandTotal.toLocaleString('en-IN')}
                           </span>
                         </div>
@@ -909,14 +897,14 @@ export const CashierPOSPage: React.FC = () => {
                       <button
                         onClick={handleSettlePayment}
                         disabled={isLoading}
-                        className="w-full py-4 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 shadow-xl cursor-pointer border border-[#7DD3FC]/50"
+                        className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-900/30 cursor-pointer border border-emerald-400/40"
                       >
                         <ShieldCheck className="w-5 h-5" />
                         <span>Settle ₹{finalGrandTotal.toLocaleString('en-IN')} via {paymentMethod}</span>
                       </button>
                     </>
                   ) : (
-                    /* SETTLED CARD STATE — Permanently Settled State */
+                    /* SETTLED CARD STATE */
                     <div className="space-y-4 text-center py-2">
                       <div className="w-14 h-14 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center mx-auto text-emerald-400 shadow-xl animate-pulse">
                         <CheckCircle className="w-8 h-8" />
@@ -924,19 +912,19 @@ export const CashierPOSPage: React.FC = () => {
 
                       <div>
                         <h4 className="font-serif font-black text-lg text-emerald-400">BILL PAID &amp; CLOSED</h4>
-                        <p className="text-xs text-aura-slate font-mono mt-0.5">Invoice #{currentBill.invoiceNumber || 'INV-SETTLED'}</p>
+                        <p className="text-xs text-slate-400 font-mono mt-0.5">Invoice #{currentBill.invoiceNumber || 'INV-SETTLED'}</p>
                         <p className="text-[11px] text-emerald-300 font-mono font-bold mt-1">
                           Amount: ₹{(currentBill.total || finalGrandTotal).toLocaleString('en-IN')} via {currentBill.paymentMethod || 'UPI'}
                         </p>
                       </div>
 
-                      <div className="pt-2 space-y-2 border-t border-aura-border/40">
+                      <div className="pt-2 space-y-2 border-t border-slate-800/80">
                         <button
                           onClick={() => {
                             setInvoiceBill(currentBill);
                             setIsInvoiceOpen(true);
                           }}
-                          className="w-full py-3 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-lg border border-[#7DD3FC]/50"
+                          className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-lg border border-purple-400/40"
                         >
                           <Printer className="w-4 h-4" />
                           <span>Print GST Tax Invoice</span>

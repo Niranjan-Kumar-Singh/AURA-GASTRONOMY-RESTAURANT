@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Flame, Sparkles, Award, Tag, Wheat } from 'lucide-react';
+import { Flame, Sparkles, Award, Tag, Wheat } from 'lucide-react';
 
 export type ActiveFilter = 'ALL' | 'VEG' | 'NON_VEG' | 'JAIN' | 'GF' | 'SPECIAL' | 'BESTSELLER' | 'UNDER300' | 'SPICY';
 
@@ -11,20 +11,71 @@ interface FilterChipsProps {
 export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onToggleFilter }) => {
   const isSelected = (filter: ActiveFilter) => selectedFilters.includes(filter);
 
-  const chips: { id: ActiveFilter; label: string; icon?: React.ReactNode; activeBg: string }[] = [
-    { id: 'ALL', label: 'All Items', activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] shadow-[0_0_15px_rgba(56,189,248,0.35)] font-extrabold scale-[1.02]' },
-    { id: 'VEG', label: 'Veg', icon: <Leaf className="w-3.5 h-3.5 text-emerald-400" />, activeBg: 'bg-[#062C22] border-2 border-emerald-500 text-emerald-300 font-bold scale-[1.02]' },
-    { id: 'NON_VEG', label: 'Non-Veg', activeBg: 'bg-[#350A14] border-2 border-rose-500 text-rose-300 font-bold scale-[1.02]' },
-    { id: 'JAIN', label: 'Jain Friendly', activeBg: 'bg-[#210D35] border-2 border-purple-500 text-purple-300 font-bold scale-[1.02]' },
-    { id: 'GF', label: 'Gluten-Free', icon: <Wheat className="w-3.5 h-3.5 text-[#38BDF8]" />, activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] font-bold scale-[1.02]' },
-    { id: 'SPECIAL', label: "Chef's Special", icon: <Sparkles className="w-3.5 h-3.5 text-[#38BDF8]" />, activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] font-bold scale-[1.02]' },
-    { id: 'BESTSELLER', label: 'Best Sellers', icon: <Award className="w-3.5 h-3.5 text-[#38BDF8]" />, activeBg: 'bg-[#161A28] border-2 border-[#38BDF8] text-[#7DD3FC] font-bold scale-[1.02]' },
-    { id: 'UNDER300', label: 'Under ₹300', icon: <Tag className="w-3.5 h-3.5 text-emerald-400" />, activeBg: 'bg-[#062C22] border-2 border-emerald-500 text-emerald-300 font-bold scale-[1.02]' },
-    { id: 'SPICY', label: 'Spicy Delights', icon: <Flame className="w-3.5 h-3.5 text-rose-400" />, activeBg: 'bg-[#350A14] border-2 border-rose-500 text-rose-300 font-bold scale-[1.02]' },
+  const chips: { id: ActiveFilter; label: string; icon?: React.ReactNode; activeClass: string }[] = [
+    {
+      id: 'ALL',
+      label: 'All Items',
+      activeClass: 'bg-[#0C831F] text-white border-[#0C831F] shadow-sm font-black',
+    },
+    {
+      id: 'VEG',
+      label: 'Pure Veg',
+      icon: (
+        <span className="w-3.5 h-3.5 rounded-sm border border-emerald-600 flex items-center justify-center bg-white shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+        </span>
+      ),
+      activeClass: 'bg-emerald-50 border-emerald-600 text-emerald-800 font-black shadow-sm',
+    },
+    {
+      id: 'NON_VEG',
+      label: 'Non-Veg',
+      icon: (
+        <span className="w-3.5 h-3.5 rounded-sm border border-rose-600 flex items-center justify-center bg-white shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+        </span>
+      ),
+      activeClass: 'bg-rose-50 border-rose-600 text-rose-800 font-black shadow-sm',
+    },
+    {
+      id: 'SPECIAL',
+      label: "Chef's Special",
+      icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" />,
+      activeClass: 'bg-amber-50 border-amber-500 text-amber-900 font-black shadow-sm',
+    },
+    {
+      id: 'BESTSELLER',
+      label: 'Bestseller',
+      icon: <Award className="w-3.5 h-3.5 text-emerald-600" />,
+      activeClass: 'bg-emerald-50 border-emerald-600 text-emerald-800 font-black shadow-sm',
+    },
+    {
+      id: 'UNDER300',
+      label: 'Under ₹300',
+      icon: <Tag className="w-3.5 h-3.5 text-slate-500" />,
+      activeClass: 'bg-slate-100 border-slate-700 text-slate-900 font-black shadow-sm',
+    },
+    {
+      id: 'JAIN',
+      label: 'Jain Friendly',
+      activeClass: 'bg-purple-50 border-purple-500 text-purple-900 font-black shadow-sm',
+    },
+    {
+      id: 'GF',
+      label: 'Gluten-Free',
+      icon: <Wheat className="w-3.5 h-3.5 text-amber-600" />,
+      activeClass: 'bg-amber-50 border-amber-500 text-amber-900 font-black shadow-sm',
+    },
+    {
+      id: 'SPICY',
+      label: 'Spicy',
+      icon: <Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />,
+      activeClass: 'bg-rose-50 border-rose-500 text-rose-800 font-black shadow-sm',
+    },
   ];
 
   return (
-    <div className="flex items-center space-x-2.5 overflow-x-auto px-1 py-1 text-xs no-scrollbar select-none scroll-smooth">
+    <div className="flex items-center space-x-2 overflow-x-auto px-1 py-1 text-xs no-scrollbar select-none scroll-smooth">
       {chips.map((chip) => {
         const active = isSelected(chip.id);
 
@@ -32,10 +83,10 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onTog
           <button
             key={chip.id}
             onClick={() => onToggleFilter(chip.id)}
-            className={`px-3.5 py-1.5 rounded-xl font-semibold flex items-center space-x-1.5 transition-all whitespace-nowrap border cursor-pointer shrink-0 ${
+            className={`px-3 py-1.5 rounded-xl font-bold flex items-center space-x-1.5 transition-all whitespace-nowrap border cursor-pointer shrink-0 text-xs shadow-sm ${
               active
-                ? chip.activeBg
-                : 'bg-[#161A28]/80 text-slate-300 border-[#38BDF8]/20 hover:border-[#38BDF8]/50 hover:text-white hover:scale-[1.01]'
+                ? chip.activeClass
+                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
             }`}
           >
             {chip.icon && <span>{chip.icon}</span>}
@@ -46,3 +97,4 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onTog
     </div>
   );
 };
+export default FilterChips;
