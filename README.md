@@ -54,6 +54,19 @@ From a guest's first QR scan to a chef's final ticket mark, waiter dispatch, cas
 
 ## 🆕 What's New — Latest Updates
 
+### ✦ Multi-Quantity Dish Add-On Steppers
+- Upgraded **Dish Detail Modal** with per-item stepper controls (`+` / `-`) for recommended add-ons and pairings.
+- Guests can now easily order multiple units of specific add-ons (e.g. 2× Truffle Garlic Butter, 3× Smoked Chili Dip) with live subtotal math and full cart synchronization.
+
+### ✦ Mobile Viewport Perfection & Full-Width Drawers
+- **Zero-Gap Mobile Panels**: Standardized `CustomerSidebar`, `CartDrawer`, `WishlistDrawer`, `OffersDrawer`, and `OrderHistoryDrawer` to expand 100% full width on mobile viewports (`<768px`), eliminating side margin gaps.
+- **Edge-to-Edge Bottom Sheet**: Transformed `DishDetailModal` into a responsive mobile bottom sheet docked seamlessly to the bottom with rounded top corners.
+- **Clean Mobile Header**: Re-engineered the top navigation bar with a compact 36px live kitchen tracker button and persistent restaurant branding with zero text crowding or collision.
+
+### ✦ Adaptive Zero-Line Scrollbar System
+- Removed `scrollbar-gutter: stable` and eliminated all hardcoded dark scrollbar tracks (`#090A0F`).
+- Globally adopted **100% transparent scrollbar tracks** (`background: transparent !important`) paired with subtle floating slate pill thumbs that only appear when content actually overflows vertically.
+
 ### ✦ Customer Experience Overhaul
 - **Order Tracking Page** completely rebuilt with customer engagement features:
   - 🍳 **Chef's Wisdom** — rotating curated culinary quotes from the kitchen
@@ -66,10 +79,6 @@ From a guest's first QR scan to a chef's final ticket mark, waiter dispatch, cas
 ### ✦ Cart Engagement (CartDrawer)
 - Replaced static prep-time banner with **rotating contextual tips** (5 smart dining suggestions)
 - Added **AI-Powered "Pairs Perfectly" strip** — horizontal carousel of recommended pairings from the `aiPairingEngine`
-
-### ✦ Menu Cards (DishCard)
-- **Removed prep time overlay** from dish card image — cleaner, less cluttered UI
-- More image real estate; timing expectation now managed by the Order Tracker instead
 
 ### ✦ Auto Table Cleanup Lifecycle
 - After bill payment, table auto-enters `CLEANING` status

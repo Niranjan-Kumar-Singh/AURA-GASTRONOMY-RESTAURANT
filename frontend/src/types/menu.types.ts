@@ -67,6 +67,8 @@ export interface CartItem {
   cartItemId?: string;
   menuItem: MenuItem;
   quantity: number;
+  unitPrice?: number;
+  addonNames?: string[];
   selectedCustomizations?: CartCustomization[];
   specialNotes?: string;
 }

@@ -60,8 +60,8 @@ export const CallWaiterButton: React.FC<CallWaiterButtonProps> = ({ tableId = '1
         onClick={() => setIsOpen(true)}
         className={`fixed z-40 p-2.5 sm:p-3.5 bg-[#F7D046] hover:bg-yellow-400 text-slate-900 font-extrabold rounded-full shadow-[0_4px_20px_rgba(247,208,70,0.35)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 border-2 border-yellow-300 cursor-pointer ${
           hasCart
-            ? 'bottom-20 right-4 sm:bottom-6 sm:right-6'
-            : 'bottom-5 right-4 sm:bottom-6 sm:right-6'
+            ? 'bottom-[80px] right-4 sm:bottom-6 sm:right-6'
+            : 'bottom-4 right-4 sm:bottom-6 sm:right-6'
         }`}
         title="Call Waiter"
       >

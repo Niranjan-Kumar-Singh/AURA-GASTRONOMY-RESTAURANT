@@ -22,6 +22,22 @@
   --theme-text: #F8FAFC;
   --theme-text-muted: #94A3B8;
   --theme-accent: #10B981;
+
+  /* Universal Customer Semantic Color Tokens */
+  --c-primary: #0C831F;
+  --c-primary-dark: #096918;
+  --c-primary-light: #E8F7ED;
+  --c-primary-border: #16A34A;
+  --c-accent: #F7D046;
+  --c-accent-hover: #EAB308;
+  --c-danger: #DC2626;
+  --c-surface: #FFFFFF;
+  --c-surface-hover: #F8FAFC;
+  --c-bg: #F4F6F8;
+  --c-text: #1E293B;
+  --c-text-muted: #64748B;
+  --c-border: #E5E7EB;
+  --c-border-strong: #CBD5E1;
 }
 
 /* 1. Customer Dining Portal (Fresh Blinkit Luminous Theme) */
@@ -40,6 +56,22 @@
   --theme-text: #1E293B;
   --theme-text-muted: #64748B;
   --theme-accent: #0C831F;
+
+  /* Customer Semantic Tokens */
+  --c-primary: #0C831F;
+  --c-primary-dark: #096918;
+  --c-primary-light: #E8F7ED;
+  --c-primary-border: #16A34A;
+  --c-accent: #F7D046;
+  --c-accent-hover: #EAB308;
+  --c-danger: #DC2626;
+  --c-surface: #FFFFFF;
+  --c-surface-hover: #F8FAFC;
+  --c-bg: #F4F6F8;
+  --c-text: #1E293B;
+  --c-text-muted: #64748B;
+  --c-border: #E5E7EB;
+  --c-border-strong: #CBD5E1;
 }
 
 /* 2. Kitchen Display Terminal (Industrial High-Contrast Amber / Flame Theme) */
@@ -140,7 +172,6 @@
 
 @layer base {
   html {
-    scrollbar-gutter: stable;
     scroll-behavior: smooth;
   }
 
@@ -251,24 +282,97 @@
   letter-spacing: -0.02em;
 }
 
-/* Custom Luxury Scrollbar */
+/* Custom Adaptive Scrollbar — 100% Transparent Track (Zero Black Lines) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090A0F;
+  background: transparent !important;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #161A28;
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #38BDF8;
+  background: #0C831F;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+/* Light / Customer-facing Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar,
+.customer-scrollbar::-webkit-scrollbar,
+.page-theme-customer ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.customer-scrollbar::-webkit-scrollbar-track,
+.page-theme-customer ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.customer-scrollbar::-webkit-scrollbar-thumb,
+.page-theme-customer ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.customer-scrollbar::-webkit-scrollbar-thumb:hover,
+.page-theme-customer ::-webkit-scrollbar-thumb:hover {
+  background: rgba(12, 131, 31, 0.6);
+}
+
+.custom-scrollbar,
+.customer-scrollbar,
+.page-theme-customer {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+/* Dark Staff Terminal Scrollbars */
+.page-theme-kitchen ::-webkit-scrollbar-thumb,
+.page-theme-waiter ::-webkit-scrollbar-thumb,
+.page-theme-cashier ::-webkit-scrollbar-thumb,
+.page-theme-admin ::-webkit-scrollbar-thumb,
+.page-theme-owner ::-webkit-scrollbar-thumb,
+.page-theme-login ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.page-theme-kitchen ::-webkit-scrollbar-thumb:hover,
+.page-theme-waiter ::-webkit-scrollbar-thumb:hover,
+.page-theme-cashier ::-webkit-scrollbar-thumb:hover,
+.page-theme-admin ::-webkit-scrollbar-thumb:hover,
+.page-theme-owner ::-webkit-scrollbar-thumb:hover,
+.page-theme-login ::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5);
+}
+
+.page-theme-kitchen,
+.page-theme-waiter,
+.page-theme-cashier,
+.page-theme-admin,
+.page-theme-owner,
+.page-theme-login {
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
 
 /* Hide scrollbar for Chrome, Safari, Opera, Edge and Firefox */

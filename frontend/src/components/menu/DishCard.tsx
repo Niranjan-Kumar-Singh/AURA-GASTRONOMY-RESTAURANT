@@ -1,6 +1,6 @@
 import React from 'react';
 import { MenuItem } from '../../types/menu.types';
-import { Heart, Plus, Minus, Star, Sparkles, Flame, Eye } from 'lucide-react';
+import { Heart, Plus, Minus, Star, Sparkles, Flame, Eye, Zap } from 'lucide-react';
 import { useCartStore } from '../../store/use-cart-store';
 import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useToast } from '../feedback/ToastContainer';
@@ -40,10 +40,10 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       onClick={() => onClick(item)}
-      className="bg-white border border-slate-200/90 hover:border-[#0C831F]/50 rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(12,131,31,0.12)] group relative transition-all duration-200 hover:-translate-y-1"
+      className="bg-white border border-slate-300 hover:border-[#0C831F] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_2px_8px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_20px_rgba(12,131,31,0.12)] group relative transition-all duration-200 hover:-translate-y-1"
     >
       {/* Top Image Box */}
-      <div className="relative h-36 sm:h-48 w-full bg-slate-100/80 overflow-hidden">
+      <div className="relative h-36 sm:h-48 w-full bg-slate-100 border-b border-slate-200 overflow-hidden">
         {!imageLoaded && (
           <div className="absolute inset-0 bg-slate-200/70 animate-pulse" />
         )}
@@ -61,7 +61,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
         {/* Out of Stock Overlay */}
         {item.isAvailable === false && (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center z-10">
-            <span className="px-2.5 py-1 bg-rose-600 text-white text-[9px] sm:text-[10px] font-black tracking-wider uppercase rounded-full shadow-md">
+            <span className="px-2.5 py-1 bg-c-danger text-white text-[9px] sm:text-[10px] font-black tracking-wider uppercase rounded-full shadow-md">
               OUT OF STOCK
             </span>
           </div>
@@ -82,66 +82,78 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           </span>
 
           {item.isChefSpecial && (
-            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-[#F7D046] text-slate-900 flex items-center space-x-1 shadow-sm">
+            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-c-accent text-slate-900 flex items-center space-x-1 shadow-sm">
               <Sparkles className="w-2.5 h-2.5 text-slate-900" />
               <span>SPECIAL</span>
             </span>
           )}
 
           {item.isBestSeller && !item.isChefSpecial && (
-            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-[#0C831F] text-white shadow-sm">
+            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-c-primary text-white shadow-sm">
               BESTSELLER
             </span>
           )}
         </div>
 
-        {/* Top Right Controls (Wishlist & Quick View) */}
+        {/* Top Right Controls (Wishlist) */}
         <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 flex items-center space-x-1 z-10">
           <button
             onClick={handleToggleLike}
-            className={`p-1.5 rounded-full backdrop-blur-md shadow-sm border transition-all ${
+            className={`w-8 h-8 rounded-full backdrop-blur-md shadow-sm border transition-all flex items-center justify-center cursor-pointer active:scale-75 ${
               isLiked
-                ? 'bg-rose-500 text-white border-rose-500'
-                : 'bg-white/90 text-slate-600 border-slate-200/80 hover:text-rose-500'
+                ? 'bg-rose-500 text-white border-rose-400 shadow-rose-500/25 scale-105'
+                : 'bg-white/90 hover:bg-white text-slate-600 border-slate-200/80 hover:text-rose-500'
             }`}
-            title="Add to Wishlist"
+            title={isLiked ? 'Remove from Wishlist' : 'Add to Wishlist'}
           >
-            <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-white' : ''}`} />
+            <Heart className={`w-4 h-4 ${isLiked ? 'fill-white' : ''}`} />
           </button>
         </div>
-
       </div>
 
       {/* Dish Content Body */}
       <div className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col justify-between bg-white">
         <div className="space-y-1">
           <div className="flex items-start justify-between gap-1.5">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#0C831F] transition-colors line-clamp-2 leading-snug">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-c-primary transition-colors line-clamp-2 leading-snug min-h-[32px] sm:min-h-[36px]">
               {item.name}
             </h3>
           </div>
 
-          <p className="text-[11px] text-slate-500 line-clamp-1 leading-normal">
+          <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
             {item.description}
           </p>
+
+          {/* Applied Add-ons Badge Preview */}
+          {cartItem?.addonNames && cartItem.addonNames.length > 0 && (
+            <div className="flex items-center space-x-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <Sparkles className="w-2.5 h-2.5 text-[#0C831F] shrink-0" />
+              <span className="truncate">Add-ons: {cartItem.addonNames.join(', ')}</span>
+            </div>
+          )}
         </div>
 
         {/* Metadata & Rating Row */}
         <div className="flex items-center justify-between text-[10px] text-slate-600 pt-1">
-          <div className="flex items-center space-x-1 bg-amber-50 px-1.5 py-0.5 rounded text-amber-800 font-bold border border-amber-200/60">
+          <div className="flex items-center space-x-1 bg-amber-50 px-1.5 py-0.5 rounded text-amber-800 font-bold border border-amber-200/60 shrink-0">
             <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
             <span>{item.rating || 4.8}</span>
-            <span className="text-[9px] text-amber-700 font-normal">({item.reviewCount || 95})</span>
+            <span className="text-[9px] text-amber-700 font-normal hidden sm:inline">({item.reviewCount || 95})</span>
           </div>
 
+          <span className="inline-flex items-center space-x-0.5 text-slate-500 font-semibold">
+            <Zap className="w-2.5 h-2.5 text-[#0C831F]" />
+            <span>{item.preparationTimeMinutes || 15}m</span>
+          </span>
+
           {item.calories && (
-            <span className="text-[10px] text-slate-400 font-medium">
+            <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
               {item.calories} kcal
             </span>
           )}
 
           {item.spiceLevel !== undefined && item.spiceLevel > 0 && (
-            <div className="flex items-center space-x-0.5" title={`Spice: ${item.spiceLevel}/3`}>
+            <div className="flex items-center space-x-0.5 shrink-0" title={`Spice: ${item.spiceLevel}/3`}>
               {Array.from({ length: item.spiceLevel }).map((_, i) => (
                 <Flame key={i} className="w-2.5 h-2.5 text-rose-500 fill-rose-500" />
               ))}
@@ -150,64 +162,73 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
         </div>
 
         {/* Bottom Row: Price & Blinkit ADD Button */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-          <div className="flex flex-col">
-            <div className="flex items-baseline space-x-1.5">
-              <span className="text-sm sm:text-base font-black text-slate-900 font-mono">
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5">
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xs sm:text-base font-black text-slate-900 font-mono">
                 ₹{item.price}
               </span>
-              <span className="text-[10px] sm:text-xs text-slate-400 line-through font-mono">
+              <span className="text-[9px] sm:text-xs text-slate-400 line-through font-mono">
                 ₹{originalPrice}
               </span>
             </div>
-            <span className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider">
+            <span className="text-[8px] sm:text-[9px] text-c-primary font-bold uppercase tracking-wider">
               {Math.round(((originalPrice - item.price) / originalPrice) * 100)}% OFF
             </span>
           </div>
 
           {/* Blinkit Green ADD Button / Stepper */}
-          <div>
+          <div className="shrink-0 flex flex-col items-end">
             {item.isAvailable === false ? (
               <button
                 disabled
-                className="px-3 py-1 bg-slate-100 text-slate-400 font-bold text-[10px] rounded-lg cursor-not-allowed uppercase"
+                className="px-2.5 py-1 bg-slate-100 text-slate-400 font-bold text-[9px] sm:text-[10px] rounded-lg cursor-not-allowed uppercase"
               >
                 OUT
               </button>
             ) : quantity === 0 ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAdd(item);
-                }}
-                className="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-50 hover:bg-[#0C831F] border border-[#0C831F] text-[#0C831F] hover:text-white rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-150 active:scale-95 shadow-sm flex items-center space-x-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                <span>ADD</span>
-              </button>
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAdd(item);
+                  }}
+                  className="px-3 sm:px-4 py-1.5 sm:py-1.5 bg-c-primary-light hover:bg-[#0C831F] border border-[#0C831F] text-[#0C831F] hover:text-white rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-150 active:scale-90 shadow-2xs flex items-center space-x-1 cursor-pointer"
+                >
+                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                  <span>ADD</span>
+                </button>
+                {((item as any).options?.length > 0 ||
+                  (item as any).addons?.length > 0 ||
+                  (item.customizationGroups && item.customizationGroups.length > 0)) && (
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">
+                    Customisable
+                  </span>
+                )}
+              </>
             ) : (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="px-1 py-0.5 bg-[#0C831F] text-white rounded-lg flex items-center space-x-1.5 font-bold shadow-sm blinkit-stepper-pop"
+                className="px-1.5 py-1 bg-[#0C831F] text-white rounded-xl flex items-center space-x-1.5 font-bold shadow-xs blinkit-stepper-pop"
               >
                 <button
                   onClick={() => updateQuantity(item.id, quantity - 1)}
-                  className="w-6 h-6 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer"
+                  className="w-6 h-6 sm:w-7 sm:h-7 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
                   title="Decrease"
                 >
-                  <Minus className="w-3.5 h-3.5 stroke-[3]" />
+                  <Minus className="w-3 h-3 stroke-[3]" />
                 </button>
 
-                <span className="font-mono text-xs sm:text-sm font-black min-w-[16px] text-center">
+                <span className="font-mono text-xs sm:text-sm font-black min-w-[16px] sm:min-w-[18px] text-center">
                   {quantity}
                 </span>
 
                 <button
                   onClick={() => addItem(item, 1)}
-                  className="w-6 h-6 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer"
+                  className="w-6 h-6 sm:w-7 sm:h-7 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
                   title="Increase"
                 >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <Plus className="w-3 h-3 stroke-[3]" />
                 </button>
               </div>
             )}

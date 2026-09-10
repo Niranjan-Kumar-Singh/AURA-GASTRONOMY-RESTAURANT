@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/use-auth-store';
 import { useTableStore } from '../../store/use-table-store';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useBackHandler } from '../../hooks/useBackHandler';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AI_RECOMMENDED_PAIRINGS, getSpendMoreProgress } from '../../services/aiPairingEngine';
 
 const CART_TIPS = [
@@ -36,7 +37,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   useBodyScrollLock(isOpen);
   useBackHandler(isOpen, onClose);
   const { showToast } = useToast();
-  const { items, addItem, updateQuantity, removeItem, updateSpecialNotes, clearCart } = useCartStore();
+  const { items, addItem, updateQuantity, removeItem, updateSpecialNotes, clearCart, getSubtotal } = useCartStore();
   const user = useAuthStore((state) => state.user);
   const { activeSessionId } = useTableStore();
 
@@ -59,7 +60,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     if (!items.length) return;
 
     const paidSubtotal = items.reduce(
-      (acc, it) => (it.menuItem.price > 0 ? acc + it.menuItem.price * it.quantity : acc),
+      (acc, it) => (it.menuItem.price > 0 ? acc + (it.unitPrice ?? it.menuItem.price) * it.quantity : acc),
       0
     );
 
@@ -89,7 +90,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     }
   }, [items, removeItem, showToast]);
 
-  const subtotal = items.reduce((acc, it) => acc + it.menuItem.price * it.quantity, 0);
+  const subtotal = getSubtotal();
 
   // Automatic Coupon Revocation Guard if subtotal drops below required threshold
   useEffect(() => {
@@ -137,7 +138,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           menuItemId: item.menuItem.id,
           name: item.menuItem.name,
           quantity: item.quantity,
-          price: item.menuItem.price,
+          price: item.unitPrice ?? item.menuItem.price,
           notes: item.specialNotes,
         })),
         subtotal,
@@ -156,23 +157,33 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      <div
-        className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex justify-end"
-        onClick={onClose}
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md bg-white border-l border-slate-200 h-full flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200"
-        >
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="cart-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex justify-end"
+            onClick={onClose}
+          >
+            <motion.div
+              key="cart-panel"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-full md:max-w-md bg-white md:border-l border-slate-200 h-full flex flex-col justify-between shadow-2xl relative"
+            >
           {/* Top Header */}
           <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-[#0C831F]/10 border border-[#0C831F]/20 rounded-xl">
-                <ShoppingBag className="w-5 h-5 text-[#0C831F]" />
+              <div className="p-2 bg-c-primary-light border border-c-primary-border/30 rounded-xl">
+                <ShoppingBag className="w-5 h-5 text-c-primary" />
               </div>
               <div>
                 <h2 className="font-bold text-base text-slate-900">Your Table Cart</h2>
@@ -201,13 +212,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           })()}
           {items.length === 0 && (
             <div className="mx-4 mt-3 p-3 bg-emerald-50 border border-emerald-200/90 rounded-2xl flex items-center space-x-2 text-xs text-emerald-900 font-bold shadow-sm">
-              <Zap className="w-4 h-4 text-[#0C831F] shrink-0" />
+              <Zap className="w-4 h-4 text-c-primary shrink-0" />
               <span>⚡ Kitchen Dispatch Guarantee: 12–15 Minutes</span>
             </div>
           )}
 
           {/* Cart Items Scroll Body */}
-          <div className="p-4 flex-1 overflow-y-auto space-y-3.5">
+          <div className="p-4 flex-1 overflow-y-auto space-y-3.5 custom-scrollbar">
             {/* Gamified Tiered Discount & Freebie Unlocker */}
             {items.length > 0 && (() => {
               const spendTier = getSpendMoreProgress(subtotal);
@@ -227,7 +238,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   {/* Progress Bar */}
                   <div className="w-full bg-amber-100 h-2 rounded-full overflow-hidden p-0.5">
                     <div
-                      className="bg-[#0C831F] h-full rounded-full transition-all duration-500"
+                      className="bg-c-primary h-full rounded-full transition-all duration-500"
                       style={{ width: `${spendTier.percent}%` }}
                     />
                   </div>
@@ -311,30 +322,54 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               items.map((item) => (
                 <div
                   key={item.menuItem.id}
-                  className="p-3 bg-white border border-slate-200/90 rounded-2xl space-y-2 shadow-sm"
+                  className="p-3.5 bg-white border border-slate-300 rounded-2xl space-y-2 shadow-sm"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-bold text-slate-900 text-sm">{item.menuItem.name}</h4>
+                        <h4 className="font-bold text-slate-900 text-sm truncate">{item.menuItem.name}</h4>
                         {item.menuItem.price === 0 && (
                           <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 rounded">
                             FREE GIFT
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2 mt-0.5 font-mono text-xs font-bold text-slate-800">
-                        {item.menuItem.price === 0 ? (
-                          <span className="text-emerald-700 font-bold">₹0.00 (Complimentary)</span>
-                        ) : (
-                          <span>₹{item.menuItem.price * item.quantity}</span>
+
+                      {/* Price & Addon Calculation Breakdown */}
+                      <div className="mt-0.5 space-y-1">
+                        <div className="flex items-baseline space-x-1.5 font-mono text-xs font-bold text-slate-800">
+                          {item.menuItem.price === 0 ? (
+                            <span className="text-emerald-700 font-bold">₹0.00 (Complimentary)</span>
+                          ) : (
+                            <>
+                              <span className="text-sm font-black text-slate-900">
+                                ₹{((item.unitPrice ?? item.menuItem.price) * item.quantity).toFixed(2)}
+                              </span>
+                              <span className="text-[11px] font-normal text-slate-500 font-sans">
+                                (₹{item.unitPrice ?? item.menuItem.price} × {item.quantity})
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Add-ons Detail & Quantity Notice */}
+                        {item.addonNames && item.addonNames.length > 0 && (
+                          <div className="p-2 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-0.5">
+                            <div className="flex items-center space-x-1 text-[11px] font-bold text-emerald-900">
+                              <Sparkles className="w-3 h-3 text-[#0C831F] shrink-0" />
+                              <span className="truncate">Add-ons: {item.addonNames.join(', ')}</span>
+                            </div>
+                            <p className="text-[10px] text-emerald-800 font-medium">
+                              ✓ All {item.quantity} portion{item.quantity > 1 ? 's' : ''} prepared with selected add-ons.
+                            </p>
+                          </div>
                         )}
                       </div>
                     </div>
 
                     <button
                       onClick={() => removeItem(item.menuItem.id)}
-                      className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
                       title="Remove item"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -343,14 +378,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                   {/* Quantity Stepper & Special Instructions */}
                   <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center space-x-1.5 bg-[#0C831F] text-white px-1.5 py-0.5 rounded-lg shadow-sm">
+                    <div className="flex items-center space-x-1.5 bg-[#0C831F] text-white px-2 py-1 rounded-xl shadow-sm">
                       <button
                         onClick={() => updateQuantity(item.menuItem.id, item.quantity - 1)}
-                        className="w-5 h-5 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-7 h-7 sm:w-6 sm:h-6 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
+                        title="Decrease quantity"
                       >
-                        <Minus className="w-3 h-3 stroke-[3]" />
+                        <Minus className="w-3.5 h-3.5 stroke-[3]" />
                       </button>
-                      <span className="font-mono text-xs font-black min-w-[16px] text-center">
+                      <span className="font-mono text-xs sm:text-sm font-black min-w-[20px] text-center">
                         {item.quantity}
                       </span>
                       <button
@@ -361,11 +397,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           }
                           updateQuantity(item.menuItem.id, item.quantity + 1);
                         }}
-                        className={`w-5 h-5 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer ${
+                        className={`w-7 h-7 sm:w-6 sm:h-6 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${
                           item.menuItem.price === 0 ? 'opacity-40 cursor-not-allowed' : ''
                         }`}
+                        title="Increase quantity"
                       >
-                        <Plus className="w-3 h-3 stroke-[3]" />
+                        <Plus className="w-3.5 h-3.5 stroke-[3]" />
                       </button>
                     </div>
 
@@ -492,11 +529,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="Try 'WELCOME100'"
-                      className="flex-1 bg-white border border-slate-200 p-2 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F]"
+                      className="flex-1 bg-white border border-slate-200 p-2 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-c-primary"
                     />
                     <button
                       onClick={handleApplyCoupon}
-                      className="px-4 py-2 bg-[#0C831F] text-white rounded-xl text-xs font-bold hover:bg-[#096918] transition-colors cursor-pointer"
+                      className="px-4 py-2 bg-c-primary text-white rounded-xl text-xs font-bold hover:bg-c-primary-dark transition-colors cursor-pointer"
                     >
                       Apply
                     </button>
@@ -508,7 +545,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Pricing Summary & Checkout Button */}
           {items.length > 0 && (
-            <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+            <div className="p-4 pb-6 sm:pb-4 bg-slate-50 border-t border-slate-200 space-y-3">
               <div className="space-y-1.5 text-xs text-slate-600">
                 <div className="flex justify-between">
                   <span>Item Subtotal</span>
@@ -516,7 +553,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
 
                 {appliedCoupon && (
-                  <div className="flex justify-between text-emerald-700 font-bold">
+                  <div className="flex justify-between text-c-primary font-bold">
                     <span>Discount</span>
                     <span className="font-mono">-₹{discount.toFixed(2)}</span>
                   </div>
@@ -533,7 +570,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       type="checkbox"
                       checked={includeServiceCharge}
                       onChange={(e) => setIncludeServiceCharge(e.target.checked)}
-                      className="rounded accent-[#0C831F]"
+                      className="rounded accent-c-primary"
                     />
                     <span>Add Optional 5% Staff Tip</span>
                   </label>
@@ -548,15 +585,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               <button
                 onClick={() => setIsConfirmOpen(true)}
-                className="w-full py-3.5 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-between px-5"
+                className="w-full py-3.5 bg-c-primary hover:bg-c-primary-dark text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-between px-5"
               >
                 <span>SEND ORDER TO KITCHEN</span>
                 <span className="font-mono text-sm font-black">₹{grandTotal.toFixed(2)}</span>
               </button>
             </div>
           )}
-        </div>
-      </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <OrderConfirmationModal
         tableId={tableId}

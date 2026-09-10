@@ -86,7 +86,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onTog
             className={`px-3 py-1.5 rounded-xl font-bold flex items-center space-x-1.5 transition-all whitespace-nowrap border cursor-pointer shrink-0 text-xs shadow-sm ${
               active
                 ? chip.activeClass
-                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                : 'bg-white text-slate-800 border-slate-300 hover:border-slate-400 hover:bg-slate-50 shadow-xs'
             }`}
           >
             {chip.icon && <span>{chip.icon}</span>}

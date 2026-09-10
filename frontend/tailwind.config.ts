@@ -41,6 +41,23 @@ const config: Config = {
           muted: '#64748B',
           red: '#DC2626',
         },
+        // Customer Semantic Color Tokens (Mapped to CSS variables)
+        c: {
+          primary: 'var(--c-primary, #0C831F)',
+          'primary-dark': 'var(--c-primary-dark, #096918)',
+          'primary-light': 'var(--c-primary-light, #E8F7ED)',
+          'primary-border': 'var(--c-primary-border, #16A34A)',
+          accent: 'var(--c-accent, #F7D046)',
+          'accent-hover': 'var(--c-accent-hover, #EAB308)',
+          danger: 'var(--c-danger, #DC2626)',
+          surface: 'var(--c-surface, #FFFFFF)',
+          'surface-hover': 'var(--c-surface-hover, #F8FAFC)',
+          bg: 'var(--c-bg, #F4F6F8)',
+          text: 'var(--c-text, #1E293B)',
+          'text-muted': 'var(--c-text-muted, #64748B)',
+          border: 'var(--c-border, #E5E7EB)',
+          'border-strong': 'var(--c-border-strong, #CBD5E1)',
+        },
         aura: {
           obsidian: '#090A0F',
           velvet: '#10131E',

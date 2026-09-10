@@ -189,27 +189,28 @@ export const OrderTrackingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] text-slate-800 pb-32 font-sans">
+    <div className="page-theme-customer min-h-screen bg-[#F4F6F8] text-slate-800 pb-32 font-sans">
       {/* Sticky Top Header */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 py-3 flex items-center justify-between shadow-sm">
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shadow-sm gap-2">
         <button
           onClick={() => navigate(`/table/${tableId}/menu`)}
-          className="flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-[#0C831F] transition-colors cursor-pointer"
+          className="flex items-center space-x-1 sm:space-x-1.5 text-xs font-bold text-slate-500 hover:text-[#0C831F] transition-colors cursor-pointer shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Menu</span>
+          <span>Back<span className="hidden xs:inline"> to Menu</span></span>
         </button>
 
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-[#0C831F] rounded-full animate-pulse" />
-          <h1 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight">
-            TABLE {tableId} — LIVE TRACKER
+        <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
+          <div className="w-2 h-2 bg-[#0C831F] rounded-full animate-pulse shrink-0" />
+          <h1 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate">
+            <span>Table {tableId}</span>
+            <span className="hidden sm:inline"> — Live Tracker</span>
           </h1>
         </div>
 
-        <div className="flex items-center space-x-1.5 text-[10px] font-bold text-[#0C831F] uppercase tracking-wider">
-          <Wifi className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Live</span>
+        <div className="flex items-center space-x-1 text-[10px] font-bold text-[#0C831F] uppercase tracking-wider shrink-0 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+          <Wifi className="w-3 h-3" />
+          <span>Live</span>
         </div>
       </header>
 

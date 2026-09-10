@@ -4,6 +4,7 @@ import { chatbotService } from '../../services/chatbot.service';
 import { ChatbotMessage, ChatbotOption } from '../../types/chatbot.types';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useBackHandler } from '../../hooks/useBackHandler';
+import { motion } from 'framer-motion';
 
 interface HelpBotPanelProps {
   tableId: string;
@@ -84,13 +85,25 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
   return (
     <>
       {/* Dark Backdrop Overlay (Mobile Only < 640px) */}
-      <div 
+      <motion.div 
+        key="bot-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         onClick={onClose}
-        className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm block sm:hidden animate-in fade-in duration-200"
+        className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm block sm:hidden"
       />
 
       {/* Main Chatbot Panel (Bottom Sheet on Mobile, Floating Widget on Desktop) */}
-      <div className="fixed inset-x-0 bottom-0 sm:bottom-20 sm:right-6 sm:left-auto z-[70] w-full sm:w-[400px] h-[85vh] sm:h-[550px] max-h-[90vh] flex flex-col bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-250 text-slate-800">
+      <motion.div
+        key="bot-panel"
+        initial={{ y: 50, opacity: 0, scale: 0.96 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 60, opacity: 0, scale: 0.96 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+        className="fixed inset-x-0 bottom-0 sm:bottom-20 sm:right-6 sm:left-auto z-[70] w-full sm:w-[400px] h-[85vh] sm:h-[550px] max-h-[90vh] flex flex-col bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden text-slate-800"
+      >
         
         {/* Mobile Pull Handle Indicator */}
         <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
@@ -193,7 +206,7 @@ export const HelpBotPanel: React.FC<HelpBotPanelProps> = ({
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };

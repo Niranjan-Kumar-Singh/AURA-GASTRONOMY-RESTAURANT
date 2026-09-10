@@ -45,46 +45,46 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-[#121520] border border-[#38BDF8]/40 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200 text-slate-800">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 text-aura-slate hover:text-white rounded-full cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full cursor-pointer transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="text-center space-y-1">
-          <div className="w-12 h-12 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl flex items-center justify-center mx-auto mb-2">
-            <User className="w-6 h-6 text-[#38BDF8]" />
+          <div className="w-12 h-12 bg-emerald-100 border border-emerald-300 rounded-2xl flex items-center justify-center mx-auto mb-2 text-[#0C831F] shadow-sm">
+            <User className="w-6 h-6 text-[#0C831F]" />
           </div>
-          <h3 className="font-serif text-xl font-bold text-white">Edit Profile</h3>
-          <p className="text-xs text-aura-slate">Update your personal dining details</p>
+          <h3 className="text-slate-900 font-extrabold text-xl">Edit Profile</h3>
+          <p className="text-xs text-slate-500">Update your personal dining details</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-3">
             <div className="relative">
-              <User className="w-4 h-4 text-aura-slate absolute left-3.5 top-3.5" />
+              <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full pl-10 pr-4 py-3 bg-[#090A0F] border border-[#38BDF8]/20 rounded-xl text-xs text-white placeholder:text-aura-slate focus:outline-none focus:border-[#38BDF8]"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white transition-colors"
               />
             </div>
 
             <div className="relative">
-              <Phone className="w-4 h-4 text-aura-slate absolute left-3.5 top-3.5" />
+              <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="tel"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Mobile Number (+91)"
-                className="w-full pl-10 pr-4 py-3 bg-[#090A0F] border border-[#38BDF8]/20 rounded-xl text-xs text-white placeholder:text-aura-slate focus:outline-none focus:border-[#38BDF8]"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -92,7 +92,7 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3.5 bg-[#0EA5E9] hover:bg-[#0284C7] disabled:bg-[#0EA5E9]/50 text-[#090A0F] font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center space-x-2 border border-[#7DD3FC]/50 cursor-pointer"
+            className="w-full py-3.5 bg-[#0C831F] hover:bg-[#096918] disabled:bg-[#0C831F]/50 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 active:scale-95 cursor-pointer"
           >
             {isSubmitting ? (
               <span className="animate-pulse">Saving...</span>
@@ -108,3 +108,4 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
     </div>
   );
 };
+export default CustomerProfileModal;

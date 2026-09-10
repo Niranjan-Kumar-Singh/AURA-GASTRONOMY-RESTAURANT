@@ -9,10 +9,23 @@ interface CartState {
   setTableId: (tableId: string) => void;
   fetchServerCart: (tableId: string) => Promise<void>;
   syncWithServer: (tableId: string, items: CartItem[]) => Promise<void>;
-  addItem: (menuItem: MenuItem, quantity?: number, specialNotes?: string) => void;
+  addItem: (
+    menuItem: MenuItem,
+    quantity?: number,
+    specialNotes?: string,
+    unitPrice?: number,
+    addonNames?: string[]
+  ) => void;
   removeItem: (menuItemId: number) => void;
   updateQuantity: (menuItemId: number, quantity: number) => void;
   updateSpecialNotes: (menuItemId: number, notes: string) => void;
+  updateItemConfiguration: (
+    menuItemId: number,
+    quantity: number,
+    unitPrice?: number,
+    specialNotes?: string,
+    addonNames?: string[]
+  ) => void;
   clearCart: () => void;
   getSubtotal: () => number;
   getTaxAmount: () => number;
@@ -53,7 +66,7 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      addItem: (menuItem, quantity = 1, specialNotes = '') => {
+      addItem: (menuItem, quantity = 1, specialNotes = '', unitPrice, addonNames) => {
         set((state) => {
           const existingIndex = state.items.findIndex(
             (item) => item.menuItem.id === menuItem.id
@@ -68,11 +81,13 @@ export const useCartStore = create<CartState>()(
               ...existingItem,
               quantity: existingItem.quantity + quantity,
               specialNotes: specialNotes || existingItem.specialNotes,
+              unitPrice: unitPrice ?? existingItem.unitPrice,
+              addonNames: addonNames ?? existingItem.addonNames,
             };
           } else {
             updatedItems = [
               ...state.items,
-              { menuItem, quantity, specialNotes },
+              { menuItem, quantity, specialNotes, unitPrice, addonNames },
             ];
           }
 
@@ -135,6 +150,32 @@ export const useCartStore = create<CartState>()(
         });
       },
 
+      updateItemConfiguration: (menuItemId, quantity, unitPrice, specialNotes, addonNames) => {
+        if (quantity <= 0) {
+          get().removeItem(menuItemId);
+          return;
+        }
+        set((state) => {
+          const updatedItems = state.items.map((item) =>
+            item.menuItem.id === menuItemId
+              ? {
+                  ...item,
+                  quantity,
+                  unitPrice: unitPrice ?? item.unitPrice,
+                  specialNotes: specialNotes ?? item.specialNotes,
+                  addonNames: addonNames ?? item.addonNames,
+                }
+              : item
+          );
+
+          if (state.tableId) {
+            get().syncWithServer(state.tableId, updatedItems);
+          }
+
+          return { items: updatedItems };
+        });
+      },
+
       clearCart: () => {
         const tableId = get().tableId;
         set({ items: [] });
@@ -145,7 +186,7 @@ export const useCartStore = create<CartState>()(
 
       getSubtotal: () => {
         return get().items.reduce(
-          (acc, item) => acc + item.menuItem.price * item.quantity,
+          (acc, item) => acc + (item.unitPrice ?? item.menuItem.price) * item.quantity,
           0
         );
       },

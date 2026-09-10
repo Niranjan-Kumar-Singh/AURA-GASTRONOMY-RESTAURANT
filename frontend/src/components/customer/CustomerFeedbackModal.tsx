@@ -39,30 +39,30 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#121520] border border-[#38BDF8]/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200"
+        className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-200 text-slate-800"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-aura-slate hover:text-white rounded-full hover:bg-[#090A0F] transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {!isSubmitted ? (
           <form onSubmit={handleSubmit} className="space-y-5 text-center">
-            <div className="w-14 h-14 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-2xl flex items-center justify-center mx-auto text-[#38BDF8] shadow-lg">
+            <div className="w-14 h-14 bg-amber-100 border border-amber-300 rounded-2xl flex items-center justify-center mx-auto text-amber-600 shadow-sm">
               <Award className="w-7 h-7" />
             </div>
 
             <div>
-              <h3 className="font-serif text-2xl font-bold text-white">Rate Your Experience</h3>
-              <p className="text-xs text-aura-slate mt-1">Order #{orderId} • AURA Fine Dining</p>
+              <h3 className="font-extrabold text-2xl text-slate-900">Rate Your Experience</h3>
+              <p className="text-xs text-slate-500 mt-1">Order #{orderId} • AURA Gastronomy</p>
             </div>
 
             {/* Star Rating Inputs */}
@@ -82,8 +82,8 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
                     <Star
                       className={`w-8 h-8 transition-all ${
                         active
-                          ? 'fill-[#38BDF8] text-[#38BDF8] drop-shadow-[0_0_10px_rgba(56,189,248,0.6)]'
-                          : 'text-aura-slate/40'
+                          ? 'fill-[#F7D046] text-[#F7D046] drop-shadow-sm'
+                          : 'text-slate-200'
                       }`}
                     />
                   </button>
@@ -93,21 +93,21 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
 
             {/* Conditional Rating Prompt */}
             {rating >= 4 ? (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-1">
-                <p className="text-xs font-bold text-emerald-400 flex items-center justify-center space-x-1">
-                  <Heart className="w-4 h-4 fill-emerald-400" />
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-1">
+                <p className="text-xs font-bold text-emerald-800 flex items-center justify-center space-x-1">
+                  <Heart className="w-4 h-4 fill-emerald-600 text-emerald-600" />
                   <span>We're thrilled you enjoyed your dining!</span>
                 </p>
-                <p className="text-[11px] text-aura-slate">
+                <p className="text-[11px] text-slate-600">
                   Help us spread the word on Google Reviews &amp; get +100 Loyalty Points!
                 </p>
               </div>
             ) : (
-              <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl space-y-1">
-                <p className="text-xs font-bold text-cyan-400">
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl space-y-1">
+                <p className="text-xs font-bold text-amber-900">
                   How can we make it better next time?
                 </p>
-                <p className="text-[11px] text-aura-slate">
+                <p className="text-[11px] text-slate-600">
                   Your feedback goes directly to our Executive Chef &amp; Manager.
                 </p>
               </div>
@@ -115,15 +115,15 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
 
             {/* Optional Comment Box */}
             <div className="space-y-1.5 text-left">
-              <label className="text-[11px] font-bold text-[#38BDF8] uppercase tracking-wider flex items-center space-x-1">
-                <MessageSquare className="w-3.5 h-3.5" />
+              <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Private Feedback / Remarks</span>
               </label>
               <textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 placeholder="Share your thoughts about food taste, ambiance, or service..."
-                className="w-full p-3 bg-[#090A0F] border border-[#38BDF8]/20 rounded-xl text-white text-xs placeholder:text-aura-slate focus:outline-none focus:border-[#38BDF8] h-20 resize-none"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white h-20 resize-none transition-colors"
               />
             </div>
 
@@ -131,7 +131,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
             <div className="space-y-2 pt-2">
               <button
                 type="submit"
-                className="w-full py-3.5 px-6 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl cursor-pointer border border-[#7DD3FC]/50"
+                className="w-full py-3.5 px-6 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
               >
                 Submit Feedback
               </button>
@@ -139,30 +139,30 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
           </form>
         ) : (
           <div className="py-6 space-y-5 text-center">
-            <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto shadow-xl animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-emerald-100 text-[#0C831F] border border-emerald-300 rounded-full flex items-center justify-center mx-auto shadow-md animate-in zoom-in-95 duration-300">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="font-serif text-2xl font-bold text-white">Thank You!</h3>
-              <p className="text-xs text-aura-slate">Your review has been recorded by AURA Management.</p>
+              <h3 className="font-extrabold text-2xl text-slate-900">Thank You!</h3>
+              <p className="text-xs text-slate-500">Your review has been recorded by AURA Management.</p>
             </div>
 
             {/* Google Review Trigger for 4+ Star Ratings */}
             {rating >= 4 && (
-              <div className="p-4 bg-gradient-to-r from-[#38BDF8]/15 via-[#090A0F] to-[#38BDF8]/15 border border-[#38BDF8]/40 rounded-2xl space-y-3 shadow-xl">
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-3 shadow-sm">
                 <div className="space-y-1">
-                  <span className="text-xs font-bold text-[#38BDF8] uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-[#0C831F] uppercase tracking-wider block">
                     🎁 Bonus Reward Offer
                   </span>
-                  <p className="text-xs text-white font-medium">
-                    Post your review on Google to claim <strong className="text-[#38BDF8] font-mono">+100 Loyalty Points</strong>!
+                  <p className="text-xs text-slate-800 font-medium">
+                    Post your review on Google to claim <strong className="text-[#0C831F] font-bold">+100 Loyalty Points</strong>!
                   </p>
                 </div>
 
                 <button
                   onClick={handleGoogleReview}
-                  className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
+                  className="w-full py-3 px-4 bg-[#0C831F] hover:bg-[#096918] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Post on Google Reviews</span>
@@ -172,7 +172,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
 
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 bg-aura-obsidian border border-aura-border text-aura-slate hover:text-aura-ivory font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer"
             >
               Done
             </button>
@@ -182,3 +182,4 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
     </div>
   );
 };
+export default CustomerFeedbackModal;

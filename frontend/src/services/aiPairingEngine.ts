@@ -120,8 +120,9 @@ export const getSmartAddonsForDish = (dish: MenuItem): AIPairingAddon[] => {
       { id: `add-${dish.id}-herb-butter`, name: 'Artisanal Herb Cultured Butter', price: 70, reason: 'Enhanced richness' },
     ];
   }
-
-  return [...specificAddons, ...POPULAR_UNIVERSAL_ADDONS];
+  // Cap total addons to maximum 5 items (specific pairings first, filled with top universal add-ons)
+  const remainingSlots = Math.max(0, 5 - specificAddons.length);
+  return [...specificAddons, ...POPULAR_UNIVERSAL_ADDONS.slice(0, remainingSlots)];
 };
 
 /**

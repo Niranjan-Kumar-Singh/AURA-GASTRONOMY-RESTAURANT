@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { HelpBotPanel } from './HelpBotPanel';
 import { ChatbotMessage, ChatbotOption } from '../../types/chatbot.types';
 import { useCartStore } from '../../store/use-cart-store';
@@ -72,8 +73,8 @@ export const HelpBotLauncher: React.FC<HelpBotLauncherProps> = ({ tableId = '14'
         onClick={() => setIsOpen((open) => !open)}
         className={`fixed z-40 p-2.5 sm:p-3.5 bg-white border-2 border-[#0C831F] hover:bg-emerald-50 text-[#0C831F] rounded-full shadow-[0_4px_20px_rgba(12,131,31,0.25)] hover:shadow-[0_6px_25px_rgba(12,131,31,0.35)] transition-all duration-300 hover:scale-105 flex items-center space-x-2 cursor-pointer ${
           hasCart
-            ? 'bottom-32 right-4 sm:bottom-20 sm:right-6'
-            : 'bottom-17 right-4 sm:bottom-20 sm:right-6'
+            ? 'bottom-[140px] right-4 sm:bottom-20 sm:right-6'
+            : 'bottom-[72px] right-4 sm:bottom-20 sm:right-6'
         }`}
         title="Ask AURA Sommelier AI"
       >
@@ -81,15 +82,17 @@ export const HelpBotLauncher: React.FC<HelpBotLauncherProps> = ({ tableId = '14'
         <span className="text-xs hidden sm:inline uppercase font-extrabold tracking-wider text-slate-800">AI Concierge</span>
       </button>
 
-      {isOpen && (
-        <HelpBotPanel
-          tableId={tableId}
-          messages={messages}
-          setMessages={setMessages}
-          onClearMessages={handleClearMessages}
-          onClose={() => setIsOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <HelpBotPanel
+            tableId={tableId}
+            messages={messages}
+            setMessages={setMessages}
+            onClearMessages={handleClearMessages}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

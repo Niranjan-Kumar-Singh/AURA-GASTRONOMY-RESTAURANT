@@ -38,39 +38,48 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose }) =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col" onClick={onClose}>
-      <div className="p-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-10" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-md flex flex-col" onClick={onClose}>
+      <div className="p-4 sm:p-6 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-slate-200 absolute top-0 w-full z-10 shadow-sm" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center space-x-3">
-          <BookOpen className="w-6 h-6 text-[#38BDF8]" />
-          <h2 className="font-serif text-2xl font-bold text-white">AURA Story & Gallery</h2>
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-[#0C831F]">
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">AURA Story &amp; Gallery</h2>
+            <p className="text-xs text-slate-500">Culinary journey &amp; culinary artistry</p>
+          </div>
         </div>
-        <button onClick={onClose} className="p-2 bg-[#090A0F] hover:bg-black rounded-full text-white transition-colors border border-white/20 cursor-pointer">
+        <button onClick={onClose} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-700 transition-colors border border-slate-200 cursor-pointer">
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar pt-24 pb-10 px-6" onClick={(e) => e.stopPropagation()}>
-        <div className="max-w-4xl mx-auto space-y-12">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pt-24 pb-10 px-4 sm:px-6 bg-slate-50" onClick={(e) => e.stopPropagation()}>
+        <div className="max-w-4xl mx-auto space-y-10">
           
-          <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <h1 className="font-serif text-4xl font-extrabold bg-gradient-to-r from-[#38BDF8] via-[#7DD3FC] to-[#38BDF8] bg-clip-text text-transparent">Culinary Excellence.</h1>
-            <p className="text-aura-slate text-sm leading-relaxed">
-              Founded in 2023, AURA Fine Dining redefines modern gastronomy by blending traditional 
-              techniques with avant-garde presentation. Our executive chefs source the rarest ingredients 
-              globally to craft an unforgettable, multi-sensory dining experience right here at your table.
+          <div className="text-center space-y-3 max-w-2xl mx-auto pt-4">
+            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider">
+              Art of Fine Gastronomy
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+              Culinary Excellence at Your Table.
+            </h1>
+            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+              Founded with passion, AURA Gastronomy redefines modern dining by harmonizing authentic regional heritage
+              with avant-garde contemporary techniques. Every dish is crafted from handpicked farm-fresh ingredients to bring you pure culinary delight.
             </p>
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#38BDF8]" /></div>
+            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#0C831F]" /></div>
           ) : (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
               {images.map((img, i) => (
-                <div key={i} className="break-inside-avoid group relative rounded-2xl overflow-hidden shadow-2xl border border-[#38BDF8]/20">
-                  <img src={img.imageUrl} alt={img.title} className="w-full h-auto object-cover transform group-hover:scale-110 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
-                    <span className="text-[#38BDF8] font-serif italic text-lg shadow-black drop-shadow-md mb-2">{img.title}</span>
-                    <span className="text-xs text-white">{img.description}</span>
+                <div key={i} className="break-inside-avoid group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-slate-200 bg-white transition-all">
+                  <img src={img.imageUrl} alt={img.title} className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-end p-4 text-center">
+                    <span className="text-[#F7D046] font-bold text-base mb-1 drop-shadow">{img.title}</span>
+                    <span className="text-xs text-white/90 line-clamp-2">{img.description}</span>
                   </div>
                 </div>
               ))}
@@ -81,3 +90,4 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose }) =
     </div>
   );
 };
+export default GalleryModal;

@@ -36,7 +36,7 @@ export const LazyDishCard: React.FC<LazyDishCardProps> = ({ item, onAdd, onClick
       {isVisible ? (
         <DishCard item={item} onAdd={onAdd} onClick={onClick} />
       ) : (
-        <div className="w-full h-44 sm:h-72 bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl animate-pulse flex flex-col justify-between p-3.5 sm:p-4 shadow-sm">
+        <div className="w-full h-44 sm:h-72 bg-white border border-slate-300 rounded-2xl sm:rounded-3xl animate-pulse flex flex-col justify-between p-3.5 sm:p-4 shadow-sm">
           <div className="w-full h-24 sm:h-44 bg-slate-100 rounded-xl" />
           <div className="space-y-2 pt-2">
             <div className="w-3/4 h-3.5 bg-slate-200 rounded-full" />
