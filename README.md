@@ -35,7 +35,7 @@ In fine dining, true luxury lives in the details. A guest shouldn't have to wait
 
 **AURA Gastronomy** was born out of real-world restaurant problem-solving. It's a complete, multi-role operating ecosystem designed to elevate the guest experience while giving managers, chefs, waiters, and cashiers the exact tools they need to run service like clockwork.
 
-> 🌿 *The culinary brand at the heart of this system is* **RASA** *— Sanskrit for "essence, flavor & emotion". Every interface, animation, and print receipt was crafted to feel as refined as the food on the plate.*
+> 🌿 *The fictional fine-dining brand powering this demo is* **RASA** *— Sanskrit for "essence, flavor & emotion". Every interface, animation, and print receipt was crafted to feel as refined as the food on the plate.*
 
 ---
 
