@@ -415,6 +415,18 @@ router.put('/waiter-calls/:id/resolve', (req, res) => {
   res.json({ success: true, data: globalWaiterAlerts });
 });
 
+// GET Table by Table Number
+router.get('/table-number/:tableNumber', async (req, res) => {
+  try {
+    const cleanTableNum = String(req.params.tableNumber || '').match(/\d+/)?.[0] || '1';
+    const table = await Table.findOne({ tableNumber: cleanTableNum });
+    if (!table) return res.status(404).json({ message: 'Table not found' });
+    res.json({ data: table });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // GET Shared Table Cart for a specific Table Number (Laptop/Mobile Multi-Device Sync)
 router.get('/table-number/:tableNumber/cart', async (req, res) => {
   try {

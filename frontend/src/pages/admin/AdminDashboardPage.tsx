@@ -9,10 +9,11 @@ import { orderService } from '../../services/order.service';
 import { MenuItem, Category } from '../../types/menu.types';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { OrderRefundModal } from '../../components/orders/OrderRefundModal';
 import {
   DollarSign, ShoppingBag, LayoutGrid, ChefHat, TrendingUp, RefreshCw, Layers, ShieldCheck,
   Calendar, Users, Play, Pause, AlertTriangle, Sparkles, Clock, Heart, Award, Utensils, Receipt, CheckCircle2,
-  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer
+  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer, RotateCcw
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -323,28 +324,24 @@ export const AdminDashboardPage: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [activeDetailModal, activeTab]);
 
-  const handleAdminRefundOrder = async (orderId: string, invoiceNum: string, amount: number) => {
-    const reason = prompt(`Enter refund reason for Invoice ${invoiceNum || orderId}:`, 'Guest Dissatisfaction / Admin Refund');
-    if (reason === null) return;
+  // Rich Refund Modal State
+  const [refundTargetOrder, setRefundTargetOrder] = useState<any | null>(null);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
-    try {
-      await orderService.refundOrder(orderId, reason);
-      showToast(`Order #${invoiceNum || orderId} refunded cleanly (₹${amount.toLocaleString('en-IN')})`, 'success');
-      fetchMetricsAndOrders(true);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || 'Failed to refund order', 'error');
-    }
+  const handleAdminRefundOrder = (order: any) => {
+    setRefundTargetOrder(order);
+    setIsRefundModalOpen(true);
   };
 
-  // Calculate live metrics from real MongoDB orders
-  const liveSettledRevenue = realSettledOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  // Calculate live net metrics from real MongoDB orders (accounting for partial refunds)
+  const liveSettledRevenue = realSettledOrders.reduce((sum, o) => sum + Math.max(0, (o.total || 0) - (o.refundAmount || 0)), 0);
   const displayRevenue = liveSettledRevenue > 0 ? liveSettledRevenue : (metrics?.revenue || 0);
 
   const totalProcessedOrders = realSettledOrders.length + realRefundedOrders.length;
   const liveRefundRate = totalProcessedOrders > 0
     ? ((realRefundedOrders.length / totalProcessedOrders) * 100).toFixed(1)
     : '0.0';
-  const totalRefundedSum = realRefundedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalRefundedSum = realRefundedOrders.reduce((sum, o) => sum + (o.refundAmount || o.total || 0), 0);
 
   return (
     <div className="page-theme-admin h-full overflow-y-auto p-6 font-sans text-theme-text bg-theme-bg">
@@ -673,14 +670,14 @@ export const AdminDashboardPage: React.FC = () => {
                             className="p-2 bg-aura-obsidian hover:bg-[#38BDF8]/10 border border-aura-border hover:border-[#38BDF8]/40 text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all cursor-pointer"
                             title="Edit Dish"
                           >
-                            <Edit className="w-3.5 h-3.5" />
+                            <Edit className="w-3.5 h-3.5 pointer-events-none" />
                           </button>
                           <button
                             onClick={() => handleDeleteDish(dish)}
                             className="p-2 bg-aura-obsidian hover:bg-rose-500/10 border border-aura-border hover:border-rose-500/40 text-aura-slate hover:text-rose-400 rounded-xl transition-all cursor-pointer"
                             title="Delete Dish"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5 pointer-events-none" />
                           </button>
                         </div>
                       </div>
@@ -736,13 +733,13 @@ export const AdminDashboardPage: React.FC = () => {
                         onClick={() => handleOpenCategoryModal(cat)}
                         className="p-2.5 bg-aura-obsidian hover:bg-[#38BDF8]/10 border border-aura-border hover:border-[#38BDF8]/40 text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all cursor-pointer"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-4 h-4 pointer-events-none" />
                       </button>
                       <button
                         onClick={() => handleDeleteCategory(cat)}
                         className="p-2.5 bg-aura-obsidian hover:bg-rose-500/10 border border-aura-border hover:border-rose-500/40 text-aura-slate hover:text-rose-400 rounded-xl transition-all cursor-pointer"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 pointer-events-none" />
                       </button>
                     </div>
                   </div>
@@ -766,8 +763,8 @@ export const AdminDashboardPage: React.FC = () => {
               placeholder="Search audit events..."
             />
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-aura-ivory">
+            <div className="overflow-x-auto luxury-scrollbar-x pb-2">
+              <table className="w-full text-left text-xs text-aura-ivory min-w-[600px]">
                 <thead className="bg-aura-obsidian text-aura-slate uppercase text-[10px] border-b border-aura-border">
                   <tr>
                     <th className="py-3.5 px-4">Log ID</th>
@@ -1207,8 +1204,8 @@ export const AdminDashboardPage: React.FC = () => {
                     <p className="text-aura-slate text-xs">Settled orders from Cashier POS will automatically appear here.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left font-mono">
+                  <div className="overflow-x-auto luxury-scrollbar-x pb-2">
+                    <table className="w-full text-left font-mono min-w-[620px]">
                       <thead className="bg-aura-obsidian text-aura-slate uppercase text-[10px] border-b border-aura-border">
                         <tr>
                           <th className="py-2.5 px-3">Invoice #</th>
@@ -1225,8 +1222,25 @@ export const AdminDashboardPage: React.FC = () => {
                             <td className="py-3 px-3 text-[#38BDF8] font-bold">{ord.invoiceNumber || ord.orderId}</td>
                             <td className="py-3 px-3">Table {ord.tableId}</td>
                             <td className="py-3 px-3 text-aura-slate">{ord.paymentMethod || 'UPI/Card'}</td>
-                            <td className="py-3 px-3 font-bold text-emerald-400">₹{(ord.total || 0).toLocaleString('en-IN')}</td>
-                            <td className="py-3 px-3"><StatusBadge status="SETTLED" /></td>
+                            <td className="py-3 px-3">
+                              <span className={`font-bold block ${ord.refundAmount && ord.refundAmount > 0 ? 'text-amber-300' : 'text-emerald-400'}`}>
+                                ₹{((ord.netAmount !== undefined ? ord.netAmount : Math.max(0, (ord.total || 0) - (ord.refundAmount || 0)))).toLocaleString('en-IN')}
+                              </span>
+                              {ord.refundAmount !== undefined && ord.refundAmount > 0 && (
+                                <span className="text-[9px] text-rose-400 block font-mono">
+                                  Ref: -₹{ord.refundAmount.toLocaleString('en-IN')}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3">
+                              {ord.refundAmount && ord.refundAmount > 0 ? (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300">
+                                  PARTIAL REFUND
+                                </span>
+                              ) : (
+                                <StatusBadge status="SETTLED" />
+                              )}
+                            </td>
                             <td className="py-3 px-3">
                               <div className="flex items-center space-x-2">
                                 <button
@@ -1237,11 +1251,15 @@ export const AdminDashboardPage: React.FC = () => {
                                   <span>View Bill</span>
                                 </button>
                                 <button
-                                  onClick={() => handleAdminRefundOrder(ord.orderId || ord._id, ord.invoiceNumber || ord.orderId, ord.total || 0)}
-                                  className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer flex items-center space-x-1"
+                                  onClick={() => handleAdminRefundOrder(ord)}
+                                  className={`px-2.5 py-1 border font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer flex items-center space-x-1 ${
+                                    ord.refundAmount && ord.refundAmount > 0
+                                      ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
+                                      : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40'
+                                  }`}
                                 >
-                                  <ShieldCheck className="w-3.5 h-3.5" />
-                                  <span>Refund</span>
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  <span>{ord.refundAmount && ord.refundAmount > 0 ? 'Refund More' : 'Refund'}</span>
                                 </button>
                               </div>
                             </td>
@@ -1324,15 +1342,17 @@ export const AdminDashboardPage: React.FC = () => {
                     <p className="text-aura-slate text-xs">No orders have been voided or refunded today.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left font-mono">
+                  <div className="overflow-x-auto luxury-scrollbar-x pb-2">
+                    <table className="w-full text-left font-mono min-w-[650px]">
                       <thead className="bg-aura-obsidian text-aura-slate uppercase text-[10px] border-b border-aura-border">
                         <tr>
                           <th className="py-2.5 px-3">Invoice #</th>
                           <th className="py-2.5 px-3">Table</th>
                           <th className="py-2.5 px-3">Reason</th>
-                          <th className="py-2.5 px-3">Amount</th>
+                          <th className="py-2.5 px-3">Refunded</th>
+                          <th className="py-2.5 px-3">Net Retained</th>
                           <th className="py-2.5 px-3">Status</th>
+                          <th className="py-2.5 px-3 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-aura-border/40">
@@ -1340,9 +1360,32 @@ export const AdminDashboardPage: React.FC = () => {
                           <tr key={ord._id || ord.orderId}>
                             <td className="py-3 px-3 text-rose-400 font-bold">{ord.invoiceNumber || ord.orderId}</td>
                             <td className="py-3 px-3">Table {ord.tableId}</td>
-                            <td className="py-3 px-3 text-aura-slate">{ord.refundReason || 'Customer Request'}</td>
-                            <td className="py-3 px-3 font-bold text-rose-400">₹{(ord.total || 0).toLocaleString('en-IN')}</td>
-                            <td className="py-3 px-3"><StatusBadge status="REFUNDED" /></td>
+                            <td className="py-3 px-3 text-aura-slate text-[11px] max-w-[200px] truncate" title={ord.refundReason}>
+                              {ord.refundReason || 'Customer Request'}
+                            </td>
+                            <td className="py-3 px-3 font-bold text-rose-400">
+                              -₹{(ord.refundAmount || ord.total || 0).toLocaleString('en-IN')}
+                            </td>
+                            <td className="py-3 px-3 font-bold text-emerald-400">
+                              ₹{(ord.netAmount !== undefined ? ord.netAmount : Math.max(0, (ord.total || 0) - (ord.refundAmount || 0))).toLocaleString('en-IN')}
+                            </td>
+                            <td className="py-3 px-3">
+                              {ord.paymentStatus === 'PARTIALLY_REFUNDED' ? (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300">
+                                  PARTIAL REFUND
+                                </span>
+                              ) : (
+                                <StatusBadge status="REFUNDED" />
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <button
+                                onClick={() => setViewBillOrder(ord)}
+                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[10px] font-bold uppercase transition-colors"
+                              >
+                                View Receipt
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1436,29 +1479,82 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
               <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t-2 border-gray-900">
                 <span>GRAND TOTAL</span>
-                <span>₹{(viewBillOrder.total || 0).toLocaleString('en-IN')}</span>
+                <span className={viewBillOrder.paymentStatus === 'REFUNDED' ? 'line-through text-gray-400' : ''}>
+                  ₹{(viewBillOrder.total || 0).toLocaleString('en-IN')}
+                </span>
               </div>
+
+              {/* Refund Details if applicable */}
+              {viewBillOrder.refundAmount !== undefined && viewBillOrder.refundAmount > 0 && (
+                <div className="pt-2 border-t border-dashed border-gray-300 space-y-1.5 font-sans">
+                  <div className="flex justify-between text-xs text-rose-600 font-bold font-mono">
+                    <span>{viewBillOrder.paymentStatus === 'REFUNDED' ? 'Full Refund Void:' : 'Partial Refund Deduction:'}</span>
+                    <span>- ₹{viewBillOrder.refundAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                  {viewBillOrder.refundReason && (
+                    <p className="text-[10px] text-rose-700 bg-rose-50 border border-rose-200 p-1.5 rounded-lg">
+                      Audit Reason: <strong>{viewBillOrder.refundReason}</strong>
+                    </p>
+                  )}
+                  {viewBillOrder.paymentStatus !== 'REFUNDED' && (
+                    <div className="flex justify-between text-xs font-black text-emerald-800 pt-1 border-t border-gray-200 font-mono">
+                      <span>NET AMOUNT SETTLED:</span>
+                      <span>₹{(viewBillOrder.netAmount !== undefined ? viewBillOrder.netAmount : Math.max(0, (viewBillOrder.total || 0) - viewBillOrder.refundAmount)).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Footer */}
-            <div className="no-print flex space-x-2 pt-2">
-              <button
-                onClick={() => window.print()}
-                className="flex-1 py-2.5 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print Receipt</span>
-              </button>
-              <button
-                onClick={() => setViewBillOrder(null)}
-                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-              >
-                Close
-              </button>
+            {/* Stamp & Footer */}
+            <div className="pt-2 text-center space-y-2">
+              {viewBillOrder.paymentStatus === 'REFUNDED' ? (
+                <div className="inline-block px-4 py-1.5 bg-rose-100 text-rose-800 font-bold rounded-full text-[10px] uppercase border border-rose-300 tracking-wider">
+                  ⛔ INVOICE VOIDED &amp; 100% REFUNDED
+                </div>
+              ) : viewBillOrder.refundAmount && viewBillOrder.refundAmount > 0 ? (
+                <div className="inline-block px-4 py-1.5 bg-amber-100 text-amber-900 font-bold rounded-full text-[10px] uppercase border border-amber-300 tracking-wider">
+                  ⚠️ PARTIALLY REFUNDED &amp; NET SETTLED
+                </div>
+              ) : (
+                <div className="inline-block px-4 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] uppercase border border-emerald-300">
+                  ✓ PAID IN FULL — AUDIT VERIFIED
+                </div>
+              )}
+
+              <div className="no-print flex space-x-2 pt-2">
+                <button
+                  onClick={() => window.print()}
+                  className="flex-1 py-2.5 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Receipt</span>
+                </button>
+                <button
+                  onClick={() => setViewBillOrder(null)}
+                  className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Rich Order Refund Modal */}
+      <OrderRefundModal
+        isOpen={isRefundModalOpen}
+        order={refundTargetOrder}
+        refundedBy="Admin Supervisor"
+        onClose={() => {
+          setIsRefundModalOpen(false);
+          setRefundTargetOrder(null);
+        }}
+        onSuccess={() => {
+          fetchMetricsAndOrders(true);
+        }}
+      />
     </div>
   );
 };

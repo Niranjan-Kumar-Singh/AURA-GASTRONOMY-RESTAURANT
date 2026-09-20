@@ -262,7 +262,7 @@ export const KitchenDisplayPage: React.FC = () => {
         </div>
 
         {/* Row 2: Queue Filter Tabs & Live Station Metrics */}
-        <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center space-x-1.5 overflow-x-auto custom-scrollbar pb-1.5 pt-0.5">
           {/* Filter Pills */}
           <button
             onClick={() => setFilterStatus('ALL')}

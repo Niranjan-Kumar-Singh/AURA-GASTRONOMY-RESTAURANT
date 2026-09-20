@@ -107,28 +107,18 @@ export const adminService = {
     });
     const tableTurnoverMins = completedWithDuration > 0 ? Math.round(totalTurnoverMins / completedWithDuration) : 42;
 
-    // Hourly Heatmap (11 AM to 10 PM)
-    const hourSlots = [
-      { hour: '11am', hNum: 11 },
-      { hour: '12pm', hNum: 12 },
-      { hour: '1pm', hNum: 13 },
-      { hour: '2pm', hNum: 14 },
-      { hour: '3pm', hNum: 15 },
-      { hour: '4pm', hNum: 16 },
-      { hour: '5pm', hNum: 17 },
-      { hour: '6pm', hNum: 18 },
-      { hour: '7pm', hNum: 19 },
-      { hour: '8pm', hNum: 20 },
-      { hour: '9pm', hNum: 21 },
-      { hour: '10pm', hNum: 22 },
-    ];
+    // Hourly Heatmap Across All 24 Hours (Real Settled Orders Only)
+    const hourSlots = Array.from({ length: 24 }, (_, i) => {
+      const hourLabel = i === 0 ? '12am' : i < 12 ? `${i}am` : i === 12 ? '12pm' : `${i - 12}pm`;
+      return { hour: hourLabel, hNum: i };
+    });
 
     const hourlyMap: Record<number, { hour: string; sales: number; orders: number }> = {};
     hourSlots.forEach((s) => {
       hourlyMap[s.hNum] = { hour: s.hour, sales: 0, orders: 0 };
     });
 
-    allOrders.forEach((o: any) => {
+    settledList.forEach((o: any) => {
       const h = new Date(o.createdAt).getHours();
       if (hourlyMap[h]) {
         hourlyMap[h].sales += (o.total || 0);
@@ -147,9 +137,9 @@ export const adminService = {
       };
     });
 
-    // Top Selling Dishes from Live DB Orders
+    // Top Selling Dishes from Live Settled Orders
     const dishMap: Record<string, { name: string; orders: number; revenue: number }> = {};
-    allOrders.forEach((o: any) => {
+    settledList.forEach((o: any) => {
       if (Array.isArray(o.items)) {
         o.items.forEach((it: any) => {
           const name = it.name || 'Artisanal Dish';
@@ -162,7 +152,7 @@ export const adminService = {
 
     const topDishes = Object.values(dishMap)
       .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 4)
+      .slice(0, 5)
       .map((d, idx) => ({
         rank: `#${idx + 1}`,
         name: d.name,
@@ -171,13 +161,37 @@ export const adminService = {
         margin: '74% Margin',
       }));
 
-    // Category mix breakdown
-    const categoryBreakdown = [
-      { name: "Chef Specials & Wood-Fired", revenue: Math.round(todaySales * 0.4), pct: 40 },
-      { name: "Tandoor & Charcoal Grills", revenue: Math.round(todaySales * 0.25), pct: 25 },
-      { name: "Italian & Truffle Pastas", revenue: Math.round(todaySales * 0.2), pct: 20 },
-      { name: "Artisanal Beverages", revenue: Math.round(todaySales * 0.15), pct: 15 },
-    ];
+    // Dynamic Category Mix from Live Settled Orders
+    const catRevenueMap: Record<string, number> = {};
+    settledList.forEach((o: any) => {
+      if (Array.isArray(o.items)) {
+        o.items.forEach((it: any) => {
+          const cleanName = (it.name || '').toLowerCase().trim();
+          let catName = "Chef's Signature Specials";
+          if (cleanName.includes('pizza')) catName = "Wood-Fired Neapolitan Pizza";
+          else if (cleanName.includes('tikka') || cleanName.includes('murgh')) catName = "Today's Popular Specials";
+          else if (cleanName.includes('biryani') || cleanName.includes('pulao')) catName = "Royal Dum Biryani & Pulao";
+          else if (cleanName.includes('naan') || cleanName.includes('roti')) catName = "Artisanal Breads & Naan";
+          else if (cleanName.includes('pasta') || cleanName.includes('tagliolini')) catName = "Italian Pastas & Truffles";
+          else if (cleanName.includes('dessert') || cleanName.includes('cake')) catName = "Gourmet Desserts & Sweets";
+
+          const itemRev = (it.price || 0) * (it.quantity || 1);
+          catRevenueMap[catName] = (catRevenueMap[catName] || 0) + itemRev;
+        });
+      }
+    });
+
+    const categoryBreakdownList = Object.entries(catRevenueMap)
+      .filter(([_, rev]) => rev > 0)
+      .map(([name, revenue]) => ({ name, revenue }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    const totalCatRev = categoryBreakdownList.reduce((sum, c) => sum + c.revenue, 0) || 1;
+    const categoryBreakdown = categoryBreakdownList.map((c) => ({
+      name: c.name,
+      revenue: c.revenue,
+      pct: Math.round((c.revenue / totalCatRev) * 100),
+    }));
 
     return {
       todaySales,

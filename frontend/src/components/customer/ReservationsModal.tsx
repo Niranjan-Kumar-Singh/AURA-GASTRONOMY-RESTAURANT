@@ -50,9 +50,9 @@ export const ReservationsModal: React.FC<ReservationsModalProps> = ({ isOpen, on
     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-aura-obsidian border border-aura-border rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-aura-obsidian border border-aura-border rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col"
       >
-        <div className="p-6 border-b border-aura-border flex items-center justify-between bg-aura-container relative overflow-hidden">
+        <div className="p-6 border-b border-aura-border flex items-center justify-between bg-aura-container relative overflow-hidden shrink-0">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0284C7] via-[#38BDF8] to-[#7DD3FC]" />
           <div className="flex items-center space-x-3 relative z-10">
             <div className="w-10 h-10 rounded-xl bg-[#38BDF8]/10 border border-[#38BDF8]/30 flex items-center justify-center">
@@ -68,7 +68,7 @@ export const ReservationsModal: React.FC<ReservationsModalProps> = ({ isOpen, on
           </button>
         </div>
 
-        <form onSubmit={handleBook} className="p-6 space-y-5">
+        <form onSubmit={handleBook} className="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#38BDF8] uppercase tracking-wider">Date</label>

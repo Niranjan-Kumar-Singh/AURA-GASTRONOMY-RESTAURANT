@@ -160,7 +160,7 @@ router.get('/table/:tableId', async (req, res) => {
 });
 
 // GET active unpaid orders for Kitchen / Waiter / Cashier
-router.get('/active/all', async (req, res) => {
+router.get(['/active', '/active/all'], async (req, res) => {
   try {
     const activeOrders = await Order.find({
       status: { $in: ['received', 'preparing', 'ready', 'served'] },
@@ -182,35 +182,99 @@ router.get('/settled/all', async (req, res) => {
   }
 });
 
-// POST refund an order
+// POST refund an order (Supports Full, Partial, Item-Level, and Custom Amount)
 router.post('/:orderId/refund', async (req, res) => {
   try {
-    const { reason, refundedBy } = req.body;
+    const { amount, reason, refundedBy, refundType, refundedItems, refundMethod } = req.body;
     const targetOrderId = req.params.orderId;
+    const isValidObjId = targetOrderId.match(/^[0-9a-fA-F]{24}$/);
 
-    const order = await Order.findOneAndUpdate(
-      { $or: [{ orderId: targetOrderId }, { _id: targetOrderId.match(/^[0-9a-fA-F]{24}$/) ? targetOrderId : null }] },
-      {
-        paymentStatus: 'REFUNDED',
-        status: 'cancelled',
-        refundReason: reason || 'Customer Requested Refund',
-        refundedAt: new Date(),
-        refundedBy: refundedBy || 'Admin'
-      },
-      { new: true }
-    );
+    const order = await Order.findOne({
+      $or: [{ orderId: targetOrderId }, { _id: isValidObjId ? targetOrderId : null }]
+    });
 
     if (!order) return res.status(404).json({ message: 'Order not found' });
-    res.json({ data: order, message: `Order #${order.orderId} refunded successfully` });
+
+    const currentRefunded = Number(order.refundAmount || 0);
+    const maxRefundable = Math.max(0, Math.round(((order.total || 0) - currentRefunded) * 100) / 100);
+
+    if (maxRefundable <= 0) {
+      return res.status(400).json({ message: 'This invoice has already been 100% refunded.' });
+    }
+
+    // Determine the amount to refund
+    let requestedAmount;
+    if (typeof amount === 'number' && amount > 0) {
+      requestedAmount = Math.min(amount, maxRefundable);
+    } else {
+      requestedAmount = maxRefundable; // Default to full remaining balance
+    }
+    requestedAmount = Math.round(requestedAmount * 100) / 100;
+
+    const newTotalRefunded = Math.round((currentRefunded + requestedAmount) * 100) / 100;
+    const isFullRefund = newTotalRefunded >= order.total;
+    const effectiveType = isFullRefund ? 'FULL' : (refundType || 'PARTIAL');
+
+    order.refundAmount = newTotalRefunded;
+    order.refundType = effectiveType;
+    order.refundReason = reason || (isFullRefund ? 'Full Bill Refund' : 'Partial / Item Refund');
+    order.refundedAt = new Date();
+    order.refundedBy = refundedBy || 'Cashier / Manager';
+    order.netAmount = Math.max(0, Math.round((order.total - newTotalRefunded) * 100) / 100);
+
+    if (Array.isArray(refundedItems) && refundedItems.length > 0) {
+      order.refundItems = refundedItems;
+    }
+
+    if (isFullRefund) {
+      order.paymentStatus = 'REFUNDED';
+      order.status = 'cancelled';
+    } else {
+      order.paymentStatus = 'PARTIALLY_REFUNDED';
+      // If order was in completed/served state, keep it completed so dining record is preserved
+      if (!['completed', 'served'].includes(order.status)) {
+        order.status = 'completed';
+      }
+    }
+
+    if (!Array.isArray(order.refundHistory)) {
+      order.refundHistory = [];
+    }
+
+    order.refundHistory.push({
+      amount: requestedAmount,
+      reason: reason || (isFullRefund ? 'Full Bill Refund' : 'Partial / Item Refund'),
+      refundedBy: refundedBy || 'Cashier / Manager',
+      refundedAt: new Date(),
+      items: refundedItems || [],
+      refundMethod: refundMethod || order.paymentMethod || 'ORIGINAL'
+    });
+
+    await order.save();
+
+    res.json({
+      success: true,
+      data: order,
+      message: isFullRefund
+        ? `Invoice #${order.invoiceNumber || order.orderId} fully refunded (₹${requestedAmount.toLocaleString('en-IN')})`
+        : `Partial refund of ₹${requestedAmount.toLocaleString('en-IN')} issued for Invoice #${order.invoiceNumber || order.orderId}. Net Retained: ₹${order.netAmount.toLocaleString('en-IN')}`
+    });
   } catch (error) {
+    console.error('Refund processing error:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// GET all refunded orders
+// GET all refunded and partially refunded orders
 router.get('/refunds/all', async (req, res) => {
   try {
-    const refundedOrders = await Order.find({ paymentStatus: 'REFUNDED' }).sort({ refundedAt: -1, updatedAt: -1 });
+    const refundedOrders = await Order.find({
+      $or: [
+        { paymentStatus: 'REFUNDED' },
+        { paymentStatus: 'PARTIALLY_REFUNDED' },
+        { refundAmount: { $gt: 0 } }
+      ]
+    }).sort({ refundedAt: -1, updatedAt: -1 });
     res.json({ data: refundedOrders });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -229,7 +293,21 @@ router.put('/:orderId/status', async (req, res) => {
     });
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
-    order.status = status;
+    if (status) order.status = status;
+    if (req.body.paymentStatus) order.paymentStatus = req.body.paymentStatus;
+    if (req.body.paymentMethod) {
+      let pm = String(req.body.paymentMethod).toUpperCase();
+      if (pm === 'UPI') pm = 'UPI_QR';
+      if (pm === 'CARD') pm = 'CARD_SWIPE';
+      order.paymentMethod = pm;
+    }
+    if (req.body.paymentStatus === 'PAID' && !order.paidAt) {
+      order.paidAt = new Date();
+      if (!order.invoiceNumber) {
+        order.invoiceNumber = generateInvoiceNumber();
+      }
+    }
+
     if (status === 'ready') {
       // Mark all unserved items as ready and prepared!
       (order.items || []).forEach(it => {

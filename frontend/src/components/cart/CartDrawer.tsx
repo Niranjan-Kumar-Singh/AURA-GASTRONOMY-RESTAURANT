@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useCartStore } from '../../store/use-cart-store';
 import { couponService } from '../../services/coupon.service';
 import { orderService } from '../../services/order.service';
-import { Coupon } from '../../types/menu.types';
+import { Coupon, MenuItem } from '../../types/menu.types';
 import { OrderConfirmationModal } from './OrderConfirmationModal';
-import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2, Sparkles, Gift, Zap, Flame, Leaf, Star, ChefHat } from 'lucide-react';
+import { DishDetailModal } from '../menu/DishDetailModal';
+import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2, Sparkles, Gift, Zap, Flame, Leaf, Star, ChefHat, ChevronLeft, ChevronRight, Check, ArrowRight } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useTableStore } from '../../store/use-table-store';
@@ -24,7 +25,7 @@ const CART_TIPS = [
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onOrderPlaced: (orderId: string) => void;
+  onOrderPlaced?: (orderId: string) => void;
   tableId?: string;
 }
 
@@ -48,6 +49,47 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [tempNote, setTempNote] = useState('');
+  const [selectedPairingItem, setSelectedPairingItem] = useState<MenuItem | null>(null);
+  const pairingScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollPairings = (direction: 'left' | 'right') => {
+    if (pairingScrollRef.current) {
+      pairingScrollRef.current.scrollBy({
+        left: direction === 'left' ? -220 : 220,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const convertPairingToMenuItem = (rec: (typeof AI_RECOMMENDED_PAIRINGS)[0]): MenuItem => ({
+    id: rec.id,
+    name: rec.name,
+    description: rec.description,
+    price: rec.price,
+    imageUrl: rec.imageUrl,
+    categoryName: rec.category,
+    categoryId: 99,
+    isVegetarian: true,
+    isGlutenFree: false,
+    isAvailable: true,
+    preparationTimeMinutes: 10,
+    rating: 4.8,
+  });
+
+  const handleAddPairingDirect = (e: React.MouseEvent, rec: (typeof AI_RECOMMENDED_PAIRINGS)[0]) => {
+    e.stopPropagation();
+    const menuItem = convertPairingToMenuItem(rec);
+    addItem(menuItem, 1);
+    showToast(`Added "${rec.name}" to Table Cart!`, 'success');
+  };
+
+  const handleOpenPairingModal = (rec: (typeof AI_RECOMMENDED_PAIRINGS)[0] | MenuItem) => {
+    if ('category' in rec) {
+      setSelectedPairingItem(convertPairingToMenuItem(rec));
+    } else {
+      setSelectedPairingItem(rec);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -150,7 +192,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       });
       setIsConfirmOpen(false);
       clearCart();
-      onOrderPlaced(order.orderId);
+      if (onOrderPlaced) {
+        onOrderPlaced(order.orderId);
+      }
       showToast('Order placed! Kitchen is preparing your dishes.', 'success');
     } catch (error: any) {
       showToast(error.response?.data?.message || 'Failed to place order', 'error');
@@ -327,7 +371,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-bold text-slate-900 text-sm truncate">{item.menuItem.name}</h4>
+                        <h4
+                          onClick={() => handleOpenPairingModal(item.menuItem)}
+                          className="font-bold text-slate-900 text-sm truncate cursor-pointer hover:text-[#0C831F] transition-colors"
+                          title="Click to view & customize"
+                        >
+                          {item.menuItem.name}
+                        </h4>
                         {item.menuItem.price === 0 && (
                           <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 rounded">
                             FREE GIFT
@@ -372,7 +422,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
                       title="Remove item"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 pointer-events-none" />
                     </button>
                   </div>
 
@@ -465,38 +515,113 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* AI-Powered Pairing Suggestions */}
             {items.length > 0 && AI_RECOMMENDED_PAIRINGS.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>Pairs Perfectly With Your Order</span>
-                </div>
-                <div className="flex space-x-3 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
-                  {AI_RECOMMENDED_PAIRINGS.slice(0, 5).map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="flex-none w-36 bg-white border border-slate-200 hover:border-emerald-400 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group"
-                      onClick={() => {
-                        // close cart and let user add from menu
-                      }}
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-xs font-black text-slate-800 uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Pairs Perfectly With Your Order</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={() => scrollPairings('left')}
+                      className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 flex items-center justify-center transition-all cursor-pointer border border-slate-200"
+                      title="Scroll recommendations left"
                     >
-                      <div className="h-24 w-full overflow-hidden bg-slate-100 relative">
-                        <img
-                          src={rec.imageUrl}
-                          alt={rec.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        {rec.badge && (
-                          <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 bg-[#0C831F] text-white rounded-full shadow-sm">
-                            {rec.badge}
-                          </span>
-                        )}
+                      <ChevronLeft className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollPairings('right')}
+                      className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 flex items-center justify-center transition-all cursor-pointer border border-slate-200"
+                      title="Scroll recommendations right"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  ref={pairingScrollRef}
+                  className="flex space-x-3 overflow-x-auto pb-2.5 -mx-1 px-1 no-scrollbar scroll-smooth select-none"
+                >
+                  {AI_RECOMMENDED_PAIRINGS.map((rec) => {
+                    const inCart = items.find((it) => it.menuItem.id === rec.id);
+                    return (
+                      <div
+                        key={rec.id}
+                        className="flex-none w-36 bg-white border border-slate-200 hover:border-emerald-400 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                        onClick={() => handleOpenPairingModal(rec)}
+                        title="Click to view details & customize"
+                      >
+                        <div>
+                          <div className="h-24 w-full overflow-hidden bg-slate-100 relative">
+                            <img
+                              src={rec.imageUrl}
+                              alt={rec.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {rec.badge && (
+                              <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 bg-[#0C831F] text-white rounded-full shadow-sm">
+                                {rec.badge}
+                              </span>
+                            )}
+                          </div>
+                          <div className="p-2 space-y-0.5">
+                            <p className="text-[10px] font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-[#0C831F] transition-colors">
+                              {rec.name}
+                            </p>
+                            <p className="text-[10px] font-black text-slate-800 font-mono">₹{rec.price}</p>
+                          </div>
+                        </div>
+
+                        {/* Action: Direct Stepper if In Cart, else Open Dish Modal */}
+                        <div className="p-2 pt-0">
+                          {inCart ? (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full flex items-center justify-between bg-[#0C831F] text-white px-1.5 py-0.5 rounded-lg shadow-2xs"
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateQuantity(rec.id, inCart.quantity - 1);
+                                }}
+                                className="w-5 h-5 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer active:scale-90"
+                                title="Decrease quantity"
+                              >
+                                <Minus className="w-3 h-3 stroke-[3]" />
+                              </button>
+                              <span className="font-mono font-black text-xs text-center min-w-[16px]">
+                                {inCart.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateQuantity(rec.id, inCart.quantity + 1);
+                                }}
+                                className="w-5 h-5 hover:bg-black/20 rounded flex items-center justify-center transition-colors cursor-pointer active:scale-90"
+                                title="Increase quantity"
+                              >
+                                <Plus className="w-3 h-3 stroke-[3]" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPairingModal(rec)}
+                              className="w-full py-1 bg-[#0C831F] hover:bg-[#096918] text-white rounded-lg text-[10px] font-black flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 shadow-xs group/btn"
+                            >
+                              <span>View &amp; Add</span>
+                              <ArrowRight className="w-2.5 h-2.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="p-2 space-y-0.5">
-                        <p className="text-[10px] font-bold text-slate-900 line-clamp-2 leading-snug">{rec.name}</p>
-                        <p className="text-[10px] font-black text-slate-800 font-mono">₹{rec.price}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -609,6 +734,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         onConfirm={handleConfirmSubmit}
         onCancel={() => setIsConfirmOpen(false)}
       />
+
+      {/* Dish Detail Modal for Clicked Pairing Item */}
+      {selectedPairingItem && (
+        <DishDetailModal
+          item={selectedPairingItem}
+          isOpen={!!selectedPairingItem}
+          onClose={() => setSelectedPairingItem(null)}
+        />
+      )}
     </>
   );
 };

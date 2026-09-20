@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, ShieldCheck, RefreshCw, X, Building2, Check, Search, Phone, FileText, Eye } from 'lucide-react';
+import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, ShieldCheck, RefreshCw, X, Building2, Check, Search, Phone, FileText, Eye, RotateCcw } from 'lucide-react';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { OrderRefundModal } from '../../components/orders/OrderRefundModal';
 
 interface POSItem {
   name: string;
@@ -28,6 +29,14 @@ interface POSBill {
   total: number;
   status: 'billing' | 'occupied' | 'settled';
   paymentMethod?: string;
+  paymentStatus?: string;
+  refundAmount?: number;
+  refundType?: string;
+  refundReason?: string;
+  refundedAt?: string | Date;
+  refundedBy?: string;
+  refundItems?: any[];
+  netAmount?: number;
   invoiceNumber?: string;
   paidAt?: string;
   paidDate?: string;
@@ -96,19 +105,14 @@ export const CashierPOSPage: React.FC = () => {
     }
   }, [settledBillsMap]);
 
-  // Handle Bill Refund Action
-  const handleRefundBill = async (bill: POSBill) => {
-    const reason = prompt(`Enter reason for refunding Invoice ${bill.invoiceNumber || bill.orderId}:`, 'Customer Requested Refund');
-    if (reason === null) return;
+  // State for rich refund modal
+  const [refundTargetBill, setRefundTargetBill] = useState<POSBill | null>(null);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
-    try {
-      await orderService.refundOrder(bill.orderId, reason);
-      showToast(`Refund processed for ${bill.invoiceNumber || bill.orderId} (₹${bill.total.toLocaleString('en-IN')})`, 'success');
-      setIsInvoiceOpen(false);
-      fetchLivePOSData(true);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || 'Failed to process refund', 'error');
-    }
+  // Handle Bill Refund Action via rich modal
+  const handleOpenRefundModal = (bill: POSBill) => {
+    setRefundTargetBill(bill);
+    setIsRefundModalOpen(true);
   };
 
   // Cache for settled orders map across polling ticks
@@ -242,6 +246,14 @@ export const CashierPOSPage: React.FC = () => {
               status: 'settled',
               invoiceNumber: dbOrd.invoiceNumber || `INV-${String(dbOrd._id || dbOrd.orderId).slice(-6).toUpperCase()}`,
               paymentMethod: (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CARD') ? 'CARD' : (dbOrd.paymentMethod || 'UPI').toUpperCase().includes('CASH') ? 'CASH' : 'UPI',
+              paymentStatus: dbOrd.paymentStatus,
+              refundAmount: Number(dbOrd.refundAmount || 0),
+              refundType: dbOrd.refundType,
+              refundReason: dbOrd.refundReason,
+              refundedAt: dbOrd.refundedAt,
+              refundedBy: dbOrd.refundedBy,
+              refundItems: dbOrd.refundItems,
+              netAmount: dbOrd.netAmount !== undefined ? dbOrd.netAmount : Math.max(0, total - Number(dbOrd.refundAmount || 0)),
               paidAt: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               paidDate: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
             };
@@ -1124,10 +1136,20 @@ export const CashierPOSPage: React.FC = () => {
                               {inv.orderId}
                             </span>
                           )}
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold font-mono whitespace-nowrap shrink-0">
+                          <span className="font-mono text-xs font-bold text-white tracking-wide">
                             {inv.invoiceNumber || 'INV-PAID'}
                           </span>
                           <span className="text-[10px] text-aura-slate whitespace-nowrap">({inv.paymentMethod || 'UPI'})</span>
+                          {inv.paymentStatus === 'REFUNDED' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-950/80 border border-rose-500/40 text-rose-400">
+                              100% REFUNDED
+                            </span>
+                          )}
+                          {(inv.paymentStatus === 'PARTIALLY_REFUNDED' || (inv.refundAmount && inv.refundAmount > 0)) && inv.paymentStatus !== 'REFUNDED' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300">
+                              PARTIAL REFUND (-₹{inv.refundAmount})
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center space-x-4 text-[10px] text-aura-slate whitespace-nowrap">
@@ -1138,9 +1160,21 @@ export const CashierPOSPage: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between md:justify-end space-x-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-aura-border/40">
-                        <span className="text-emerald-400 font-black text-sm whitespace-nowrap">
-                          ₹{(inv.total || inv.subtotal).toLocaleString('en-IN')}
-                        </span>
+                        <div className="text-right">
+                          <span className={`font-black text-sm whitespace-nowrap block ${
+                            inv.paymentStatus === 'REFUNDED'
+                              ? 'text-rose-400 line-through'
+                              : 'text-emerald-400'
+                          }`}>
+                            ₹{(inv.total || inv.subtotal).toLocaleString('en-IN')}
+                          </span>
+                          {inv.refundAmount !== undefined && inv.refundAmount > 0 && inv.paymentStatus !== 'REFUNDED' && (
+                            <span className="text-[10px] font-mono text-slate-400 block">
+                              Net: <strong className="text-emerald-300">₹{(inv.netAmount || (inv.total - inv.refundAmount)).toLocaleString('en-IN')}</strong>
+                            </span>
+                          )}
+                        </div>
+
                         <div className="flex items-center space-x-2 shrink-0">
                           <button
                             onClick={() => {
@@ -1153,13 +1187,24 @@ export const CashierPOSPage: React.FC = () => {
                             <Eye className="w-3.5 h-3.5" />
                             <span>View Bill</span>
                           </button>
-                          <button
-                            onClick={() => handleRefundBill(inv)}
-                            className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[10px] uppercase rounded-xl transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
-                          >
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>Refund</span>
-                          </button>
+
+                          {inv.paymentStatus === 'REFUNDED' ? (
+                            <span className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 text-slate-500 font-bold text-[10px] uppercase rounded-xl cursor-not-allowed">
+                              Voided
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleOpenRefundModal(inv)}
+                              className={`px-3 py-1.5 border font-bold text-[10px] uppercase rounded-xl transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0 ${
+                                inv.refundAmount && inv.refundAmount > 0
+                                  ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
+                                  : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40'
+                              }`}
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>{inv.refundAmount && inv.refundAmount > 0 ? 'Refund More' : 'Refund'}</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1279,15 +1324,50 @@ export const CashierPOSPage: React.FC = () => {
               </div>
               <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t-2 border-gray-900">
                 <span>GRAND TOTAL</span>
-                <span>₹{invoiceBill.total.toLocaleString('en-IN')}</span>
+                <span className={invoiceBill.paymentStatus === 'REFUNDED' ? 'line-through text-gray-400' : ''}>
+                  ₹{invoiceBill.total.toLocaleString('en-IN')}
+                </span>
               </div>
+
+              {/* Refund Audit Section if applicable */}
+              {invoiceBill.refundAmount !== undefined && invoiceBill.refundAmount > 0 && (
+                <div className="pt-2 border-t border-dashed border-gray-300 space-y-1.5">
+                  <div className="flex justify-between text-xs text-rose-600 font-bold">
+                    <span>
+                      {invoiceBill.paymentStatus === 'REFUNDED' ? '100% Full Refund Void:' : 'Partial Refund Deduction:'}
+                    </span>
+                    <span>- ₹{invoiceBill.refundAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                  {invoiceBill.refundReason && (
+                    <p className="text-[10px] text-rose-700 bg-rose-50 border border-rose-200 p-1.5 rounded-lg">
+                      Audit Reason: <strong>{invoiceBill.refundReason}</strong>
+                    </p>
+                  )}
+                  {invoiceBill.paymentStatus !== 'REFUNDED' && (
+                    <div className="flex justify-between text-xs font-black text-emerald-800 pt-1 border-t border-gray-200">
+                      <span>NET AMOUNT SETTLED:</span>
+                      <span>₹{(invoiceBill.netAmount !== undefined ? invoiceBill.netAmount : Math.max(0, invoiceBill.total - invoiceBill.refundAmount)).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Stamp & Footer */}
             <div className="pt-2 text-center space-y-3">
-              <div className="inline-block px-4 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] uppercase border border-emerald-300">
-                ✓ PAID IN FULL — THANK YOU FOR DINING WITH AURA
-              </div>
+              {invoiceBill.paymentStatus === 'REFUNDED' ? (
+                <div className="inline-block px-4 py-1.5 bg-rose-100 text-rose-800 font-bold rounded-full text-[10px] uppercase border border-rose-300 tracking-wider">
+                  ⛔ INVOICE VOIDED &amp; 100% REFUNDED
+                </div>
+              ) : invoiceBill.refundAmount && invoiceBill.refundAmount > 0 ? (
+                <div className="inline-block px-4 py-1.5 bg-amber-100 text-amber-900 font-bold rounded-full text-[10px] uppercase border border-amber-300 tracking-wider">
+                  ⚠️ PARTIALLY REFUNDED &amp; NET SETTLED
+                </div>
+              ) : (
+                <div className="inline-block px-4 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] uppercase border border-emerald-300">
+                  ✓ PAID IN FULL — THANK YOU FOR DINING WITH AURA
+                </div>
+              )}
 
               <div className="no-print flex space-x-2 pt-2">
                 <button
@@ -1308,6 +1388,20 @@ export const CashierPOSPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Order Refund Modal (Single Dish / Custom Amount / Full Bill) */}
+      <OrderRefundModal
+        isOpen={isRefundModalOpen}
+        order={refundTargetBill}
+        refundedBy="Cashier POS Staff"
+        onClose={() => {
+          setIsRefundModalOpen(false);
+          setRefundTargetBill(null);
+        }}
+        onSuccess={() => {
+          fetchLivePOSData(true);
+        }}
+      />
     </div>
   );
 };

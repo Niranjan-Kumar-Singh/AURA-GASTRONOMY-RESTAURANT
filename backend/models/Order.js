@@ -39,19 +39,36 @@ const orderSchema = new mongoose.Schema({
   appliedCoupon: { type: String },
   paymentStatus: {
     type: String,
-    enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'],
+    enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_REFUNDED'],
     default: 'PENDING'
   },
   paymentMethod: {
     type: String,
-    enum: ['UPI_QR', 'CARD_SWIPE', 'CASH', 'ONLINE'],
+    enum: ['UPI_QR', 'CARD_SWIPE', 'CASH', 'ONLINE', 'UPI', 'CARD'],
     default: 'CASH'
   },
   paidAt: { type: Date },
   invoiceNumber: { type: String },
+  refundAmount: { type: Number, default: 0 },
+  refundType: { type: String, enum: ['FULL', 'PARTIAL'] },
   refundReason: { type: String },
   refundedAt: { type: Date },
   refundedBy: { type: String },
+  refundItems: [{
+    name: String,
+    quantity: Number,
+    price: Number,
+    reason: String
+  }],
+  refundHistory: [{
+    amount: Number,
+    reason: String,
+    refundedBy: String,
+    refundedAt: { type: Date, default: Date.now },
+    items: Array,
+    refundMethod: String
+  }],
+  netAmount: { type: Number },
   cancelReason: { type: String },
   cancelledAt: { type: Date },
   cancelledBy: { type: String }

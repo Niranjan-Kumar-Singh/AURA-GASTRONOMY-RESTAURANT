@@ -75,7 +75,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onTog
   ];
 
   return (
-    <div className="flex items-center space-x-2 overflow-x-auto px-1 py-1 text-xs no-scrollbar select-none scroll-smooth">
+    <div className="flex items-center space-x-2 overflow-x-auto px-1 pt-1 pb-1.5 text-xs blinkit-scrollbar-x select-none scroll-smooth min-w-full">
       {chips.map((chip) => {
         const active = isSelected(chip.id);
 

@@ -51,11 +51,14 @@ router.get('/metrics', async (req, res) => {
 router.get('/executive-analytics', async (req, res) => {
   try {
     const allOrders = await Order.find({}).sort({ createdAt: -1 });
-    const settledOrders = allOrders.filter(o => o.status === 'completed' || o.paymentStatus === 'PAID');
-    const ongoingOrders = allOrders.filter(o => ['received', 'preparing', 'ready', 'served'].includes(o.status) && o.paymentStatus !== 'PAID');
+    const settledOrders = allOrders.filter(o => 
+      (o.status === 'completed' || o.paymentStatus === 'PAID' || o.paymentStatus === 'PARTIALLY_REFUNDED') && 
+      o.paymentStatus !== 'REFUNDED'
+    );
+    const ongoingOrders = allOrders.filter(o => ['received', 'preparing', 'ready', 'served'].includes(o.status) && o.paymentStatus !== 'PAID' && o.paymentStatus !== 'PARTIALLY_REFUNDED');
 
-    // Live Revenue
-    const todaySales = settledOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    // Live Net Revenue (Deducting any partial refunds cleanly)
+    const todaySales = settledOrders.reduce((sum, o) => sum + Math.max(0, (o.total || 0) - (o.refundAmount || 0)), 0);
     const totalOrdersCount = allOrders.length;
     const aov = settledOrders.length > 0 ? Math.round(todaySales / settledOrders.length) : (totalOrdersCount > 0 ? Math.round(todaySales / totalOrdersCount) : 0);
 
@@ -81,32 +84,22 @@ router.get('/executive-analytics', async (req, res) => {
     });
     const tableTurnoverMins = completedCountWithDuration > 0 ? Math.round(totalTurnoverMins / completedCountWithDuration) : 42;
 
-    // Hourly Heatmap (11 AM to 10 PM)
-    const hourSlots = [
-      { hour: '11am', hNum: 11 },
-      { hour: '12pm', hNum: 12 },
-      { hour: '1pm', hNum: 13 },
-      { hour: '2pm', hNum: 14 },
-      { hour: '3pm', hNum: 15 },
-      { hour: '4pm', hNum: 16 },
-      { hour: '5pm', hNum: 17 },
-      { hour: '6pm', hNum: 18 },
-      { hour: '7pm', hNum: 19 },
-      { hour: '8pm', hNum: 20 },
-      { hour: '9pm', hNum: 21 },
-      { hour: '10pm', hNum: 22 },
-    ];
+    // Hourly Heatmap Across All 24 Hours (Real Settled Orders Only)
+    const hourSlots = Array.from({ length: 24 }, (_, i) => {
+      const hourLabel = i === 0 ? '12am' : i < 12 ? `${i}am` : i === 12 ? '12pm' : `${i - 12}pm`;
+      return { hour: hourLabel, hNum: i };
+    });
 
     const hourlyMap = {};
     hourSlots.forEach(s => {
       hourlyMap[s.hNum] = { hour: s.hour, sales: 0, orders: 0 };
     });
 
-    allOrders.forEach(o => {
+    settledOrders.forEach(o => {
       const orderDate = new Date(o.createdAt);
       const h = orderDate.getHours();
       if (hourlyMap[h]) {
-        hourlyMap[h].sales += (o.total || 0);
+        hourlyMap[h].sales += Math.max(0, (o.total || 0) - (o.refundAmount || 0));
         hourlyMap[h].orders += 1;
       }
     });
@@ -122,9 +115,9 @@ router.get('/executive-analytics', async (req, res) => {
       };
     });
 
-    // Top Performing Dishes
+    // Top Performing Dishes (Settled Orders Only)
     const dishAggregation = {};
-    allOrders.forEach(o => {
+    settledOrders.forEach(o => {
       if (Array.isArray(o.items)) {
         o.items.forEach(it => {
           const name = it.name || 'Artisanal Dish';
@@ -139,7 +132,7 @@ router.get('/executive-analytics', async (req, res) => {
 
     const topDishes = Object.values(dishAggregation)
       .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 4)
+      .slice(0, 5)
       .map((d, idx) => ({
         rank: `#${idx + 1}`,
         name: d.name,
@@ -148,15 +141,21 @@ router.get('/executive-analytics', async (req, res) => {
         margin: '74% Margin'
       }));
 
-    // Category Revenue Breakdown
+    // Category Revenue Breakdown (Settled Orders Only)
     const Category = require('../models/Category');
+    const MenuItem = require('../models/MenuItem');
     const categories = await Category.find({});
     const allMenuItems = await MenuItem.find({});
 
     const itemToCategoryMap = {};
     allMenuItems.forEach(m => {
-      itemToCategoryMap[m.name] = m.categoryId;
+      itemToCategoryMap[m.name.toLowerCase().trim()] = m.categoryId;
       itemToCategoryMap[m.id] = m.categoryId;
+    });
+
+    const catIdToName = {};
+    categories.forEach(c => {
+      catIdToName[c.id] = c.name;
     });
 
     const categoryMap = {};
@@ -164,10 +163,18 @@ router.get('/executive-analytics', async (req, res) => {
       categoryMap[c.id] = { name: c.name, revenue: 0 };
     });
 
-    allOrders.forEach(o => {
+    settledOrders.forEach(o => {
       if (Array.isArray(o.items)) {
         o.items.forEach(it => {
-          const catId = itemToCategoryMap[it.name] || itemToCategoryMap[it.menuItemId] || 1;
+          const cleanName = (it.name || '').toLowerCase().trim();
+          let catId = itemToCategoryMap[cleanName] || itemToCategoryMap[it.menuItemId];
+          if (!catId) {
+            if (cleanName.includes('pizza')) catId = 8;
+            else if (cleanName.includes('cake') || cleanName.includes('dessert')) catId = 16;
+            else if (cleanName.includes('naan') || cleanName.includes('roti')) catId = 6;
+            else catId = 1;
+          }
+
           if (categoryMap[catId]) {
             categoryMap[catId].revenue += ((it.price || 0) * (it.quantity || 1));
           }
@@ -178,7 +185,7 @@ router.get('/executive-analytics', async (req, res) => {
     const categoryBreakdownList = Object.values(categoryMap)
       .filter(c => c.revenue > 0)
       .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 4);
+      .slice(0, 5);
 
     const totalCatRevenue = categoryBreakdownList.reduce((sum, c) => sum + c.revenue, 0) || 1;
     const categoryBreakdown = categoryBreakdownList.map(c => ({

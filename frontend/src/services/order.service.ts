@@ -76,8 +76,16 @@ export const orderService = {
     return response.data.data;
   },
 
-  async refundOrder(orderId: string, reason?: string) {
-    const response = await apiClient.post(`/orders/${orderId}/refund`, { reason });
+  async refundOrder(orderId: string, payload?: string | {
+    amount?: number;
+    reason?: string;
+    refundedBy?: string;
+    refundType?: 'FULL' | 'PARTIAL';
+    refundedItems?: any[];
+    refundMethod?: string;
+  }) {
+    const body = typeof payload === 'string' ? { reason: payload } : (payload || {});
+    const response = await apiClient.post(`/orders/${orderId}/refund`, body);
     return response.data;
   },
 

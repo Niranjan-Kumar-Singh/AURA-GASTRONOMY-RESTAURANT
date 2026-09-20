@@ -26,7 +26,7 @@ import { useCartStore } from '../../store/use-cart-store';
 import { useOrderStore } from '../../store/use-order-store';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useWishlistStore } from '../../store/use-wishlist-store';
-import { ShoppingBag, Utensils, Menu, Sparkles, Flame, Activity, RotateCcw, AlertCircle, Heart } from 'lucide-react';
+import { ShoppingBag, Utensils, Menu, Sparkles, Flame, ChefHat, RotateCcw, AlertCircle, Heart } from 'lucide-react';
 
 export const MenuPage: React.FC = () => {
   const { tableId = '10' } = useParams<{ tableId?: string }>();
@@ -57,55 +57,92 @@ export const MenuPage: React.FC = () => {
 
   // Dynamic Scroll Direction Header Visibility (hides on scroll down, shows on scroll up)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const isHeaderVisibleRef = useRef(true);
   const lastScrollY = useRef(0);
   const accumulatedDistance = useRef(0);
   const scrollDirection = useRef<'up' | 'down'>('up');
+  const transitionCooldownRef = useRef(0);
+  const rafId = useRef<number | null>(null);
+
+  useEffect(() => {
+    isHeaderVisibleRef.current = isHeaderVisible;
+  }, [isHeaderVisible]);
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = Math.max(0, window.scrollY);
-      const delta = currentScrollY - lastScrollY.current;
+      if (rafId.current !== null) return;
 
-      // Always show when near the very top of page
-      if (currentScrollY <= 45) {
-        setIsHeaderVisible(true);
-        accumulatedDistance.current = 0;
-        scrollDirection.current = 'up';
-        lastScrollY.current = currentScrollY;
-        return;
-      }
+      rafId.current = window.requestAnimationFrame(() => {
+        rafId.current = null;
+        const currentScrollY = Math.max(0, window.scrollY);
+        const delta = currentScrollY - lastScrollY.current;
 
-      if (delta > 0) {
-        // Scrolling DOWN
-        if (scrollDirection.current !== 'down') {
-          scrollDirection.current = 'down';
+        // Ignore micro-jitter / subpixel bounce
+        if (Math.abs(delta) < 3) {
+          return;
+        }
+
+        const now = Date.now();
+
+        // Always show when near the very top of page
+        if (currentScrollY <= 60) {
+          if (!isHeaderVisibleRef.current) {
+            setIsHeaderVisible(true);
+            transitionCooldownRef.current = now + 350;
+          }
           accumulatedDistance.current = 0;
-        }
-        accumulatedDistance.current += delta;
-
-        // Hide header once scrolled down 25px
-        if (accumulatedDistance.current >= 25) {
-          setIsHeaderVisible(false);
-        }
-      } else if (delta < 0) {
-        // Scrolling UP
-        if (scrollDirection.current !== 'up') {
           scrollDirection.current = 'up';
-          accumulatedDistance.current = 0;
+          lastScrollY.current = currentScrollY;
+          return;
         }
-        accumulatedDistance.current += Math.abs(delta);
 
-        // Reveal header once scrolled up 20px
-        if (accumulatedDistance.current >= 20) {
-          setIsHeaderVisible(true);
+        // If in transition cooldown period, ignore opposite triggers to prevent oscillation
+        if (now < transitionCooldownRef.current) {
+          lastScrollY.current = currentScrollY;
+          return;
         }
-      }
 
-      lastScrollY.current = currentScrollY;
+        if (delta > 0) {
+          // Scrolling DOWN
+          if (scrollDirection.current !== 'down') {
+            scrollDirection.current = 'down';
+            accumulatedDistance.current = 0;
+          }
+          accumulatedDistance.current += delta;
+
+          // Hide header once scrolled down 45px and past top zone
+          if (accumulatedDistance.current >= 45 && currentScrollY > 120 && isHeaderVisibleRef.current) {
+            setIsHeaderVisible(false);
+            transitionCooldownRef.current = now + 350;
+            accumulatedDistance.current = 0;
+          }
+        } else if (delta < 0) {
+          // Scrolling UP
+          if (scrollDirection.current !== 'up') {
+            scrollDirection.current = 'up';
+            accumulatedDistance.current = 0;
+          }
+          accumulatedDistance.current += Math.abs(delta);
+
+          // Reveal header once scrolled up 40px
+          if (accumulatedDistance.current >= 40 && !isHeaderVisibleRef.current) {
+            setIsHeaderVisible(true);
+            transitionCooldownRef.current = now + 350;
+            accumulatedDistance.current = 0;
+          }
+        }
+
+        lastScrollY.current = currentScrollY;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId.current !== null) {
+        window.cancelAnimationFrame(rafId.current);
+      }
+    };
   }, []);
 
   const { addItem, getItemCount, getGrandTotal, clearCart, setTableId: setCartTableId } = useCartStore();
@@ -326,7 +363,7 @@ export const MenuPage: React.FC = () => {
                       className="relative p-2 sm:px-3 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer font-black text-xs shrink-0 active:scale-95"
                       title="Track Active Kitchen Order"
                     >
-                      <Activity className="w-4 h-4 animate-pulse text-emerald-100 shrink-0" />
+                      <ChefHat className="w-4 h-4 animate-bounce text-emerald-100 shrink-0" />
                       <span className="uppercase tracking-wider text-[10px] sm:text-xs font-black hidden sm:inline">
                         Track Order
                       </span>
@@ -541,7 +578,6 @@ export const MenuPage: React.FC = () => {
         item={selectedItem}
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        onAddToCart={handleAddToCart}
       />
 
       <CartDrawer

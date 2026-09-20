@@ -5,6 +5,37 @@
 @tailwind utilities;
 
 /* =========================================================================
+   GLOBAL POINTER & CURSOR STABILITY (Prevents cursor flicker on icons/SVGs)
+   ========================================================================= */
+button,
+[role="button"],
+a,
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+button *,
+[role="button"] *,
+a *,
+.cursor-pointer * {
+  cursor: pointer;
+}
+
+button svg,
+[role="button"] svg,
+a svg,
+.cursor-pointer svg {
+  pointer-events: none !important;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+.cursor-not-allowed,
+.cursor-not-allowed * {
+  cursor: not-allowed !important;
+}
+
+/* =========================================================================
    PAGE-SPECIFIC COLOR VARIABLE COMBINATIONS (DESIGN TOKENS)
    ========================================================================= */
 
@@ -432,6 +463,29 @@
 .blinkit-scrollbar-x {
   scrollbar-width: thin;
   scrollbar-color: #16A34A #E5E7EB;
+}
+
+/* Cart Recommendations Visible Horizontal Scrollbar */
+.cart-scrollbar-x::-webkit-scrollbar {
+  height: 6px;
+}
+.cart-scrollbar-x::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 9999px;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+.cart-scrollbar-x::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+.cart-scrollbar-x::-webkit-scrollbar-thumb:hover {
+  background: #0C831F;
+}
+.cart-scrollbar-x {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 #F1F5F9;
 }
 
 /* Blinkit Fresh Add Button Pulse & Stepper Animation */

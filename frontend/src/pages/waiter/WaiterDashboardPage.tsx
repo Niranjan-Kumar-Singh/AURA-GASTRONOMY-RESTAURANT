@@ -512,7 +512,7 @@ export const WaiterDashboardPage: React.FC = () => {
         </div>
 
         {/* Row 2: Queue Tabs + Quick Status Filters (Horizontal Swipeable Rail) */}
-        <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center space-x-1.5 overflow-x-auto custom-scrollbar pb-1.5 pt-0.5">
           {/* Main Dispatch Queues */}
           <button
             onClick={() => setActiveTab('TABLE_STATUS')}
@@ -702,7 +702,7 @@ export const WaiterDashboardPage: React.FC = () => {
             <div className="bg-theme-surface border border-theme-border rounded-2xl p-2.5 sm:p-3.5 shadow-sm space-y-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 {/* Zone Filter Chips */}
-                <div className="flex items-center space-x-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1.5 custom-scrollbar">
                   {['ALL', 'Main Hall', 'VIP Lounge', 'Outdoor Garden', 'Family Section'].map((zone) => (
                     <button
                       key={zone}

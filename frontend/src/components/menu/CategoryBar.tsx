@@ -18,6 +18,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   searchQuery = '',
   onSearchChange,
 }) => {
+
   return (
     <div className="w-full bg-white/95 backdrop-blur-md">
       <div className="max-w-[1560px] mx-auto px-3 sm:px-6 lg:px-8 py-2 space-y-2">

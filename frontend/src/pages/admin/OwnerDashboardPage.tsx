@@ -63,7 +63,11 @@ ${data.categoryBreakdown.map((c) => `${c.name}: ₹${c.revenue.toLocaleString('e
     showToast('Executive Financial Report downloaded', 'success');
   };
 
+  const [hoveredBar, setHoveredBar] = useState<{ hour: string; sales: number; orders: number; peak: boolean } | null>(null);
+
   const maxHeatmapSales = data?.hourlyHeatmap ? Math.max(...data.hourlyHeatmap.map((b) => b.sales), 1) : 1;
+  const totalHeatmapSales = data?.hourlyHeatmap ? data.hourlyHeatmap.reduce((sum, b) => sum + b.sales, 0) : 0;
+  const totalHeatmapOrders = data?.hourlyHeatmap ? data.hourlyHeatmap.reduce((sum, b) => sum + b.orders, 0) : 0;
 
   return (
     <div className="page-theme-owner h-full overflow-y-auto p-4 sm:p-6 font-sans text-theme-text bg-theme-bg">
@@ -170,44 +174,120 @@ ${data.categoryBreakdown.map((c) => `${c.name}: ₹${c.revenue.toLocaleString('e
           </div>
         </div>
 
-        {/* Peak Dining & Hourly Heatmap */}
+        {/* Peak Dining & Hourly Heatmap (100% Real Settled Database Orders) */}
         <div className="bg-[#0E1422] border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <h3 className="text-base font-bold text-white flex items-center space-x-2">
-              <BarChart3 className="w-4 h-4 text-emerald-400" />
-              <span>Hourly Service Window Heatmap</span>
-            </h3>
-            <span className="text-xs text-slate-400 font-mono">Live hourly sales distribution</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center space-x-2.5">
+                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                  <BarChart3 className="w-4 h-4 text-emerald-400" />
+                  <span>Hourly Service Window Heatmap</span>
+                </h3>
+                <span className="inline-flex items-center space-x-1 text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>100% VERIFIED DB DATA</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                Live 24-hour cycle • Aggregated strictly from completed &amp; paid dining orders
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2 text-xs font-mono">
+              {hoveredBar ? (
+                <div className="bg-slate-900 border border-emerald-500/40 px-3 py-1.5 rounded-xl flex items-center space-x-2 text-emerald-400 shadow-md animate-fadeIn">
+                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-bold">{hoveredBar.hour}</span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-white font-black">₹{hoveredBar.sales.toLocaleString('en-IN')}</span>
+                  <span className="text-slate-400">({hoveredBar.orders} {hoveredBar.orders === 1 ? 'order' : 'orders'})</span>
+                  {hoveredBar.peak && (
+                    <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.2 rounded">
+                      PEAK
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-xl flex items-center space-x-2 text-slate-300">
+                  <span className="text-slate-400">Total Settled Volume:</span>
+                  <span className="text-emerald-400 font-bold font-mono">₹{totalHeatmapSales.toLocaleString('en-IN')}</span>
+                  <span className="text-slate-400">({totalHeatmapOrders} invoices)</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 pt-6 items-end h-44 border-b border-slate-800 pb-3">
-            {data?.hourlyHeatmap && data.hourlyHeatmap.length > 0 ? (
-              data.hourlyHeatmap.map((bar, idx) => {
-                const heightPct = bar.sales > 0 ? Math.max((bar.sales / maxHeatmapSales) * 100, 12) : 6;
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group">
-                    <span className="text-[9px] font-mono text-emerald-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                      {bar.sales > 0 ? `₹${(bar.sales / 1000).toFixed(1)}k` : '₹0'}
-                    </span>
+          <div className="overflow-x-auto luxury-scrollbar-x pb-2">
+            <div
+              className="gap-1 sm:gap-1.5 pt-8 items-end h-48 border-b border-slate-800 pb-3 min-w-[700px]"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${data?.hourlyHeatmap?.length || 24}, minmax(0, 1fr))`
+              }}
+            >
+              {data?.hourlyHeatmap && data.hourlyHeatmap.length > 0 ? (
+                data.hourlyHeatmap.map((bar, idx) => {
+                  const heightPct = bar.sales > 0 ? Math.max((bar.sales / maxHeatmapSales) * 100, 14) : 6;
+                  const isCurrentHover = hoveredBar?.hour === bar.hour;
+
+                  return (
                     <div
-                      style={{ height: `${heightPct}%` }}
-                      className={`w-full max-w-[28px] rounded-t transition-all duration-500 ${
-                        bar.peak
-                          ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
-                          : bar.sales > 0
-                          ? 'bg-slate-700 hover:bg-emerald-500'
-                          : 'bg-slate-900 border border-slate-800'
-                      }`}
-                    />
-                    <span className="text-[9px] text-slate-400 font-mono uppercase">{bar.hour}</span>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="col-span-12 text-center text-xs text-slate-500 py-8">
-                No orders logged for today's service window yet.
-              </div>
-            )}
+                      key={idx}
+                      className="flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer relative"
+                      onMouseEnter={() => setHoveredBar(bar)}
+                      onMouseLeave={() => setHoveredBar(null)}
+                      title={`${bar.hour}: ₹${bar.sales.toLocaleString('en-IN')} (${bar.orders} orders)${bar.peak ? ' [Peak]' : ''}`}
+                    >
+                      {/* Live Amount Label above bar */}
+                      <span
+                        className={`text-[9px] font-mono font-bold transition-all duration-200 pointer-events-none whitespace-nowrap ${
+                          isCurrentHover
+                            ? 'text-white scale-110 opacity-100'
+                            : bar.sales > 0
+                            ? 'text-emerald-400 opacity-90 group-hover:opacity-100'
+                            : 'text-slate-600 opacity-0 group-hover:opacity-100'
+                        }`}
+                      >
+                        {bar.sales > 0
+                          ? bar.sales >= 1000
+                            ? `₹${(bar.sales / 1000).toFixed(1)}k`
+                            : `₹${bar.sales}`
+                          : '₹0'}
+                      </span>
+
+                      {/* Bar Column */}
+                      <div
+                        style={{ height: `${heightPct}%` }}
+                        className={`w-full max-w-[24px] rounded-t transition-all duration-300 ${
+                          bar.peak
+                            ? 'bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.6)] group-hover:bg-emerald-300'
+                            : bar.sales > 0
+                            ? 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+                            : 'bg-slate-900 border border-slate-800/80 hover:bg-slate-800'
+                        } ${isCurrentHover ? 'ring-2 ring-white/50' : ''}`}
+                      />
+
+                      {/* Hour Label */}
+                      <span
+                        className={`text-[9px] font-mono transition-colors duration-200 ${
+                          isCurrentHover
+                            ? 'text-emerald-400 font-bold'
+                            : bar.sales > 0
+                            ? 'text-slate-300 font-medium'
+                            : 'text-slate-500'
+                        }`}
+                      >
+                        {bar.hour}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center text-xs text-slate-500 py-8">
+                  No orders logged for today's service window yet.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

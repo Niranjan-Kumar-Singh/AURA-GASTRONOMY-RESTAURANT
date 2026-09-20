@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Heart, Star, Plus, Minus, Sparkles, Zap, ShoppingBag, ArrowRight, Flame } from 'lucide-react';
+import { X, Heart, Star, Plus, Minus, Sparkles, Zap, ShoppingBag, ArrowRight, Flame, Check } from 'lucide-react';
 import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useCartStore } from '../../store/use-cart-store';
 import { useToast } from '../feedback/ToastContainer';
@@ -247,7 +247,10 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      onClick={() => onSelectDish && onSelectDish(item)}
+                      onClick={() => {
+                        onClose();
+                        if (onSelectDish) onSelectDish(item);
+                      }}
                       className="p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200 hover:border-[#0C831F] transition-all shadow-xs hover:shadow-md group cursor-pointer active:scale-[0.99] flex flex-col space-y-2.5 relative"
                     >
                       {/* Top Row: Thumbnail + Info */}
@@ -348,20 +351,15 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                           </span>
                         </div>
 
-                        {/* Cart CTA or Stepper */}
+                        {/* Cart Action: Direct Stepper if In Cart, else View & Add */}
                         <div className="flex items-center space-x-2">
-                          {isCustomizable && !inCart && (
-                            <span className="text-[10px] font-medium text-slate-400 hidden xs:inline">
-                              Customisable
-                            </span>
-                          )}
-
                           {inCart ? (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              className="flex items-center space-x-1 bg-[#0C831F] text-white px-1.5 py-0.5 rounded-xl shadow-xs"
+                              className="flex items-center space-x-1.5 bg-[#0C831F] text-white px-2 py-1 rounded-xl shadow-xs shrink-0"
                             >
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   updateQuantity(item.id, cartItem.quantity - 1);
@@ -369,12 +367,13 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                                 className="w-6 h-6 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
                                 title="Decrease quantity"
                               >
-                                <Minus className="w-3 h-3 stroke-[3]" />
+                                <Minus className="w-3.5 h-3.5 stroke-[3]" />
                               </button>
-                              <span className="font-mono font-black text-xs min-w-[20px] text-center">
+                              <span className="font-mono font-black text-xs sm:text-sm min-w-[18px] text-center">
                                 {cartItem.quantity}
                               </span>
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   updateQuantity(item.id, cartItem.quantity + 1);
@@ -382,16 +381,22 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                                 className="w-6 h-6 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
                                 title="Increase quantity"
                               >
-                                <Plus className="w-3 h-3 stroke-[3]" />
+                                <Plus className="w-3.5 h-3.5 stroke-[3]" />
                               </button>
                             </div>
                           ) : (
                             <button
-                              onClick={(e) => handleAddToCart(e, item)}
-                              className="px-3.5 py-1.5 bg-[#0C831F] hover:bg-[#096918] text-white font-black text-xs rounded-xl shadow-xs transition-all active:scale-95 flex items-center space-x-1 cursor-pointer shrink-0"
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onClose();
+                                if (onSelectDish) onSelectDish(item);
+                              }}
+                              className="px-3 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase transition-all flex items-center space-x-1 bg-[#0C831F] hover:bg-[#096918] text-white shadow-xs hover:shadow-md active:scale-95 cursor-pointer shrink-0 group/btn"
+                              title="View dish details, chef pairings & add to order"
                             >
-                              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                              <span>ADD</span>
+                              <span>View &amp; Add</span>
+                              <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
                             </button>
                           )}
                         </div>

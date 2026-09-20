@@ -15,6 +15,9 @@ const getOrderBadge = (order: any) => {
   if (order.paymentStatus === 'REFUNDED') {
     return { label: 'REFUNDED & VOID', style: 'text-rose-700 bg-rose-50 border-rose-200' };
   }
+  if (order.paymentStatus === 'PARTIALLY_REFUNDED' || (order.refundAmount && order.refundAmount > 0)) {
+    return { label: `PARTIALLY REFUNDED (-₹${order.refundAmount})`, style: 'text-amber-700 bg-amber-50 border-amber-300' };
+  }
   if (order.paymentStatus === 'PAID') {
     return { label: 'PAID & SETTLED', style: 'text-emerald-700 bg-emerald-50 border-emerald-200' };
   }
@@ -126,6 +129,8 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                   createdAt: order.createdAt,
                   paymentStatus: order.paymentStatus,
                   paymentMethod: order.paymentMethod,
+                  refundAmount: order.refundAmount || 0,
+                  refundReason: order.refundReason,
                   ordersCount: 1,
                   allOrderIds: [order.orderId || order._id],
                   allItems: [...(order.items || [])],
@@ -144,6 +149,8 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                 group.tax += order.tax || 0;
                 group.discount += order.discount || 0;
                 group.total += order.total || 0;
+                group.refundAmount = (group.refundAmount || 0) + (order.refundAmount || 0);
+                if (order.refundReason) group.refundReason = order.refundReason;
               }
             });
 
@@ -266,9 +273,31 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                   <span>₹{(selectedReceipt.tax || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-900">
-                  <span>TOTAL BILL</span>
-                  <span className="text-[#0C831F]">₹{(selectedReceipt.total || 0).toLocaleString('en-IN')}</span>
+                  <span>GROSS TOTAL</span>
+                  <span className={selectedReceipt.paymentStatus === 'REFUNDED' ? 'line-through text-slate-400' : 'text-slate-900'}>
+                    ₹{(selectedReceipt.total || 0).toLocaleString('en-IN')}
+                  </span>
                 </div>
+
+                {selectedReceipt.refundAmount !== undefined && selectedReceipt.refundAmount > 0 && (
+                  <div className="pt-2 border-t border-dashed border-slate-300 space-y-1 font-sans">
+                    <div className="flex justify-between text-xs text-rose-600 font-bold font-mono">
+                      <span>{selectedReceipt.paymentStatus === 'REFUNDED' ? 'Full Refund Void:' : 'Partial Refund Issued:'}</span>
+                      <span>- ₹{selectedReceipt.refundAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                    {selectedReceipt.refundReason && (
+                      <p className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 p-1.5 rounded-lg">
+                        Reason: {selectedReceipt.refundReason}
+                      </p>
+                    )}
+                    {selectedReceipt.paymentStatus !== 'REFUNDED' && (
+                      <div className="flex justify-between text-xs font-black text-[#0C831F] pt-1 border-t border-slate-200 font-mono">
+                        <span>NET SETTLED:</span>
+                        <span>₹{Math.max(0, (selectedReceipt.total || 0) - selectedReceipt.refundAmount).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

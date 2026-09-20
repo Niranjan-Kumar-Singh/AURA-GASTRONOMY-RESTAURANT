@@ -30,7 +30,8 @@ router.post('/register', async (req, res) => {
         _id: user._id,
         name: user.name,
         phone: user.phone,
-        status: user.status,
+        role: 'CUSTOMER',
+        status: user.status || 'Standard',
         token: generateToken(user._id),
       }
     });
