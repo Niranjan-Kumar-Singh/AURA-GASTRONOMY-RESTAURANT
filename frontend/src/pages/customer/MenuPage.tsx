@@ -12,7 +12,7 @@ import { CustomerSearchBar } from '../../components/customer/CustomerSearchBar';
 import { FilterChips, ActiveFilter } from '../../components/customer/FilterChips';
 import { RecommendationSection } from '../../components/customer/RecommendationSection';
 import { CallWaiterButton } from '../../components/customer/CallWaiterButton';
-import { HelpBotLauncher } from '../../components/customer/HelpBotLauncher';
+import { WaterRefillButton } from '../../components/customer/WaterRefillButton';
 import { CustomerSidebar } from '../../components/customer/CustomerSidebar';
 import { CustomerAuthModal } from '../../components/auth/CustomerAuthModal';
 import { CustomerProfileModal } from '../../components/auth/CustomerProfileModal';
@@ -55,7 +55,60 @@ export const MenuPage: React.FC = () => {
   const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
-  const { addItem, getItemCount, getGrandTotal, clearCart, setTableId: setCartTableId, fetchServerCart } = useCartStore();
+  // Dynamic Scroll Direction Header Visibility (hides on scroll down, shows on scroll up)
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const accumulatedDistance = useRef(0);
+  const scrollDirection = useRef<'up' | 'down'>('up');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = Math.max(0, window.scrollY);
+      const delta = currentScrollY - lastScrollY.current;
+
+      // Always show when near the very top of page
+      if (currentScrollY <= 45) {
+        setIsHeaderVisible(true);
+        accumulatedDistance.current = 0;
+        scrollDirection.current = 'up';
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      if (delta > 0) {
+        // Scrolling DOWN
+        if (scrollDirection.current !== 'down') {
+          scrollDirection.current = 'down';
+          accumulatedDistance.current = 0;
+        }
+        accumulatedDistance.current += delta;
+
+        // Hide header once scrolled down 25px
+        if (accumulatedDistance.current >= 25) {
+          setIsHeaderVisible(false);
+        }
+      } else if (delta < 0) {
+        // Scrolling UP
+        if (scrollDirection.current !== 'up') {
+          scrollDirection.current = 'up';
+          accumulatedDistance.current = 0;
+        }
+        accumulatedDistance.current += Math.abs(delta);
+
+        // Reveal header once scrolled up 20px
+        if (accumulatedDistance.current >= 20) {
+          setIsHeaderVisible(true);
+        }
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const { addItem, getItemCount, getGrandTotal, clearCart, setTableId: setCartTableId } = useCartStore();
   const { wishlist } = useWishlistStore();
   const { activeOrderId, setActiveOrderId } = useOrderStore();
   const { isAuthenticated, tableId: sessionTableId, setTableId } = useAuthStore();
@@ -74,9 +127,8 @@ export const MenuPage: React.FC = () => {
         setTableId(tableId);
       }
       setCartTableId(tableId);
-      fetchServerCart(tableId);
     }
-  }, [tableId, sessionTableId, setTableId, setCartTableId, fetchServerCart]);
+  }, [tableId]);
 
   // Prompt login dialog if not authenticated on first load
   useEffect(() => {
@@ -141,12 +193,14 @@ export const MenuPage: React.FC = () => {
     setSelectedFilters(next);
   };
 
-  const handleAddToCart = (item: MenuItem, quantity = 1, notes = '') => {
-    if (!isAuthenticated) {
-      setIsAuthOpen(true);
-      return;
-    }
-    addItem(item, quantity, notes);
+  const handleAddToCart = (
+    item: MenuItem,
+    quantity = 1,
+    notes = '',
+    unitPrice?: number,
+    addonNames?: string[]
+  ) => {
+    addItem(item, quantity, notes, unitPrice, addonNames);
   };
 
   const handleResetFilters = () => {
@@ -210,91 +264,107 @@ export const MenuPage: React.FC = () => {
     <div className="page-theme-customer min-h-screen flex flex-col bg-[#F4F6F8] text-slate-800 font-sans selection:bg-[#0C831F] selection:text-white">
       {/* Unified Coordinated Sticky Navigation: Brand Header & Category Bar */}
       <div className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-300 shadow-sm">
-        {/* Top Restaurant Brand & Table Navigation Bar */}
-        <header className="px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 border-b border-slate-200/90 bg-white/95">
-          <div className="max-w-[1560px] mx-auto w-full flex items-center justify-between gap-2">
-            {/* Left: Hamburger Menu + Restaurant Branding */}
-            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 sm:p-2.5 text-slate-800 hover:text-slate-950 bg-slate-100 hover:bg-slate-200/90 border border-slate-200 rounded-xl shadow-2xs transition-all shrink-0 cursor-pointer active:scale-95"
-                title="Open Dining Menu"
-              >
-                <Menu className="w-5 h-5 stroke-[2.2]" />
-              </button>
+        {/* Top Restaurant Brand & Table Navigation Bar with GPU-Accelerated Smooth Dynamic Collapse */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateRows: isHeaderVisible ? '1fr' : '0fr',
+            maxHeight: isHeaderVisible ? '70px' : '0px',
+            opacity: isHeaderVisible ? 1 : 0,
+            transition: 'grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1), max-height 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease',
+            overflow: 'hidden',
+            pointerEvents: isHeaderVisible ? 'auto' : 'none',
+          }}
+        >
+          <div style={{ overflow: 'hidden', minHeight: 0 }}>
+            <header className="bg-white/95 px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 border-b border-slate-200/90">
+              <div className="max-w-[1560px] mx-auto w-full flex items-center justify-between gap-2">
+                {/* Strict Left-to-Right Flow: 1. Burger -> 2. Logo Emblem -> 3. Restaurant Name -> 4. Table Badge */}
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                  {/* 1. Burger Icon */}
+                  <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-2 sm:p-2.5 text-slate-800 hover:text-slate-950 bg-slate-100 hover:bg-slate-200/90 border border-slate-200 rounded-xl shadow-2xs transition-all shrink-0 cursor-pointer active:scale-95"
+                    title="Open Dining Menu"
+                  >
+                    <Menu className="w-5 h-5 stroke-[2.2]" />
+                  </button>
 
-              {/* Culinary Emblem Icon - Visible on Tablet/Desktop */}
-              <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-600 via-[#0C831F] to-emerald-800 border border-emerald-400/40 items-center justify-center text-white shadow-sm shrink-0">
-                <Utensils className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-50" />
-              </div>
+                  {/* 2. Logo Emblem (Visible on Mobile & Desktop) */}
+                  <div className="flex w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 via-[#0C831F] to-emerald-800 border border-emerald-400/40 items-center justify-center text-white shadow-xs shrink-0">
+                    <Utensils className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-emerald-50" />
+                  </div>
 
-              {/* Restaurant Name & Live Table Status */}
-              <div className="min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-1 leading-none">
-                  <span className="font-black text-sm sm:text-base text-slate-900 tracking-tight font-serif uppercase">
-                    AURA
-                  </span>
-                  <span className="font-black text-[10px] sm:text-xs text-[#0C831F] tracking-widest uppercase">
-                    GASTRONOMY
-                  </span>
+                  {/* 3. Restaurant Name & 4. Table Number Badge */}
+                  <div className="min-w-0 flex flex-col justify-center">
+                    <div className="flex items-center gap-1 leading-none">
+                      <span className="font-black text-xs sm:text-base text-slate-900 tracking-tight font-serif uppercase">
+                        AURA
+                      </span>
+                      <span className="font-black text-[9px] sm:text-xs text-[#0C831F] tracking-widest uppercase">
+                        GASTRONOMY
+                      </span>
+                    </div>
+
+                    {/* 4. Active Table Badge */}
+                    <div className="flex items-center space-x-1 mt-0.5">
+                      <span className="inline-flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 bg-emerald-50 border border-emerald-200/90 rounded-full text-[9px] sm:text-[10px] font-black text-emerald-900 shadow-2xs whitespace-nowrap">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#0C831F] animate-pulse shrink-0" />
+                        <span>Table {tableId}</span>
+                        <span className="text-emerald-700 font-semibold hidden xs:inline">• {zoneName}</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Active Table Badge */}
-                <div className="flex items-center space-x-1 mt-0.5">
-                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200/90 rounded-full text-[9px] sm:text-[10px] font-black text-emerald-900 shadow-2xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0C831F] animate-pulse shrink-0" />
-                    <span>Table {tableId}</span>
-                    <span className="text-emerald-700 font-semibold hidden xs:inline">• {zoneName}</span>
-                  </span>
+                {/* Right: 5. Track Order -> 6. Wishlist -> 7. Cart */}
+                <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+                  {/* 5. Track Order (Active Kitchen Order) */}
+                  {activeOrderId && (
+                    <button
+                      onClick={() => navigate(`/table/${tableId}/order/${activeOrderId}`)}
+                      className="relative p-2 sm:px-3 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer font-black text-xs shrink-0 active:scale-95"
+                      title="Track Active Kitchen Order"
+                    >
+                      <Activity className="w-4 h-4 animate-pulse text-emerald-100 shrink-0" />
+                      <span className="uppercase tracking-wider text-[10px] sm:text-xs font-black hidden sm:inline">
+                        Track Order
+                      </span>
+                    </button>
+                  )}
+
+                  {/* 6. Saved Wishlist Button */}
+                  <button
+                    onClick={() => setIsWishlistOpen(true)}
+                    className="relative p-2 sm:p-2.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-700 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                    title="Saved Wishlist"
+                  >
+                    <Heart className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${wishlist.length > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-700'}`} />
+                    {wishlist.length > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-150">
+                        {wishlist.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* 7. Table Cart Button */}
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative p-2 sm:p-2.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-[#0C831F] text-slate-800 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                    title="View Active Table Cart"
+                  >
+                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-slate-800" />
+                    {getItemCount() > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-[#0C831F] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-150">
+                        {getItemCount()}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
-            </div>
-
-            {/* Right: Actions Cluster */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-              {activeOrderId && (
-                <button
-                  onClick={() => navigate(`/table/${tableId}/order/${activeOrderId}`)}
-                  className="relative p-2 sm:px-3 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer font-black text-xs shrink-0 active:scale-95"
-                  title="Track Active Kitchen Order"
-                >
-                  <Activity className="w-4 h-4 animate-pulse text-emerald-100 shrink-0" />
-                  <span className="uppercase tracking-wider text-[10px] sm:text-xs font-black hidden sm:inline">
-                    Track Order
-                  </span>
-                </button>
-              )}
-
-              {/* Saved Wishlist Quick Access Button */}
-              <button
-                onClick={() => setIsWishlistOpen(true)}
-                className="relative p-2 sm:p-2.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-700 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
-                title="Saved Wishlist"
-              >
-                <Heart className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${wishlist.length > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-700'}`} />
-                {wishlist.length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-150">
-                    {wishlist.length}
-                  </span>
-                )}
-              </button>
-
-              {/* Table Cart Button */}
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2 sm:p-2.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-[#0C831F] text-slate-800 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
-                title="View Active Table Cart"
-              >
-                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-slate-800" />
-                {getItemCount() > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-[#0C831F] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-150">
-                    {getItemCount()}
-                  </span>
-                )}
-              </button>
-            </div>
+            </header>
           </div>
-        </header>
+        </div>
 
         {/* Zero-Gap Sticky Category & Mobile Search Control Bar */}
         <CategoryBar
@@ -319,13 +389,14 @@ export const MenuPage: React.FC = () => {
           />
         </div>
 
-        {/* Dynamic Recommendation Rails */}
+        {/* Dynamic Recommendation Rails with Differentiated Luxury Backgrounds */}
         {!searchQuery && !selectedCategoryId && (
           <div className="space-y-4 my-2">
             {chefSpecials.length > 0 && (
               <RecommendationSection
                 title="Chef's Signature Recommendations"
-                icon={<Sparkles className="w-4 h-4 text-[#0C831F]" />}
+                icon={<Sparkles className="w-4 h-4 text-amber-400" />}
+                variant="chef"
                 items={chefSpecials}
                 onItemClick={(it) => {
                   setSelectedItem(it);
@@ -337,7 +408,8 @@ export const MenuPage: React.FC = () => {
             {todaysSpecials.length > 0 && (
               <RecommendationSection
                 title="Today's Most Popular Specials"
-                icon={<Flame className="w-4 h-4 text-amber-500" />}
+                icon={<Flame className="w-4 h-4 text-emerald-400" />}
+                variant="popular"
                 items={todaysSpecials}
                 onItemClick={(it) => {
                   setSelectedItem(it);
@@ -437,11 +509,11 @@ export const MenuPage: React.FC = () => {
         </div>
       </main>
 
+      {/* Floating 1-Tap Water Refill (Directly above Call Waiter) */}
+      <WaterRefillButton tableId={tableId} />
+
       {/* Floating Call Waiter Button */}
       <CallWaiterButton tableId={tableId} />
-
-      {/* Floating Help Bot for Users */}
-      <HelpBotLauncher tableId={tableId} />
 
       {/* Floating Active Cart Bar (Desktop & Mobile - Blinkit Green Style) */}
       {getItemCount() > 0 && (
@@ -480,6 +552,7 @@ export const MenuPage: React.FC = () => {
           setIsCartOpen(false);
           setActiveOrderId(orderId);
           clearCart();
+          navigate(`/table/${tableId}/order/${orderId}`);
         }}
       />
 

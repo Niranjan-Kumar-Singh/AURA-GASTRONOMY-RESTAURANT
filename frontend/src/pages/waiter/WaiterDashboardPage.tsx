@@ -173,6 +173,7 @@ export const WaiterDashboardPage: React.FC = () => {
           orderTotal: hasActiveOrders ? cumulativeSessionTotal : 0,
           orderStatus: hasActiveOrders ? overallOrderStatus : undefined,
           items: hasActiveOrders ? allItemsList : [],
+          cleaningStartedAt: existingTable?.cleaningStartedAt,
         };
       });
 
@@ -305,14 +306,24 @@ export const WaiterDashboardPage: React.FC = () => {
       return;
     }
 
-    // Rule 5: Cannot directly clean an Occupied table with an open order
-    if (nextStatus === 'cleaning' && targetTable.status === 'occupied' && targetTable.activeOrderId) {
-      showToast(
-        `Table ${tableNum} is currently dining with order #${targetTable.activeOrderId}. Please complete order & billing first.`,
-        'error',
-        'Active Dining Session'
-      );
-      return;
+    // Rule 5: Cannot set table to Cleaning if table is occupied with active order or has an unpaid bill
+    if (nextStatus === 'cleaning') {
+      if (targetTable.status === 'occupied' && targetTable.activeOrderId) {
+        showToast(
+          `Table ${tableNum} is currently dining with order #${targetTable.activeOrderId}. Please complete dining & settle bill before cleaning.`,
+          'error',
+          'Active Dining Session'
+        );
+        return;
+      }
+      if (targetTable.status === 'billing' || (targetTable.orderTotal && targetTable.orderTotal > 0)) {
+        showToast(
+          `Table ${tableNum} has an unpaid balance of ₹${targetTable.orderTotal?.toFixed(2) || '0.00'}! Settle bill at Cashier POS before setting table to Cleaning.`,
+          'error',
+          'Unpaid Bill Pending'
+        );
+        return;
+      }
     }
 
     // Rule 6: Billing table CANNOT transition back to Occupied (dining)
@@ -327,11 +338,12 @@ export const WaiterDashboardPage: React.FC = () => {
 
     // Instant local UI update
     const finalGuests = nextStatus === 'occupied' ? (guestCountParam || targetTable.guestCount || 2) : 0;
+    const cleaningStartedAtVal = nextStatus === 'cleaning' ? new Date().toISOString() : undefined;
     setTables((prev) =>
-      prev.map((t) => (t.tableNumber === tableNum ? { ...t, status: nextStatus, guestCount: finalGuests } : t))
+      prev.map((t) => (t.tableNumber === tableNum ? { ...t, status: nextStatus, guestCount: finalGuests, cleaningStartedAt: cleaningStartedAtVal } : t))
     );
     if (selectedTable && selectedTable.tableNumber === tableNum) {
-      setSelectedTable((prev) => (prev ? { ...prev, status: nextStatus, guestCount: finalGuests } : null));
+      setSelectedTable((prev) => (prev ? { ...prev, status: nextStatus, guestCount: finalGuests, cleaningStartedAt: cleaningStartedAtVal } : null));
     }
 
     try {
@@ -395,6 +407,17 @@ export const WaiterDashboardPage: React.FC = () => {
     } catch (error) {
       showToast('Failed to update order status', 'error');
     }
+  };
+
+  const getCleaningTimeRemaining = (cleaningStartedAt?: string | Date) => {
+    if (!cleaningStartedAt) return '2m 30s';
+    const startMs = new Date(cleaningStartedAt).getTime();
+    const elapsedSecs = Math.max(0, Math.floor((nowTimestamp - startMs) / 1000));
+    const remainingSecs = Math.max(0, 150 - elapsedSecs);
+    if (remainingSecs === 0) return 'Ready';
+    const mins = Math.floor(remainingSecs / 60);
+    const secs = remainingSecs % 60;
+    return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
   };
 
   // Visual Badging for Table Statuses
@@ -736,7 +759,11 @@ export const WaiterDashboardPage: React.FC = () => {
                           T-{table.tableNumber < 10 ? `0${table.tableNumber}` : table.tableNumber}
                         </span>
                         <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-current">
-                          {table.orderStatus === 'ready' ? 'READY' : table.status}
+                          {table.orderStatus === 'ready'
+                            ? 'READY'
+                            : table.status === 'cleaning'
+                            ? `CLEAN (${getCleaningTimeRemaining(table.cleaningStartedAt)})`
+                            : table.status}
                         </span>
                       </div>
 
@@ -751,8 +778,9 @@ export const WaiterDashboardPage: React.FC = () => {
                             👥 {table.guestCount || 2}
                           </span>
                         ) : table.status === 'cleaning' ? (
-                          <span className="font-mono text-[10px] font-bold text-rose-400">
-                            Clean ⏱
+                          <span className="font-mono text-[9px] font-bold text-amber-300 bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1">
+                            <span>🧹</span>
+                            <span>{getCleaningTimeRemaining(table.cleaningStartedAt)}</span>
                           </span>
                         ) : (
                           <span className="text-[9px] font-mono opacity-70 truncate max-w-[65px]">

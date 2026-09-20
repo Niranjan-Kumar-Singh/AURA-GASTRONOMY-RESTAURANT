@@ -110,6 +110,9 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
       addItem(item, displayQuantity, finalNotes, unitPrice, chosenAddonNames);
       showToast(`Added ${displayQuantity}x "${item.name}" to Table Cart`, 'success');
     }
+    if (onAddToCart) {
+      onAddToCart(item, displayQuantity, finalNotes);
+    }
     onClose();
   };
 

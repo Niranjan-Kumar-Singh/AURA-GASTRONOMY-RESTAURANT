@@ -735,26 +735,70 @@ export const CashierPOSPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Discount Selector */}
+                  {/* Dedicated VIP Account / Member Action & Executive Discounts */}
                   {!isCurrentSettled && (
-                    <div className="p-4 bg-[#07090E] border border-slate-800 rounded-xl space-y-2">
-                      <span className="text-[10px] font-mono text-slate-400 uppercase block font-bold">
-                        Apply Executive Discount:
-                      </span>
-                      <div className="flex space-x-2">
-                        {[0, 5, 10, 15, 20].map((pct) => (
-                          <button
-                            key={pct}
-                            onClick={() => setDiscountPercent(pct)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
-                              discountPercent === pct
-                                ? 'bg-purple-600 text-white border-purple-400 shadow-md font-black'
-                                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
-                            }`}
-                          >
-                            {pct === 0 ? 'None' : `${pct}% OFF`}
-                          </button>
-                        ))}
+                    <div className="p-4 bg-[#07090E] border border-slate-800 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-slate-400 uppercase font-bold">
+                          Membership & Discounts:
+                        </span>
+                        {discountPercent === 15 && (
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                            <span>👑 VIP 15% Active</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Prominent Dedicated VIP Account Button */}
+                      <button
+                        onClick={() => {
+                          if (discountPercent === 15) {
+                            setDiscountPercent(0);
+                            showToast('VIP Discount Removed', 'info');
+                          } else {
+                            setDiscountPercent(15);
+                            showToast('👑 VIP Account: 15% Privilege Discount Applied!', 'success');
+                          }
+                        }}
+                        className={`w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between border active:scale-95 ${
+                          discountPercent === 15
+                            ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 border-amber-300 shadow-lg font-black'
+                            : 'bg-slate-900/90 text-amber-400 border-amber-500/40 hover:border-amber-400 hover:bg-amber-500/10'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="text-base">👑</span>
+                          <div className="text-left">
+                            <p className="font-black text-xs leading-none">VIP Account / Member</p>
+                            <p className={`text-[10px] font-medium ${discountPercent === 15 ? 'text-slate-900' : 'text-slate-400'}`}>
+                              Automatic 15% VIP Privileged Discount
+                            </p>
+                          </div>
+                        </div>
+                        <span className="font-mono font-black text-[10px] px-2.5 py-1 rounded bg-black/20">
+                          {discountPercent === 15 ? 'APPLIED ✓' : 'TAP TO APPLY'}
+                        </span>
+                      </button>
+
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[10px] font-mono text-slate-500 uppercase block">
+                          Or standard discounts:
+                        </span>
+                        <div className="flex space-x-2">
+                          {[0, 5, 10, 20].map((pct) => (
+                            <button
+                              key={pct}
+                              onClick={() => setDiscountPercent(pct)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
+                                discountPercent === pct
+                                  ? 'bg-purple-600 text-white border-purple-400 shadow-md font-black'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                              }`}
+                            >
+                              {pct === 0 ? 'None' : `${pct}% OFF`}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1183,6 +1227,15 @@ export const CashierPOSPage: React.FC = () => {
                 <span className="text-gray-500">Payment Mode:</span>
                 <span className="font-bold text-emerald-700 uppercase">{invoiceBill.paymentMethod || paymentMethod} (SETTLED)</span>
               </div>
+              {invoiceBill.discountPercent === 15 && (
+                <div className="flex justify-between items-center bg-amber-100/90 text-amber-900 px-2.5 py-1 rounded-lg font-bold text-[10px] border border-amber-300">
+                  <span className="flex items-center gap-1">
+                    <span>👑</span>
+                    <span>VIP PRIVILEGED MEMBER</span>
+                  </span>
+                  <span className="font-mono">15% SAVINGS</span>
+                </div>
+              )}
             </div>
 
             {/* Itemized Receipt Table */}
@@ -1212,7 +1265,7 @@ export const CashierPOSPage: React.FC = () => {
               </div>
               {invoiceBill.discountAmount !== undefined && invoiceBill.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-700 font-bold">
-                  <span>Executive Discount ({invoiceBill.discountPercent}%)</span>
+                  <span>{invoiceBill.discountPercent === 15 ? '👑 VIP Member Discount (15%)' : `Executive Discount (${invoiceBill.discountPercent}%)`}</span>
                   <span>- ₹{invoiceBill.discountAmount.toLocaleString('en-IN')}</span>
                 </div>
               )}

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Utensils, CheckCircle2, Clock, ArrowLeft, Plus, ChefHat, ShoppingBag, Receipt,
-  Sparkles, Zap, Star, Coffee, Heart, MessageCircle, Gift, Flame, Leaf, Music2,
-  ArrowRight, Wifi, Phone
+  Sparkles, Zap, Star, Coffee, Heart, MessageCircle, Flame,
+  ArrowRight, Wifi, Play, Pause, Volume2, VolumeX, Eye, FlameKindling
 } from 'lucide-react';
 import { CallWaiterButton } from '../../components/customer/CallWaiterButton';
-import { HelpBotLauncher } from '../../components/customer/HelpBotLauncher';
+import { WaterRefillButton } from '../../components/customer/WaterRefillButton';
 import { useCartStore } from '../../store/use-cart-store';
+import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 import { menuService } from '../../services/menu.service';
 import { MenuItem } from '../../types/menu.types';
@@ -37,75 +38,69 @@ interface OrderData {
   createdAt: string;
 }
 
-// Chef wisdom rotating messages
-const CHEF_WISDOM = [
-  "Our chef marinates the proteins for 24 hours before cooking — each bite tells that story.",
-  "Every dish is finished with hand-harvested Himalayan sea salt. Taste the difference.",
-  "We source our vegetables fresh from local farms every morning — today's harvest is in your order.",
-  "The secret to our Biryani? Slow-cooked on dum for 45 minutes. Worth every second.",
-  "Our masalas are stone-ground in-house — no packaged spices enter our kitchen.",
-  "Our chef trained under a Michelin-starred kitchen in Lyon, France before returning home.",
-  "The ghee we use is churned fresh every morning from A2 milk from our partner dairy.",
-];
-
-// Fun dining facts
-const DINING_FACTS = [
-  "Did you know? Fine dining restaurants typically spend 40% of their budget on fresh ingredients.",
-  "The word 'restaurant' comes from the French 'restaurer' meaning 'to restore oneself'.",
-  "Humans can detect 5 primary tastes: sweet, sour, salty, bitter and umami.",
-  "Indian cuisine uses over 25 different spices — more than any other cuisine in the world!",
-  "The best way to taste wine or complex dishes is to breathe in through your nose while eating.",
-  "Cooking with cast iron can actually increase the iron content of your food by up to 20%.",
-];
-
 // Suggested add-ons when order is in kitchen
 const QUICK_ADD_SUGGESTIONS = [
   { emoji: '🥗', label: 'Add a Salad', hint: 'Pair with your mains' },
-  { emoji: '🍞', label: 'Order Bread', hint: 'Naan or Roti' },
-  { emoji: '🥤', label: 'Add Drinks', hint: 'Mocktails & Lassi' },
-  { emoji: '🍮', label: 'Save Dessert', hint: 'Add to queue now' },
+  { emoji: '🍞', label: 'Order Bread', hint: 'Butter Naan or Roti' },
+  { emoji: '🥤', label: 'Add Drinks', hint: 'Botanical Mocktails & Lassi' },
+  { emoji: '🍮', label: 'Add Dessert', hint: 'Artisanal Kulfi & Halwa' },
+];
+
+// Curated Gastronomy Live Reels to hook waiting guests
+const GASTRONOMY_REELS = [
+  {
+    id: 991,
+    name: 'Truffle & Burrata Sourdough Pizza',
+    tagline: 'Fresh from our 400°C Beechwood Oven',
+    price: 680,
+    chefNote: 'Hand-stretched 48-hr fermented sourdough crowned with creamy Puglia burrata and freshly shaved winter truffles.',
+    videoSrc: 'https://assets.mixkit.co/videos/preview/mixkit-putting-garnishing-on-a-gourmet-dish-42860-large.mp4',
+    poster: '/images/aura_hero_interior.png',
+    badge: '🔥 Chef Choice',
+  },
+  {
+    id: 992,
+    name: 'Slow-Smoked Dum Dal Bukhara',
+    tagline: '18-Hour Overnight Charcoal Simmer',
+    price: 480,
+    chefNote: 'Black lentils slow-cooked overnight over aromatic charcoal embers, finished with churned white butter and cream.',
+    videoSrc: 'https://assets.mixkit.co/videos/preview/mixkit-chef-plating-a-gourmet-dish-42861-large.mp4',
+    poster: '/images/aura_hero_interior.png',
+    badge: '⭐ Iconic Special',
+  },
+  {
+    id: 993,
+    name: 'Royal Saffron & Pistachio Kulfi Pot',
+    tagline: 'Hand-Churned with Kashmiri Saffron',
+    price: 320,
+    chefNote: 'Reduced A2 milk rabri infused with raw organic Iranian saffron, pistachios, and edible 24K pure silver leaf.',
+    videoSrc: 'https://assets.mixkit.co/videos/preview/mixkit-serving-food-in-a-restaurant-5228-large.mp4',
+    poster: '/images/aura_hero_interior.png',
+    badge: '🍯 Dessert Gold',
+  },
 ];
 
 export const OrderTrackingPage: React.FC = () => {
   const { tableId = '10', orderId } = useParams<{ tableId?: string; orderId?: string }>();
   const navigate = useNavigate();
-  const { items, clearCart } = useCartStore();
+  const { items, addItem, clearCart, getItemCount } = useCartStore();
+  const { showToast } = useToast();
 
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [cancelledOrders, setCancelledOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [nowTimestamp, setNowTimestamp] = useState(Date.now());
-  const [wisdomIndex, setWisdomIndex] = useState(0);
-  const [factIndex, setFactIndex] = useState(0);
   const [suggestedItems, setSuggestedItems] = useState<MenuItem[]>([]);
 
-  // Clear cart if items remain
-  useEffect(() => {
-    if (items.length > 0) {
-      clearCart();
-    }
-  }, []);
+  // Gastronomy Video Reel State
+  const [activeReelIdx, setActiveReelIdx] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Rotate chef wisdom every 8 seconds
+  // Fetch real menu dessert / beverage suggestions
   useEffect(() => {
-    const interval = setInterval(() => {
-      setWisdomIndex((prev) => (prev + 1) % CHEF_WISDOM.length);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Rotate dining facts every 12 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % DINING_FACTS.length);
-    }, 12000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Fetch a few dessert / beverage suggestions from real menu
-  useEffect(() => {
-    menuService.getMenuItems({}).then((items) => {
-      const picks = items
+    menuService.getMenuItems({}).then((menuItems) => {
+      const picks = menuItems
         .filter((it) => it.isAvailable !== false)
         .sort(() => Math.random() - 0.5)
         .slice(0, 4);
@@ -113,7 +108,7 @@ export const OrderTrackingPage: React.FC = () => {
     }).catch(() => {});
   }, []);
 
-  // Fetch active orders for this table's current session
+  // Fetch active orders for this table's session
   const fetchTableOrders = async () => {
     try {
       const data = await orderService.getOrdersByTable(tableId);
@@ -138,12 +133,41 @@ export const OrderTrackingPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [tableId, orderId]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNowTimestamp(Date.now());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const toggleVideoPlayback = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const handleAddReelItem = (reel: typeof GASTRONOMY_REELS[0]) => {
+    const dishItem: MenuItem = {
+      id: reel.id,
+      categoryId: 1,
+      categoryName: "Chef's Signatures",
+      name: reel.name,
+      description: reel.chefNote,
+      price: reel.price,
+      imageUrl: reel.poster,
+      isVegetarian: true,
+      isGlutenFree: false,
+      isAvailable: true,
+      preparationTimeMinutes: 15,
+      spiceLevel: 1,
+    };
+    addItem(dishItem, 1);
+    showToast(`✨ Added ${reel.name} (₹${reel.price}) to Table ${tableId} Cart!`, 'success');
+  };
 
   const steps = [
     { key: 'received', label: 'Received', desc: 'Sent to kitchen', icon: '📋' },
@@ -188,33 +212,35 @@ export const OrderTrackingPage: React.FC = () => {
     }
   };
 
+  const activeReel = GASTRONOMY_REELS[activeReelIdx];
+
   return (
-    <div className="page-theme-customer min-h-screen bg-[#F4F6F8] text-slate-800 pb-32 font-sans">
+    <div className="page-theme-customer min-h-screen bg-[#F4F6F8] text-slate-800 pb-36 font-sans">
       {/* Sticky Top Header */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shadow-sm gap-2">
         <button
           onClick={() => navigate(`/table/${tableId}/menu`)}
-          className="flex items-center space-x-1 sm:space-x-1.5 text-xs font-bold text-slate-500 hover:text-[#0C831F] transition-colors cursor-pointer shrink-0"
+          className="flex items-center space-x-1 sm:space-x-1.5 text-xs font-bold text-slate-600 hover:text-[#0C831F] transition-colors cursor-pointer shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back<span className="hidden xs:inline"> to Menu</span></span>
         </button>
 
-        <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
+        <div className="flex items-center space-x-2 min-w-0">
           <div className="w-2 h-2 bg-[#0C831F] rounded-full animate-pulse shrink-0" />
           <h1 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate">
             <span>Table {tableId}</span>
-            <span className="hidden sm:inline"> — Live Tracker</span>
+            <span className="hidden sm:inline"> — Live Kitchen Tracker</span>
           </h1>
         </div>
 
-        <div className="flex items-center space-x-1 text-[10px] font-bold text-[#0C831F] uppercase tracking-wider shrink-0 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+        <div className="flex items-center space-x-1 text-[10px] font-bold text-[#0C831F] uppercase tracking-wider shrink-0 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
           <Wifi className="w-3 h-3" />
-          <span>Live</span>
+          <span>Live Sync</span>
         </div>
       </header>
 
-      <div className="p-4 max-w-2xl mx-auto space-y-4 pt-4">
+      <div className="p-3 sm:p-4 max-w-2xl mx-auto space-y-4 pt-3 sm:pt-4">
         {/* Cancelled Order Notice */}
         {cancelledOrders.length > 0 && (
           <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl shadow-sm space-y-2">
@@ -236,7 +262,7 @@ export const OrderTrackingPage: React.FC = () => {
         {isLoading ? (
           <div className="py-16 text-center space-y-3 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
             <ChefHat className="w-10 h-10 text-[#0C831F] animate-bounce mx-auto" />
-            <p className="font-bold text-sm text-slate-700">Fetching Live Order Status...</p>
+            <p className="font-bold text-sm text-slate-700">Connecting to Kitchen Display Systems...</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="space-y-4">
@@ -246,9 +272,9 @@ export const OrderTrackingPage: React.FC = () => {
                 <CheckCircle2 className="w-7 h-7" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900">No Pending Orders</h2>
+                <h2 className="text-base font-bold text-slate-900">No Active Kitchen Orders</h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Your Table {tableId} session is all caught up. Ready to order something delicious?
+                  Your Table {tableId} session is currently clear. Ready to order something delicious?
                 </p>
               </div>
               <button
@@ -256,22 +282,13 @@ export const OrderTrackingPage: React.FC = () => {
                 className="px-6 py-3 bg-[#0C831F] hover:bg-[#096918] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center space-x-1.5 mx-auto cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Browse Menu &amp; Order</span>
+                <span>Open Table Menu</span>
               </button>
-            </div>
-
-            {/* Chef Wisdom even on empty state */}
-            <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-2">
-              <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
-                <ChefHat className="w-4 h-4 text-[#0C831F]" />
-                <span>Chef's Corner</span>
-              </div>
-              <p className="text-xs text-slate-600 italic leading-relaxed">{CHEF_WISDOM[wisdomIndex]}</p>
             </div>
           </div>
         ) : (
           <>
-            {/* === LIVE ORDER TRACKER === */}
+            {/* === 1. LIVE ORDER TRACKER STEPPER === */}
             {latestOrder && (
               <div className="bg-white border border-slate-200/90 rounded-3xl shadow-sm overflow-hidden">
                 {/* Status color bar */}
@@ -284,7 +301,7 @@ export const OrderTrackingPage: React.FC = () => {
                   }`}
                 />
 
-                <div className="p-5 sm:p-6 space-y-4">
+                <div className="p-4 sm:p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2.5">
                       <div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center text-[#0C831F] shrink-0">
@@ -354,58 +371,127 @@ export const OrderTrackingPage: React.FC = () => {
               </div>
             )}
 
-            {/* === ENGAGEMENT SECTION: Chef's Wisdom & Dining Facts === */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Chef Wisdom Card */}
-              <div className="bg-white border border-amber-200/80 rounded-2xl p-4 space-y-2 shadow-sm">
-                <div className="flex items-center space-x-2 text-xs font-black text-amber-900 uppercase tracking-wider">
-                  <ChefHat className="w-4 h-4 text-amber-600" />
-                  <span>Chef's Corner</span>
+            {/* === 2. GASTRONOMY LIVE REELS & VIDEO SHOWCASE (Holding Guests & Driving Orders) === */}
+            <div className="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm space-y-3 p-4 sm:p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="p-1.5 bg-rose-100 text-rose-600 rounded-xl">
+                    <Flame className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 leading-tight">Gastronomy Live Reels</h3>
+                    <p className="text-[10px] text-slate-500 font-medium">Watch Master Chefs Craft Dishes • Tap to Add Live</p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed italic min-h-[60px] transition-all duration-700">
-                  "{CHEF_WISDOM[wisdomIndex]}"
-                </p>
-                <div className="flex gap-1 pt-1">
-                  {CHEF_WISDOM.map((_, i) => (
-                    <div
+
+                <div className="flex items-center space-x-1">
+                  {GASTRONOMY_REELS.map((_, i) => (
+                    <button
                       key={i}
-                      className={`h-1 rounded-full transition-all duration-500 ${i === wisdomIndex ? 'w-4 bg-amber-500' : 'w-1.5 bg-amber-200'}`}
+                      onClick={() => setActiveReelIdx(i)}
+                      className={`h-2 rounded-full transition-all cursor-pointer ${
+                        i === activeReelIdx ? 'w-6 bg-[#0C831F]' : 'w-2 bg-slate-200 hover:bg-slate-300'
+                      }`}
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Dining Facts Card */}
-              <div className="bg-white border border-sky-200/80 rounded-2xl p-4 space-y-2 shadow-sm">
-                <div className="flex items-center space-x-2 text-xs font-black text-sky-800 uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-sky-500" />
-                  <span>Did You Know?</span>
+              {/* Video Player Display Container */}
+              <div className="relative rounded-2xl overflow-hidden bg-black aspect-video sm:aspect-[16/9] shadow-md group">
+                <video
+                  ref={videoRef}
+                  src={activeReel.videoSrc}
+                  poster={activeReel.poster}
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Video Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 pointer-events-none" />
+
+                {/* Top Overlay Badges & Controls */}
+                <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                  <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-amber-300 text-[10px] font-bold border border-amber-400/30 shadow-xs">
+                    {activeReel.badge}
+                  </span>
+
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      onClick={toggleMute}
+                      className="p-2 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-all cursor-pointer border border-white/20"
+                      title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+                    >
+                      {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={toggleVideoPlayback}
+                      className="p-2 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-all cursor-pointer border border-white/20"
+                      title={isPlaying ? 'Pause Reel' : 'Play Reel'}
+                    >
+                      {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed min-h-[60px] transition-all duration-700">
-                  {DINING_FACTS[factIndex]}
-                </p>
-                <div className="flex gap-1 pt-1">
-                  {DINING_FACTS.map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1 rounded-full transition-all duration-500 ${i === factIndex ? 'w-4 bg-sky-400' : 'w-1.5 bg-sky-100'}`}
-                    />
-                  ))}
+
+                {/* Bottom Overlay Dish Information & Direct Add Button */}
+                <div className="absolute bottom-3 left-3 right-3 flex flex-col sm:flex-row sm:items-end justify-between gap-2.5">
+                  <div className="text-white space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
+                      {activeReel.tagline}
+                    </span>
+                    <h4 className="text-sm sm:text-base font-black tracking-tight leading-snug">
+                      {activeReel.name}
+                    </h4>
+                    <p className="text-[11px] text-slate-200 line-clamp-2 max-w-md font-medium">
+                      {activeReel.chefNote}
+                    </p>
+                  </div>
+
+                  {/* Direct Add to Cart Trigger */}
+                  <button
+                    onClick={() => handleAddReelItem(activeReel)}
+                    className="px-4 py-2.5 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all duration-150 shadow-lg flex items-center justify-center space-x-1.5 shrink-0 active:scale-95 cursor-pointer border border-emerald-400"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add to Cart • ₹{activeReel.price}</span>
+                  </button>
                 </div>
+              </div>
+
+              {/* Reel Switcher Buttons */}
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                {GASTRONOMY_REELS.map((reel, idx) => (
+                  <button
+                    key={reel.id}
+                    onClick={() => setActiveReelIdx(idx)}
+                    className={`p-2 rounded-xl text-left border transition-all cursor-pointer ${
+                      idx === activeReelIdx
+                        ? 'bg-emerald-50 border-emerald-400 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <p className="text-[10px] font-bold text-slate-900 truncate">{reel.name}</p>
+                    <p className="text-[10px] font-mono font-black text-[#0C831F]">₹{reel.price}</p>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* === ENGAGEMENT: Quick Add More Items === */}
+            {/* === 3. WHILE YOU WAIT — QUICK ADD SUGGESTIONS === */}
             {latestOrder && ['received', 'preparing'].includes(latestOrder.status) && (
               <div className="bg-white border border-slate-200/90 rounded-2xl p-4 space-y-3 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
                     <ShoppingBag className="w-4 h-4 text-[#0C831F]" />
-                    <span>While You Wait — Add More?</span>
+                    <span>While You Wait — Add More To Table?</span>
                   </div>
                   <button
                     onClick={() => navigate(`/table/${tableId}/menu`)}
-                    className="text-[10px] text-[#0C831F] font-bold flex items-center space-x-0.5 hover:underline"
+                    className="text-[10px] text-[#0C831F] font-bold flex items-center space-x-0.5 hover:underline cursor-pointer"
                   >
                     <span>Browse all</span>
                     <ArrowRight className="w-3 h-3" />
@@ -430,17 +516,17 @@ export const OrderTrackingPage: React.FC = () => {
               </div>
             )}
 
-            {/* === Suggested Dishes Carousel (real menu items) === */}
+            {/* === 4. SUGGESTED DISHES CAROUSEL === */}
             {suggestedItems.length > 0 && (
               <div className="bg-white border border-slate-200/90 rounded-2xl p-4 space-y-3 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span>You Might Also Love</span>
+                    <span>Popular Chef Specialties</span>
                   </div>
                   <button
                     onClick={() => navigate(`/table/${tableId}/menu`)}
-                    className="text-[10px] text-[#0C831F] font-bold flex items-center space-x-0.5 hover:underline"
+                    className="text-[10px] text-[#0C831F] font-bold flex items-center space-x-0.5 hover:underline cursor-pointer"
                   >
                     <span>See all</span>
                     <ArrowRight className="w-3 h-3" />
@@ -476,44 +562,7 @@ export const OrderTrackingPage: React.FC = () => {
               </div>
             )}
 
-            {/* === ENGAGEMENT: Wifi & Comfort Amenities Card === */}
-            <div className="bg-gradient-to-r from-[#0C831F]/5 to-amber-500/5 border border-emerald-200/60 rounded-2xl p-4 shadow-sm">
-              <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-3 flex items-center space-x-2">
-                <Gift className="w-4 h-4 text-[#0C831F]" />
-                <span>While You Dine</span>
-              </h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="text-center space-y-1.5">
-                  <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center mx-auto shadow-sm">
-                    <Wifi className="w-4 h-4 text-sky-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-900">Free WiFi</p>
-                    <p className="text-[9px] text-slate-500">AURA_GUEST</p>
-                  </div>
-                </div>
-                <div className="text-center space-y-1.5">
-                  <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center mx-auto shadow-sm">
-                    <Music2 className="w-4 h-4 text-purple-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-900">Live Music</p>
-                    <p className="text-[9px] text-slate-500">Fridays & Sat</p>
-                  </div>
-                </div>
-                <div className="text-center space-y-1.5">
-                  <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center mx-auto shadow-sm">
-                    <Phone className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-900">Need Help?</p>
-                    <p className="text-[9px] text-slate-500">Call Waiter ↓</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* === Order Items List === */}
+            {/* === 5. ORDER ITEMS BREAKDOWN === */}
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-sm font-black text-slate-900 flex items-center space-x-2">
@@ -573,12 +622,12 @@ export const OrderTrackingPage: React.FC = () => {
               })}
             </div>
 
-            {/* === Cumulative Session Total === */}
+            {/* === 6. CUMULATIVE SESSION TOTAL === */}
             <div className="bg-emerald-50/80 border border-emerald-300 rounded-2xl p-4 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Receipt className="w-4 h-4 text-emerald-800" />
-                  <span className="font-bold text-xs text-emerald-900 uppercase">Table {tableId} Total</span>
+                  <span className="font-bold text-xs text-emerald-900 uppercase">Table {tableId} Cumulative Total</span>
                 </div>
                 <span className="font-mono font-black text-lg text-emerald-900">
                   ₹{grandSessionTotal.toFixed(2)}
@@ -586,21 +635,21 @@ export const OrderTrackingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* === Feedback Teaser === */}
+            {/* === 7. EXPERIENCE FEEDBACK === */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2 shadow-sm">
               <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
                 <Heart className="w-4 h-4 text-rose-500" />
-                <span>Share Your Experience</span>
+                <span>Rate Your Dining Experience</span>
               </div>
               <p className="text-xs text-slate-500">
-                Enjoying your meal? Rate your experience, and your feedback reaches the chef directly.
+                Your instant feedback reaches the executive chef & floor manager live.
               </p>
               <div className="flex space-x-1.5 pt-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
-                    onClick={() => navigate(`/table/${tableId}/menu`)}
-                    className="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 hover:border-amber-400 flex items-center justify-center transition-all cursor-pointer text-lg"
+                    onClick={() => showToast(`Thank you for rating ${star}★! We appreciate your feedback.`, 'success')}
+                    className="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 hover:border-amber-400 flex items-center justify-center transition-all cursor-pointer text-lg active:scale-95"
                   >
                     ⭐
                   </button>
@@ -608,7 +657,7 @@ export const OrderTrackingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* === Add More Items CTA === */}
+            {/* === 8. BIG CTA: ADD MORE DISHES === */}
             <button
               onClick={() => navigate(`/table/${tableId}/menu`)}
               className="w-full py-4 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-sm uppercase tracking-wider transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
@@ -620,9 +669,13 @@ export const OrderTrackingPage: React.FC = () => {
         )}
       </div>
 
+      {/* Floating 1-Tap Water Refill (Directly above Call Waiter) */}
+      <WaterRefillButton tableId={tableId} />
+
+      {/* Floating Call Waiter Button */}
       <CallWaiterButton tableId={tableId} />
-      <HelpBotLauncher tableId={tableId} />
     </div>
   );
 };
+
 export default OrderTrackingPage;

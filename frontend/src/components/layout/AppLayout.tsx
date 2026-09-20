@@ -313,14 +313,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <Activity className="w-3.5 h-3.5 text-theme-primary" />
               <span>{currentTime}</span>
             </div>
-
-            <button
-              onClick={() => navigate('/table/10/menu')}
-              className="px-2.5 sm:px-3 py-1.5 bg-theme-primary-light hover:bg-theme-primary/20 border border-theme-primary/30 text-theme-primary text-xs font-bold rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer"
-            >
-              <Utensils className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Table Menu</span>
-            </button>
           </div>
         </header>
 

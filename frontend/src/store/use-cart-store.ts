@@ -7,7 +7,7 @@ interface CartState {
   items: CartItem[];
   tableId: string | null;
   setTableId: (tableId: string) => void;
-  fetchServerCart: (tableId: string) => Promise<void>;
+  fetchServerCart: (tableId: string, force?: boolean) => Promise<void>;
   syncWithServer: (tableId: string, items: CartItem[]) => Promise<void>;
   addItem: (
     menuItem: MenuItem,
@@ -41,16 +41,28 @@ export const useCartStore = create<CartState>()(
       tableId: null,
 
       setTableId: (tableId: string) => {
+        const currentTableId = get().tableId;
         set({ tableId });
-        get().fetchServerCart(tableId);
+        const isDifferentTable = currentTableId !== null && currentTableId !== tableId;
+        get().fetchServerCart(tableId, isDifferentTable);
       },
 
-      fetchServerCart: async (tableId: string) => {
+      fetchServerCart: async (tableId: string, force = false) => {
         try {
           const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || '1';
           const res = await apiClient.get(`/tables/table-number/${cleanTableNum}/cart`);
           if (res.data && Array.isArray(res.data.data)) {
-            set({ items: res.data.data, tableId });
+            const serverItems = res.data.data;
+            const currentItems = get().items;
+            if (serverItems.length > 0) {
+              set({ items: serverItems, tableId });
+            } else if (currentItems.length > 0 && !force) {
+              // Local cart has items, server is empty: preserve local items & sync to server
+              get().syncWithServer(tableId, currentItems);
+              set({ tableId });
+            } else {
+              set({ items: [], tableId });
+            }
           }
         } catch (e) {
           // Gracefully fallback to local state if server table session is initializing
@@ -91,11 +103,10 @@ export const useCartStore = create<CartState>()(
             ];
           }
 
-          if (state.tableId) {
-            get().syncWithServer(state.tableId, updatedItems);
-          }
+          const targetTableId = state.tableId || '10';
+          get().syncWithServer(targetTableId, updatedItems);
 
-          return { items: updatedItems };
+          return { items: updatedItems, tableId: targetTableId };
         });
       },
 
@@ -105,11 +116,10 @@ export const useCartStore = create<CartState>()(
             (item) => item.menuItem.id !== menuItemId
           );
 
-          if (state.tableId) {
-            get().syncWithServer(state.tableId, updatedItems);
-          }
+          const targetTableId = state.tableId || '10';
+          get().syncWithServer(targetTableId, updatedItems);
 
-          return { items: updatedItems };
+          return { items: updatedItems, tableId: targetTableId };
         });
       },
 
@@ -126,11 +136,10 @@ export const useCartStore = create<CartState>()(
               : item
           );
 
-          if (state.tableId) {
-            get().syncWithServer(state.tableId, updatedItems);
-          }
+          const targetTableId = state.tableId || '10';
+          get().syncWithServer(targetTableId, updatedItems);
 
-          return { items: updatedItems };
+          return { items: updatedItems, tableId: targetTableId };
         });
       },
 
@@ -142,11 +151,10 @@ export const useCartStore = create<CartState>()(
               : item
           );
 
-          if (state.tableId) {
-            get().syncWithServer(state.tableId, updatedItems);
-          }
+          const targetTableId = state.tableId || '10';
+          get().syncWithServer(targetTableId, updatedItems);
 
-          return { items: updatedItems };
+          return { items: updatedItems, tableId: targetTableId };
         });
       },
 
@@ -168,11 +176,10 @@ export const useCartStore = create<CartState>()(
               : item
           );
 
-          if (state.tableId) {
-            get().syncWithServer(state.tableId, updatedItems);
-          }
+          const targetTableId = state.tableId || '10';
+          get().syncWithServer(targetTableId, updatedItems);
 
-          return { items: updatedItems };
+          return { items: updatedItems, tableId: targetTableId };
         });
       },
 

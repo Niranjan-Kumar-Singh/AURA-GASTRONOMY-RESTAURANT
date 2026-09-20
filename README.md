@@ -54,6 +54,31 @@ From a guest's first QR scan to a chef's final ticket mark, waiter dispatch, cas
 
 ## 🆕 What's New — Latest Updates
 
+### ✦ 1-Tap Quick Water Refill & Balanced Floating Action Hub
+- **Instant Water Refill Action**: Added dedicated `WaterRefillButton` floating action trigger allowing diners to alert waitstaff for a water refill with a single tap. Features visual state feedback (`Water Requested ✓`), 30-second cooldown auto-reset, animated status indicators, and audio/toast confirmation.
+- **Harmonized Floating Button Spacing**: Implemented a balanced 16px vertical gap between the **Water Refill** and **Call Waiter** floating buttons across all viewports (mobile and desktop) and across all cart states (both when the floating active cart bar is open or collapsed), eliminating overlapping or attached buttons.
+
+### ✦ 60fps GPU-Accelerated Smooth Header Scroll Dynamics
+- Replaced jittery scroll jump with an accumulated scroll distance listener (`accumulatedDistance >= 25px` downward to collapse, `>= 20px` upward to reveal, `<= 45px` top reset).
+- Engineered a dual-layer hardware-accelerated CSS Grid (`gridTemplateRows: 1fr` <-> `0fr`) and `maxHeight` (`70px` <-> `0px`) transition with `minHeight: 0`, completely eliminating layout jumps and phantom scroll lag.
+
+### ✦ Luxury Faded Dark Recommendation Rails
+- **Chef's Signature Recommendations**: Styled with a rich, faded dark roasted espresso and hazelnut gradient (`from-[#332517]/95 via-[#261d15]/90 to-[#1d1610]/75`) with glowing amber badges and warm card hover borders.
+- **Today's Most Popular Specials**: Styled with a muted cypress and jade faded dark gradient (`from-[#173023]/95 via-[#13241b]/90 to-[#0e1b14]/75`) with emerald flame badges.
+- Elevated visual hierarchy with crisp white cards nestled cleanly against faded dark backdrops for a fine-dining feel.
+
+### ✦ Resilient Table Cart Synchronization & Guest Access
+- **Zero-Loss Cart Store Hydration**: `fetchServerCart` now protects local cart items against accidental blank overwrites (`[]`), automatically re-synchronizing local items back to the table session.
+- **Unblocked Guest Ordering**: Removed strict authentication requirements on adding items, allowing table guests to browse and assemble their cart immediately upon scanning.
+- **Preserved Order Tracking Cart**: Removed destructive mount-time cart clearing on `OrderTrackingPage`, enabling seamless additional dish orders from gastronomy live reels and suggestion carousels.
+
+### ✦ Waiter Dashboard Live Table Cleaning Countdown & Safety Guards
+- **Live 2m 30s Countdown**: Floor grid tiles now display a live countdown timer (`CLEAN (2m 14s)`) with broom icon badge for tables currently in the cleaning cycle.
+- **Strict Transition Guards**: Prevented occupied tables with active dining sessions or unpaid balances from being marked as cleaning until the bill has been settled at Cashier POS.
+
+### ✦ Cashier POS VIP Member Privileges
+- Integrated a dedicated 👑 **VIP Privileged Member** discount tier (15% savings) with custom badge, real-time recalculation, and branded itemized tax receipt prints.
+
 ### ✦ Multi-Quantity Dish Add-On Steppers
 - Upgraded **Dish Detail Modal** with per-item stepper controls (`+` / `-`) for recommended add-ons and pairings.
 - Guests can now easily order multiple units of specific add-ons (e.g. 2× Truffle Garlic Butter, 3× Smoked Chili Dip) with live subtotal math and full cart synchronization.

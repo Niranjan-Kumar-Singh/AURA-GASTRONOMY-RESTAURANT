@@ -54,4 +54,5 @@ export interface TableResponse {
   activeOrderId?: string;
   orderTotal?: number;
   items?: any[];
+  cleaningStartedAt?: string | Date;
 }

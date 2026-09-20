@@ -1,6 +1,6 @@
 import React from 'react';
 import { MenuItem } from '../../types/menu.types';
-import { Sparkles, Plus, Minus, Heart } from 'lucide-react';
+import { Sparkles, Heart, Check, ArrowRight } from 'lucide-react';
 import { useCartStore } from '../../store/use-cart-store';
 import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useToast } from '../feedback/ToastContainer';
@@ -10,6 +10,7 @@ interface RecommendationSectionProps {
   icon?: React.ReactNode;
   items: MenuItem[];
   onItemClick: (item: MenuItem) => void;
+  variant?: 'chef' | 'popular';
 }
 
 export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
@@ -17,8 +18,9 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
   icon = <Sparkles className="w-4 h-4 text-emerald-600" />,
   items,
   onItemClick,
+  variant = 'chef',
 }) => {
-  const { addItem, items: cartItems, updateQuantity } = useCartStore();
+  const { items: cartItems } = useCartStore();
   const { toggleWishlist, isWishlisted } = useWishlistStore();
   const { showToast } = useToast();
 
@@ -29,20 +31,48 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
 
   if (items.length === 0) return null;
 
+  const isChef = variant === 'chef';
+
   return (
     <div className="px-3 sm:px-6 lg:px-8 max-w-[1560px] mx-auto my-3 sm:my-4">
-      <div className="bg-white/90 border border-slate-300 rounded-3xl p-3.5 sm:p-4 shadow-sm space-y-2.5">
+      <div
+        className={`rounded-3xl p-3.5 sm:p-4 shadow-lg space-y-2.5 border transition-all ${
+          isChef
+            ? 'bg-gradient-to-r from-[#332517]/95 via-[#261d15]/90 to-[#1d1610]/75 backdrop-blur-sm border-amber-500/30 shadow-amber-950/15'
+            : 'bg-gradient-to-r from-[#173023]/95 via-[#13241b]/90 to-[#0e1b14]/75 backdrop-blur-sm border-emerald-500/30 shadow-emerald-950/15'
+        }`}
+      >
         {/* Section Header with Accent and Item Count */}
-        <div className="flex items-center justify-between pb-2 border-b border-slate-200/90">
+        <div
+          className={`flex items-center justify-between pb-2 border-b ${
+            isChef ? 'border-amber-500/20' : 'border-emerald-500/20'
+          }`}
+        >
           <div className="flex items-center space-x-2">
-            <span className="p-1 bg-emerald-50 rounded-lg border border-emerald-200/80 shadow-xs flex items-center justify-center">
+            <span
+              className={`p-1.5 rounded-xl border shadow-xs flex items-center justify-center ${
+                isChef
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/35'
+                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/35'
+              }`}
+            >
               {icon}
             </span>
-            <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide">
+            <h3
+              className={`text-xs sm:text-sm font-black uppercase tracking-wide ${
+                isChef ? 'text-amber-100' : 'text-emerald-100'
+              }`}
+            >
               {title}
             </h3>
           </div>
-          <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full border border-slate-300/80">
+          <span
+            className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
+              isChef
+                ? 'bg-amber-500/15 text-amber-200 border-amber-500/30'
+                : 'bg-emerald-500/15 text-emerald-200 border-emerald-500/30'
+            }`}
+          >
             {items.length} specials
           </span>
         </div>
@@ -57,7 +87,11 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
             return (
               <div
                 key={item.id}
-                className="flex-none w-44 sm:w-56 bg-white border border-slate-300 hover:border-[#0C831F] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer shadow-[0_2px_8px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_20px_rgba(12,131,31,0.12)] transition-all duration-200 group relative flex flex-col justify-between hover:-translate-y-1"
+                className={`flex-none w-44 sm:w-56 bg-white border rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition-all duration-200 group relative flex flex-col justify-between hover:-translate-y-1 ${
+                  isChef
+                    ? 'border-amber-500/30 hover:border-amber-400 hover:shadow-[0_8px_24px_rgba(245,158,11,0.2)]'
+                    : 'border-emerald-500/30 hover:border-[#0C831F] hover:shadow-[0_8px_24px_rgba(12,131,31,0.2)]'
+                }`}
                 onClick={() => onItemClick(item)}
               >
                 {/* 1. Top Image Div — Edge to Edge Flush with Border Bottom */}
@@ -142,37 +176,15 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
                     </div>
 
                     {qty > 0 ? (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center space-x-1 bg-[#0C831F] text-white font-bold rounded-lg px-1.5 py-0.5 shadow-sm blinkit-stepper-pop shrink-0"
-                      >
-                        <button
-                          onClick={() => updateQuantity(item.id, qty - 1)}
-                          className="w-6 h-6 hover:bg-black/20 rounded-md flex items-center justify-center transition-colors cursor-pointer active:scale-90"
-                          title="Decrease"
-                        >
-                          <Minus className="w-3 h-3 stroke-[3]" />
-                        </button>
-                        <span className="font-mono text-xs font-black min-w-[14px] text-center">{qty}</span>
-                        <button
-                          onClick={() => addItem(item, 1)}
-                          className="w-6 h-6 hover:bg-black/20 rounded-md flex items-center justify-center transition-colors cursor-pointer active:scale-90"
-                          title="Increase"
-                        >
-                          <Plus className="w-3 h-3 stroke-[3]" />
-                        </button>
+                      <div className="flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg text-[10px] font-bold shadow-2xs shrink-0">
+                        <Check className="w-2.5 h-2.5 text-[#0C831F]" />
+                        <span>({qty})</span>
                       </div>
                     ) : (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addItem(item, 1);
-                        }}
-                        className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-black uppercase transition-all flex items-center space-x-1 bg-c-primary-light hover:bg-[#0C831F] text-[#0C831F] hover:text-white border border-[#0C831F] shadow-sm active:scale-95 cursor-pointer shrink-0"
-                      >
-                        <Plus className="w-3 h-3 stroke-[3]" />
-                        <span>ADD</span>
-                      </button>
+                      <div className="flex items-center space-x-0.5 px-2 py-0.5 bg-slate-100 group-hover:bg-emerald-50 text-slate-700 group-hover:text-[#0C831F] border border-slate-200 group-hover:border-emerald-300 rounded-lg text-[10px] font-bold transition-all shadow-2xs shrink-0">
+                        <span>View</span>
+                        <ArrowRight className="w-2.5 h-2.5 text-slate-400 group-hover:text-[#0C831F] group-hover:translate-x-0.5 transition-transform" />
+                      </div>
                     )}
                   </div>
                 </div>
