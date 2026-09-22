@@ -24,8 +24,10 @@ const adminRoutes = require('./routes/adminRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const { router: loyaltyRoutes } = require('./routes/loyaltyRoutes');
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB (non-blocking initialization)
+connectDB().catch((err) => {
+  console.warn('Initial MongoDB Connection Warning:', err.message);
+});
 
 const app = express();
 
@@ -57,6 +59,30 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // 4. NoSQL Injection Sanitizer across all incoming requests
 app.use(nosqlSanitizer);
+
+// 5. Database Connection Assurance Middleware (crucial for Serverless cold-starts & resilience)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Database connection middleware error:', err.message);
+    if (req.path === '/' || req.path === '/api/health') {
+      return res.status(200).json({
+        status: 'degraded',
+        system: 'AURA Gastronomy Commercial Operating System',
+        database: 'disconnected',
+        message: 'Server is running, but database connection is pending or unavailable.',
+        timestamp: new Date().toISOString()
+      });
+    }
+    return res.status(503).json({
+      success: false,
+      message: 'Database temporarily unavailable. Please verify database connection configuration.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
 
 // 5. Rate Limiting Protection on Sensitive Endpoints
 app.use('/api/auth/register', authRateLimiter);
@@ -99,7 +125,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 let server;
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
   server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT} (accessible on LAN) with Enterprise Security`);
   });
