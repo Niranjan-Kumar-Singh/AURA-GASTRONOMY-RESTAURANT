@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Flame, Clock, CheckCircle2, AlertCircle, RefreshCw, ChefHat, Filter,
   CheckSquare, Square, BellRing, BellOff, Sparkles, Lock, ArrowRight,
-  Activity, Timer, ShieldAlert, Check
+  Activity, Timer, ShieldAlert, Check, Ban, UtensilsCrossed
 } from 'lucide-react';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 import { OrderCancelModal } from '../../components/orders/OrderCancelModal';
+import { OrderItemCancelModal } from '../../components/orders/OrderItemCancelModal';
 
 interface KDSItem {
   name: string;
@@ -14,6 +15,7 @@ interface KDSItem {
   notes?: string;
   status?: string;
   isPrepared?: boolean;
+  cancelReason?: string;
 }
 
 interface KDSTicket {
@@ -25,6 +27,14 @@ interface KDSTicket {
   items: KDSItem[];
 }
 
+interface CancelItemTarget {
+  orderId: string;
+  tableId: string;
+  itemIndex: number;
+  itemName: string;
+  itemQuantity: number;
+}
+
 export const KitchenDisplayPage: React.FC = () => {
   const { showToast } = useToast();
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'received' | 'preparing'>('ALL');
@@ -33,6 +43,7 @@ export const KitchenDisplayPage: React.FC = () => {
   const [nowTimestamp, setNowTimestamp] = useState(Date.now());
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [cancelModalTicket, setCancelModalTicket] = useState<{ id: string; tableId: string } | null>(null);
+  const [cancelItemTarget, setCancelItemTarget] = useState<CancelItemTarget | null>(null);
 
   // Track individual item check state: `${ticketId}-${itemIndex}` -> boolean
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -84,6 +95,7 @@ export const KitchenDisplayPage: React.FC = () => {
           notes: i.notes,
           status: i.status || 'received',
           isPrepared: !!i.isPrepared,
+          cancelReason: i.cancelReason,
         })),
       }));
 
@@ -380,11 +392,15 @@ export const KitchenDisplayPage: React.FC = () => {
               const timerFormatted = formatTimer(elapsedSecs);
               const urgency = getUrgencyConfig(elapsedSecs);
 
-              const checkedCount = ticket.items.filter(
-                (it, idx) => checkedItems[`${ticket.id}-${idx}`] || it.status === 'served' || it.isPrepared
+              const activeItems = ticket.items.filter((it) => it.status !== 'cancelled');
+              const checkedCount = activeItems.filter(
+                (it) => {
+                  const originalIdx = ticket.items.indexOf(it);
+                  return checkedItems[`${ticket.id}-${originalIdx}`] || it.status === 'served' || it.isPrepared;
+                }
               ).length;
-              const totalItems = ticket.items.length;
-              const isAllChecked = checkedCount === totalItems;
+              const totalItems = activeItems.length;
+              const isAllChecked = totalItems > 0 && checkedCount === totalItems;
 
               return (
                 <div
@@ -439,17 +455,50 @@ export const KitchenDisplayPage: React.FC = () => {
                     {/* Item Checklist */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono uppercase tracking-wider px-1">
-                        <span>Items ({totalItems})</span>
+                        <span>
+                          Active Dishes ({totalItems}
+                          {ticket.items.length !== totalItems ? ` • ${ticket.items.length - totalItems} Cancelled` : ''})
+                        </span>
                         <span className={isAllChecked ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                          {checkedCount}/{totalItems} Done
+                          {totalItems === 0 ? 'All 86\'d' : `${checkedCount}/${totalItems} Done`}
                         </span>
                       </div>
 
                       <div className="space-y-1.5">
                         {ticket.items.map((item, idx) => {
                           const itemKey = `${ticket.id}-${idx}`;
+                          const isCancelled = item.status === 'cancelled';
                           const isServed = item.status === 'served';
                           const isDone = isServed || item.isPrepared || !!checkedItems[itemKey];
+
+                          if (isCancelled) {
+                            return (
+                              <div
+                                key={idx}
+                                className="p-3 rounded-xl border border-rose-500/30 bg-rose-950/20 text-rose-300/80 flex items-start justify-between space-x-2 select-none"
+                              >
+                                <div className="space-y-1 flex-1 min-w-0">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="w-5 h-5 bg-rose-500/20 text-rose-400 text-xs font-mono font-bold rounded flex items-center justify-center flex-shrink-0 border border-rose-500/40">
+                                      {item.quantity}x
+                                    </span>
+                                    <span className="font-bold text-xs leading-tight truncate line-through text-rose-300/70">
+                                      {item.name}
+                                    </span>
+                                    <span className="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-300 font-mono text-[9px] font-bold shrink-0 uppercase">
+                                      86'D / CANCELLED
+                                    </span>
+                                  </div>
+                                  {item.cancelReason && (
+                                    <p className="text-[10px] text-rose-400/90 font-medium italic pl-7">
+                                      Reason: {item.cancelReason}
+                                    </p>
+                                  )}
+                                </div>
+                                <Ban className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
+                              </div>
+                            );
+                          }
 
                           return (
                             <div
@@ -484,17 +533,40 @@ export const KitchenDisplayPage: React.FC = () => {
                                 )}
                               </div>
 
-                              {isServed ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                              ) : ticket.status !== 'received' ? (
-                                <div className="mt-0.5 flex-shrink-0">
-                                  {isDone ? (
-                                    <CheckSquare className="w-4 h-4 text-emerald-400" />
-                                  ) : (
-                                    <Square className="w-4 h-4 text-slate-600" />
-                                  )}
-                                </div>
-                              ) : null}
+                              <div className="flex items-center space-x-2 shrink-0">
+                                {/* Chef 86 / Cancel Dish Action */}
+                                {!isServed && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCancelItemTarget({
+                                        orderId: ticket.id,
+                                        tableId: ticket.tableId,
+                                        itemIndex: idx,
+                                        itemName: item.name,
+                                        itemQuantity: item.quantity,
+                                      });
+                                    }}
+                                    title="Cancel / 86 this dish"
+                                    className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer"
+                                  >
+                                    <Ban className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+
+                                {isServed ? (
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                                ) : ticket.status !== 'received' ? (
+                                  <div className="mt-0.5 flex-shrink-0">
+                                    {isDone ? (
+                                      <CheckSquare className="w-4 h-4 text-emerald-400" />
+                                    ) : (
+                                      <Square className="w-4 h-4 text-slate-600" />
+                                    )}
+                                  </div>
+                                ) : null}
+                              </div>
                             </div>
                           );
                         })}
@@ -567,6 +639,21 @@ export const KitchenDisplayPage: React.FC = () => {
           tableNumber={cancelModalTicket.tableId}
           cancelledBy="Head Chef"
           onClose={() => setCancelModalTicket(null)}
+          onSuccess={() => fetchActiveOrders(true)}
+        />
+      )}
+
+      {/* Chef Item Cancel Modal */}
+      {cancelItemTarget && (
+        <OrderItemCancelModal
+          isOpen={!!cancelItemTarget}
+          orderId={cancelItemTarget.orderId}
+          tableNumber={cancelItemTarget.tableId}
+          itemIndex={cancelItemTarget.itemIndex}
+          itemName={cancelItemTarget.itemName}
+          itemQuantity={cancelItemTarget.itemQuantity}
+          cancelledBy="Executive Chef"
+          onClose={() => setCancelItemTarget(null)}
           onSuccess={() => fetchActiveOrders(true)}
         />
       )}

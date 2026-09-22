@@ -268,6 +268,12 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                   <span>Subtotal</span>
                   <span>₹{(selectedReceipt.subtotal || 0).toLocaleString('en-IN')}</span>
                 </div>
+                {selectedReceipt.pointsDiscount && selectedReceipt.pointsDiscount > 0 ? (
+                  <div className="flex justify-between text-[#0C831F] font-bold">
+                    <span>Points Discount ({selectedReceipt.pointsRedeemed || 0} PTS)</span>
+                    <span className="font-mono">-₹{(selectedReceipt.pointsDiscount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between text-slate-600">
                   <span>GST Tax</span>
                   <span>₹{(selectedReceipt.tax || 0).toLocaleString('en-IN')}</span>
@@ -278,6 +284,12 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                     ₹{(selectedReceipt.total || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
+                {selectedReceipt.pointsEarned && selectedReceipt.pointsEarned > 0 ? (
+                  <div className="flex justify-between text-[11px] text-amber-800 bg-amber-50 border border-amber-200 p-1.5 rounded-lg font-bold font-sans mt-1">
+                    <span>AURA Points Earned:</span>
+                    <span className="font-mono font-black">+{selectedReceipt.pointsEarned} PTS</span>
+                  </div>
+                ) : null}
 
                 {selectedReceipt.refundAmount !== undefined && selectedReceipt.refundAmount > 0 && (
                   <div className="pt-2 border-t border-dashed border-slate-300 space-y-1 font-sans">

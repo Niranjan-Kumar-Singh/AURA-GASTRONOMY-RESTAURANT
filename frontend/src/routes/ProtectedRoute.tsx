@@ -14,7 +14,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && allowedRoles.length > 0 && (!user.role || !allowedRoles.includes(user.role))) {
+  const normalizedUserRole = user.role
+    ? (() => {
+        const upper = String(user.role).toUpperCase();
+        if (upper === 'KITCHEN') return 'CHEF';
+        if (upper === 'OWNER') return 'RESTAURANT_OWNER';
+        return upper;
+      })()
+    : null;
+
+  const isAuthorized = !allowedRoles || allowedRoles.length === 0 || (
+    normalizedUserRole && allowedRoles.some((r) => {
+      const upperRole = String(r).toUpperCase();
+      return upperRole === normalizedUserRole ||
+        (upperRole === 'ADMIN' && (normalizedUserRole === 'RESTAURANT_OWNER' || normalizedUserRole === 'SUPER_ADMIN'));
+    })
+  );
+
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-aura-obsidian text-aura-ivory flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-md space-y-4">

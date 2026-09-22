@@ -2,8 +2,24 @@ const express = require('express');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
+const { optionalAuth } = require('../middleware/authMiddleware');
 
 const router = express.Router();
+
+// Apply optionalAuth to parse staff tokens
+router.use(optionalAuth);
+
+// Middleware: In production, verify user is staff or manager
+const requireStaffAuth = (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    if (!req.user || req.user.role === 'CUSTOMER') {
+      return res.status(403).json({ success: false, message: 'Forbidden: Access restricted to authorized restaurant staff.' });
+    }
+  }
+  next();
+};
+
+router.use(requireStaffAuth);
 
 router.get('/metrics', async (req, res) => {
   try {

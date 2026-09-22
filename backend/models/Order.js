@@ -8,10 +8,13 @@ const orderItemSchema = new mongoose.Schema({
   notes: { type: String },
   status: {
     type: String,
-    enum: ['received', 'preparing', 'ready', 'served'],
+    enum: ['received', 'preparing', 'ready', 'served', 'cancelled'],
     default: 'received'
   },
   isPrepared: { type: Boolean, default: false },
+  cancelReason: { type: String },
+  cancelledAt: { type: Date },
+  cancelledBy: { type: String },
   customizations: [{
     groupId: String,
     groupTitle: String,
@@ -35,6 +38,10 @@ const orderSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true },
   tax: { type: Number, required: true },
   discount: { type: Number, default: 0 },
+  pointsRedeemed: { type: Number, default: 0 },
+  pointsDiscount: { type: Number, default: 0 },
+  pointsEarned: { type: Number, default: 0 },
+  pointsCredited: { type: Boolean, default: false },
   total: { type: Number, required: true },
   appliedCoupon: { type: String },
   paymentStatus: {
@@ -73,5 +80,11 @@ const orderSchema = new mongoose.Schema({
   cancelledAt: { type: Date },
   cancelledBy: { type: String }
 }, { timestamps: true });
+
+// Production Performance Compound Indexes
+orderSchema.index({ tableId: 1, paymentStatus: 1 });
+orderSchema.index({ status: 1, paymentStatus: 1 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ customerPhone: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);

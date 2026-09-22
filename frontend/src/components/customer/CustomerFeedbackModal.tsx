@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Star, X, MessageSquare, ExternalLink, CheckCircle2, Heart, Award } from 'lucide-react';
+import { Star, X, MessageSquare, ExternalLink, CheckCircle2, Heart, Award, Sparkles } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useBackHandler } from '../../hooks/useBackHandler';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useAuthStore } from '../../store/use-auth-store';
+import { loyaltyService } from '../../services/loyalty.service';
 
 interface CustomerFeedbackModalProps {
   isOpen: boolean;
@@ -18,23 +20,52 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
   useBodyScrollLock(isOpen);
   useBackHandler(isOpen, onClose);
   const { showToast } = useToast();
+  const { user } = useAuthStore();
   const [rating, setRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [feedbackText, setFeedbackText] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [bonusEarned, setBonusEarned] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    showToast('Thank you for your feedback!', 'success');
+    setIsSubmitting(true);
+    try {
+      if (user?.phone) {
+        const res = await loyaltyService.claimFeedbackBonus({
+          phone: user.phone,
+          orderId,
+          rating,
+          feedback: feedbackText
+        }).catch(() => null);
+
+        if (res?.success) {
+          setBonusEarned(50);
+          useAuthStore.getState().updateUser({
+            ...user,
+            loyaltyPoints: res.data.loyaltyPoints,
+            loyaltyTier: res.data.loyaltyTier
+          });
+          showToast(res.message || '🎉 +50 AURA Points added to your wallet!', 'success');
+        } else {
+          showToast('Thank you for rating your dining experience!', 'success');
+        }
+      } else {
+        showToast('Thank you for your feedback! Register to earn points on reviews.', 'info');
+      }
+    } finally {
+      setIsSubmitted(true);
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoogleReview = () => {
     // Open Google Review Link in a new tab
     window.open('https://search.google.com/local/writereview?placeid=ChIJN1t_tMoWrjsR00000000000', '_blank');
-    showToast('+100 AURA Loyalty Points added to your account!', 'success');
+    showToast('Thank you! Our concierge will verify your review for bonus points.', 'success');
   };
 
   return (
@@ -147,6 +178,13 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
               <h3 className="font-extrabold text-2xl text-slate-900">Thank You!</h3>
               <p className="text-xs text-slate-500">Your review has been recorded by AURA Management.</p>
             </div>
+
+            {bonusEarned > 0 && (
+              <div className="p-3 bg-gradient-to-r from-amber-50 via-emerald-50 to-amber-50 border border-amber-300 rounded-2xl flex items-center justify-center space-x-2 text-amber-950 font-bold text-xs shadow-sm">
+                <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" />
+                <span>+{bonusEarned} AURA Club Points Credited to Wallet!</span>
+              </div>
+            )}
 
             {/* Google Review Trigger for 4+ Star Ratings */}
             {rating >= 4 && (

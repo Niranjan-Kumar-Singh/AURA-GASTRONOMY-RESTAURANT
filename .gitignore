@@ -21,9 +21,10 @@ target/
 *.war
 *.class
 
-# Maven / Java legacy tools
-backend/tools/
-tools/
+# Legacy tools
+/tools/
+backend/tools/*
+!backend/tools/test_*.js
 
 # Environment & Local Secrets (ALLOW *.env.example)
 .env

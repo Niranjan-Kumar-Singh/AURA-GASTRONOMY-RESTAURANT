@@ -87,12 +87,20 @@ router.get('/menu-items', async (req, res) => {
     const { categoryId, search } = req.query;
     let query = {};
     
-    if (categoryId) query.categoryId = Number(categoryId);
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
+    if (categoryId && !isNaN(Number(categoryId))) {
+      query.categoryId = Number(categoryId);
+    }
+    
+    if (search && typeof search === 'string') {
+      const trimmedSearch = search.trim();
+      if (trimmedSearch.length > 0) {
+        // Escape special regex characters to prevent ReDoS & syntax crashes
+        const escapedSearch = trimmedSearch.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        query.$or = [
+          { name: { $regex: escapedSearch, $options: 'i' } },
+          { description: { $regex: escapedSearch, $options: 'i' } }
+        ];
+      }
     }
 
     const items = await MenuItem.find(query).sort({ id: 1 });

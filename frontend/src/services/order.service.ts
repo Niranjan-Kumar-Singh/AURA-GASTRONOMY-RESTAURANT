@@ -18,6 +18,9 @@ export interface OrderPayload {
   total: number;
   appliedCoupon?: string;
   sessionId?: string;
+  pointsRedeemed?: number;
+  pointsDiscount?: number;
+  pointsEarned?: number;
 }
 
 export const orderService = {
@@ -53,6 +56,11 @@ export const orderService = {
 
   async checkOrderItem(orderId: string, itemIndex: number, isPrepared: boolean) {
     const response = await apiClient.put(`/orders/${orderId}/items/check`, { itemIndex, isPrepared });
+    return response.data;
+  },
+
+  async cancelOrderItem(orderId: string, itemIndex: number, reason?: string, cancelledBy?: string) {
+    const response = await apiClient.put(`/orders/${orderId}/items/${itemIndex}/cancel`, { reason, cancelledBy });
     return response.data;
   },
 

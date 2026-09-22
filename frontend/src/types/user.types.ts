@@ -16,6 +16,9 @@ export interface User {
   status?: string;
   role?: Role;
   isActive?: boolean;
+  loyaltyPoints?: number;
+  lifetimePoints?: number;
+  loyaltyTier?: 'STANDARD' | 'SILVER' | 'GOLD' | 'PLATINUM' | string;
 }
 
 export interface AuthResponse {

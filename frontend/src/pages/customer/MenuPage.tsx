@@ -22,6 +22,7 @@ import { OffersDrawer } from '../../components/customer/OffersDrawer';
 import { GalleryModal } from '../../components/customer/GalleryModal';
 import { FaqModal } from '../../components/customer/FaqModal';
 import { CustomerFeedbackModal } from '../../components/customer/CustomerFeedbackModal';
+import { LoyaltyPointsModal } from '../../components/customer/LoyaltyPointsModal';
 import { useCartStore } from '../../store/use-cart-store';
 import { useOrderStore } from '../../store/use-order-store';
 import { useAuthStore } from '../../store/use-auth-store';
@@ -54,6 +55,7 @@ export const MenuPage: React.FC = () => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
 
   // Dynamic Scroll Direction Header Visibility (hides on scroll down, shows on scroll up)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -605,6 +607,13 @@ export const MenuPage: React.FC = () => {
         onOpenGallery={() => setIsGalleryOpen(true)}
         onOpenFaq={() => setIsFaqOpen(true)}
         onOpenFeedback={() => setIsFeedbackOpen(true)}
+        onOpenLoyalty={() => setIsLoyaltyOpen(true)}
+      />
+
+      <LoyaltyPointsModal
+        isOpen={isLoyaltyOpen}
+        onClose={() => setIsLoyaltyOpen(false)}
+        onOpenAuth={() => setIsAuthOpen(true)}
       />
 
       <CustomerAuthModal

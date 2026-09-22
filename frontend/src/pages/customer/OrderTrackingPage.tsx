@@ -4,16 +4,18 @@ import {
   Utensils, CheckCircle2, Clock, ArrowLeft, Plus, Minus, ChefHat, ShoppingBag, Receipt,
   Sparkles, Zap, Star, Coffee, Heart, MessageCircle, Flame,
   ArrowRight, Wifi, Play, Pause, Volume2, VolumeX, Eye, FlameKindling,
-  ChevronLeft, ChevronRight, Check
+  ChevronLeft, ChevronRight, Check, Award
 } from 'lucide-react';
 import { CallWaiterButton } from '../../components/customer/CallWaiterButton';
 import { WaterRefillButton } from '../../components/customer/WaterRefillButton';
 import { DishDetailModal } from '../../components/menu/DishDetailModal';
 import { CartDrawer } from '../../components/cart/CartDrawer';
 import { useCartStore } from '../../store/use-cart-store';
+import { useAuthStore } from '../../store/use-auth-store';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 import { menuService } from '../../services/menu.service';
+import { loyaltyService } from '../../services/loyalty.service';
 import { MenuItem } from '../../types/menu.types';
 
 interface OrderItem {
@@ -21,6 +23,8 @@ interface OrderItem {
   quantity: number;
   price: number;
   notes?: string;
+  status?: string;
+  cancelReason?: string;
 }
 
 interface OrderData {
@@ -33,6 +37,9 @@ interface OrderData {
   subtotal: number;
   tax: number;
   discount: number;
+  pointsRedeemed?: number;
+  pointsDiscount?: number;
+  pointsEarned?: number;
   total: number;
   status: 'received' | 'preparing' | 'ready' | 'completed' | 'served' | 'cancelled';
   paymentStatus?: string;
@@ -944,22 +951,47 @@ export const OrderTrackingPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2 divide-y divide-slate-100">
-                      {ord.items.map((it, i) => (
-                        <div key={i} className="pt-1.5 flex items-center justify-between text-xs">
-                          <div>
-                            <p className="font-semibold text-slate-900">{it.quantity}x {it.name}</p>
-                            {it.notes && <p className="text-[10px] text-emerald-700 italic">Note: {it.notes}</p>}
+                      {ord.items.map((it, i) => {
+                        const isCancelled = it.status === 'cancelled';
+                        return (
+                          <div key={i} className={`pt-1.5 flex items-start justify-between text-xs ${isCancelled ? 'opacity-70' : ''}`}>
+                            <div className="space-y-0.5">
+                              <div className="flex items-center space-x-1.5">
+                                <p className={`font-semibold ${isCancelled ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+                                  {it.quantity}x {it.name}
+                                </p>
+                                {isCancelled && (
+                                  <span className="px-1.5 py-0.2 bg-rose-100 border border-rose-300 text-rose-700 text-[9px] font-bold rounded">
+                                    Cancelled by Kitchen
+                                  </span>
+                                )}
+                              </div>
+                              {it.notes && <p className="text-[10px] text-emerald-700 italic">Note: {it.notes}</p>}
+                              {isCancelled && (
+                                <p className="text-[10px] text-rose-600 font-medium">
+                                  {it.cancelReason || "Item 86'd / out of ingredients"}
+                                </p>
+                              )}
+                            </div>
+                            <span className={`font-mono font-bold ${isCancelled ? 'line-through text-rose-400' : 'text-slate-900'}`}>
+                              ₹{(it.price * it.quantity).toFixed(2)}
+                            </span>
                           </div>
-                          <span className="font-mono text-slate-900 font-bold">
-                            ₹{(it.price * it.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
-                    <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Order Total</span>
-                      <span className="font-mono font-bold text-slate-900">₹{ord.total ? ord.total.toFixed(2) : '0.00'}</span>
+                    <div className="border-t border-slate-100 pt-2 space-y-1 text-xs">
+                      {ord.pointsDiscount && ord.pointsDiscount > 0 ? (
+                        <div className="flex items-center justify-between text-[#0C831F] font-bold">
+                          <span>Points Discount ({ord.pointsRedeemed} PTS)</span>
+                          <span className="font-mono">-₹{ord.pointsDiscount.toFixed(2)}</span>
+                        </div>
+                      ) : null}
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Order Total</span>
+                        <span className="font-mono font-bold text-slate-900">₹{ord.total ? ord.total.toFixed(2) : '0.00'}</span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -977,22 +1009,60 @@ export const OrderTrackingPage: React.FC = () => {
                   ₹{grandSessionTotal.toFixed(2)}
                 </span>
               </div>
+              <div className="pt-2 border-t border-emerald-200/80 flex items-center justify-between text-xs text-emerald-800">
+                <span className="flex items-center gap-1 font-bold">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  AURA Points you'll earn upon payment:
+                </span>
+                <span className="font-mono font-black text-sm text-[#0C831F]">
+                  +{Math.floor(grandSessionTotal / 10)} PTS
+                </span>
+              </div>
             </div>
 
             {/* === 7. EXPERIENCE FEEDBACK === */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2 shadow-sm">
-              <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
-                <Heart className="w-4 h-4 text-rose-500" />
-                <span>Rate Your Dining Experience</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                  <span>Rate Your Dining Experience</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-900 rounded-full border border-amber-300">
+                  +50 PTS REWARD
+                </span>
               </div>
               <p className="text-xs text-slate-500">
-                Your instant feedback reaches the executive chef & floor manager live.
+                Tap a star to rate — instant +50 AURA Points credited to your member wallet!
               </p>
               <div className="flex space-x-1.5 pt-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
-                    onClick={() => showToast(`Thank you for rating ${star}★! We appreciate your feedback.`, 'success')}
+                    onClick={async () => {
+                      const user = useAuthStore.getState().user;
+                      if (user?.phone) {
+                        try {
+                          const res = await loyaltyService.claimFeedbackBonus({
+                            phone: user.phone,
+                            orderId: latestOrder?.orderId,
+                            rating: star,
+                            feedback: `Rated ${star}★ from Order Tracker`
+                          });
+                          if (res?.success) {
+                            useAuthStore.getState().updateUser({
+                              ...user,
+                              loyaltyPoints: res.data.loyaltyPoints,
+                              loyaltyTier: res.data.loyaltyTier
+                            });
+                            showToast(`🎉 +50 AURA Points added to your wallet! Thank you for rating ${star}★!`, 'success');
+                            return;
+                          }
+                        } catch (e) {
+                          // Handled below
+                        }
+                      }
+                      showToast(`Thank you for rating ${star}★! We appreciate your feedback.`, 'success');
+                    }}
                     className="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 hover:border-amber-400 flex items-center justify-center transition-all cursor-pointer text-lg active:scale-95"
                   >
                     ⭐

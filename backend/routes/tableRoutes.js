@@ -8,13 +8,19 @@ const router = express.Router();
 // Helper to generate unique session ID
 const generateSessionId = () => `SESS-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-// Seed a table for testing if it doesn't exist (temporary utility)
+// Seed a table for testing if it doesn't exist (strictly bounded to tables 1-30)
 router.post('/seed/:tableNumber', async (req, res) => {
   try {
-    let table = await Table.findOne({ tableNumber: req.params.tableNumber });
+    const num = parseInt(req.params.tableNumber, 10);
+    if (isNaN(num) || num < 1 || num > 30) {
+      return res.status(400).json({ success: false, message: 'Invalid table number. Must be between 1 and 30.' });
+    }
+
+    let table = await Table.findOne({ tableNumber: String(num) });
     if (!table) {
       table = await Table.create({
-        tableNumber: req.params.tableNumber,
+        tableNumber: String(num),
+        capacity: num % 4 === 0 ? 6 : num % 2 === 0 ? 4 : 2,
         qrToken: crypto.randomBytes(16).toString('hex'),
       });
     }
@@ -24,14 +30,21 @@ router.post('/seed/:tableNumber', async (req, res) => {
   }
 });
 
-// DEV MODE ONLY: Seed and return session without checking token
+// DEV MODE ONLY: Seed and return session without checking token (bounded to tables 1-30)
 router.post('/dev-seed', async (req, res) => {
   try {
     const { tableNumber, userId } = req.body;
-    let table = await Table.findOne({ tableNumber });
+    const num = parseInt(tableNumber, 10);
+    if (isNaN(num) || num < 1 || num > 30) {
+      return res.status(400).json({ success: false, message: 'Invalid table number. Must be between 1 and 30.' });
+    }
+
+    const tableNumStr = String(num);
+    let table = await Table.findOne({ tableNumber: tableNumStr });
     if (!table) {
       table = await Table.create({
-        tableNumber,
+        tableNumber: tableNumStr,
+        capacity: num % 4 === 0 ? 6 : num % 2 === 0 ? 4 : 2,
         qrToken: crypto.randomBytes(16).toString('hex'),
       });
     }
@@ -45,11 +58,11 @@ router.post('/dev-seed', async (req, res) => {
         users: userId ? [userId] : [],
       });
       table.status = 'occupied';
-      await table.save();
+      await table.save().catch(() => {});
     } else {
       if (userId && !session.users.some(u => u._id.toString() === userId || u.toString() === userId)) {
         session.users.push(userId);
-        await session.save();
+        await session.save().catch(() => {});
       }
     }
 
@@ -128,7 +141,7 @@ router.get('/', async (req, res) => {
             // Auto-heal table status to 'occupied' if active unpaid orders exist!
             if (table.status === 'available') {
               table.status = 'occupied';
-              await table.save();
+              await table.save().catch(() => {});
             }
           }
         }

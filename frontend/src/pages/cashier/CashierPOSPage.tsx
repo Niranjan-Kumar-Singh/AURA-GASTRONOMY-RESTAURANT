@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, ShieldCheck, RefreshCw, X, Building2, Check, Search, Phone, FileText, Eye, RotateCcw } from 'lucide-react';
+import { CreditCard, QrCode, DollarSign, Receipt, Printer, CheckCircle, Split, ShieldCheck, RefreshCw, X, Building2, Check, Search, Phone, FileText, Eye, RotateCcw, Award, Sparkles, Gift } from 'lucide-react';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
+import { loyaltyService } from '../../services/loyalty.service';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { OrderRefundModal } from '../../components/orders/OrderRefundModal';
 
@@ -24,6 +25,9 @@ interface POSBill {
   subtotal: number;
   discountPercent?: number;
   discountAmount?: number;
+  pointsRedeemed?: number;
+  pointsDiscount?: number;
+  pointsEarned?: number;
   cgst: number;
   sgst: number;
   total: number;
@@ -70,6 +74,15 @@ export const CashierPOSPage: React.FC = () => {
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [cashTendered, setCashTendered] = useState<string>('');
   const [customerMobileInput, setCustomerMobileInput] = useState<string>('');
+
+  // Customer Loyalty Tracking State
+  const [customerLoyalty, setCustomerLoyalty] = useState<{
+    phone: string;
+    points: number;
+    tier: string;
+    cashValue: number;
+  } | null>(null);
+  const [isGrantingReward, setIsGrantingReward] = useState(false);
 
   // Persistent Settlement Map & Invoice Modal
   const [settledBillsMap, setSettledBillsMap] = useState<Record<number, POSBill>>(() => getStoredSettledBills());
@@ -191,6 +204,9 @@ export const CashierPOSPage: React.FC = () => {
               { name: 'AURA Gastronomy Chef Special', qty: 2, price: 2400 },
             ],
             subtotal,
+            pointsRedeemed: latestOrder?.pointsRedeemed || 0,
+            pointsDiscount: latestOrder?.pointsDiscount || 0,
+            pointsEarned: latestOrder?.pointsEarned || 0,
             cgst,
             sgst,
             total,
@@ -240,6 +256,9 @@ export const CashierPOSPage: React.FC = () => {
               customerMobile: dbOrd.customerPhone || '',
               items: itemsList,
               subtotal,
+              pointsRedeemed: dbOrd.pointsRedeemed || 0,
+              pointsDiscount: dbOrd.pointsDiscount || 0,
+              pointsEarned: dbOrd.pointsEarned || 0,
               cgst,
               sgst,
               total,
@@ -312,7 +331,7 @@ export const CashierPOSPage: React.FC = () => {
 
   // Derived Filtered List for Cashier POS Queue
   const filteredBillsList = bills.filter((b) => {
-    const isSettled = b.status === 'settled' || !!settledBillsMap[b.tableNumber];
+    const isSettled = b.status === 'settled';
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
@@ -345,10 +364,61 @@ export const CashierPOSPage: React.FC = () => {
   // Strict Subtotal calculation from items list
   const rawSubtotal = currentBill ? currentBill.items.reduce((sum, item) => sum + (item.qty * item.price), 0) : 0;
   const discountAmount = Math.round(rawSubtotal * (discountPercent / 100));
-  const netSubtotal = Math.max(0, rawSubtotal - discountAmount);
+  const pointsDiscount = currentBill?.pointsDiscount || 0;
+  const netSubtotal = Math.max(0, rawSubtotal - discountAmount - pointsDiscount);
   const netCgst = Math.round(netSubtotal * 0.025);
   const netSgst = Math.round(netSubtotal * 0.025);
   const finalGrandTotal = netSubtotal + netCgst + netSgst;
+
+  // Synchronize customer loyalty balance when currentBill changes or customerMobileInput changes
+  useEffect(() => {
+    const rawMobile = customerMobileInput || currentBill?.customerMobile;
+    const cleanPhone = String(rawMobile || '').trim();
+    if (cleanPhone && cleanPhone.length >= 10) {
+      loyaltyService.getLoyaltyBalance(cleanPhone)
+        .then((res) => {
+          setCustomerLoyalty({
+            phone: cleanPhone,
+            points: res.loyaltyPoints || 0,
+            tier: res.loyaltyTier || 'STANDARD',
+            cashValue: res.cashValue || 0,
+          });
+        })
+        .catch(() => setCustomerLoyalty(null));
+    } else {
+      setCustomerLoyalty(null);
+    }
+  }, [customerMobileInput, currentBill?.customerMobile]);
+
+  const handleQuickGrantReward = async (pts: number, reason: string) => {
+    const phone = customerLoyalty?.phone || customerMobileInput || currentBill?.customerMobile;
+    if (!phone) {
+      showToast('Please enter customer mobile number first', 'error');
+      return;
+    }
+    setIsGrantingReward(true);
+    try {
+      const res = await loyaltyService.adjustPoints({
+        phone,
+        points: pts,
+        reason,
+        adjustedBy: 'Cashier POS'
+      });
+      if (res?.success) {
+        showToast(`🎉 Granted +${pts} PTS to ${phone}!`, 'success');
+        setCustomerLoyalty(prev => prev ? {
+          ...prev,
+          points: res.data.loyaltyPoints,
+          tier: res.data.loyaltyTier,
+          cashValue: (res.data.loyaltyPoints || 0) * 0.5
+        } : null);
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to adjust points', 'error');
+    } finally {
+      setIsGrantingReward(false);
+    }
+  };
 
   const perPersonTotal = Math.round(finalGrandTotal / Math.max(1, splitCount));
   const tenderedVal = parseFloat(cashTendered) || 0;
@@ -710,6 +780,51 @@ export const CashierPOSPage: React.FC = () => {
                         onChange={(e) => setCustomerMobileInput(e.target.value)}
                         className="w-full p-2.5 bg-[#0A0D15] border border-slate-800 rounded-xl text-xs text-white font-mono focus:border-purple-500 outline-none placeholder:text-slate-600"
                       />
+
+                      {/* Customer Loyalty Profile Card & Quick Reward */}
+                      {customerLoyalty && (
+                        <div className="p-3 bg-gradient-to-r from-amber-950/40 via-[#0A0D15] to-emerald-950/30 border border-amber-500/30 rounded-xl space-y-2 mt-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center space-x-1.5">
+                              <Award className="w-4 h-4 text-amber-400" />
+                              <span className="font-bold text-white uppercase text-[11px] tracking-wider">AURA Rewards Member</span>
+                            </div>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold border border-amber-400/40">
+                              {customerLoyalty.tier}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between font-mono text-xs">
+                            <span className="text-slate-400">Available Wallet Balance:</span>
+                            <span className="font-bold text-amber-400">
+                              {customerLoyalty.points} PTS (≈ ₹{customerLoyalty.cashValue.toFixed(0)})
+                            </span>
+                          </div>
+
+                          {/* Cashier Quick Reward Action */}
+                          <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                            <span className="text-[10px] text-slate-400 font-mono">Goodwill Bonus:</span>
+                            <div className="flex items-center space-x-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleQuickGrantReward(50, 'Cashier Dining Courtesy Bonus (+50 PTS)')}
+                                disabled={isGrantingReward}
+                                className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer active:scale-95"
+                              >
+                                +50 PTS
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleQuickGrantReward(100, 'VIP Dining Goodwill Bonus (+100 PTS)')}
+                                disabled={isGrantingReward}
+                                className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer active:scale-95"
+                              >
+                                +100 PTS
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -931,6 +1046,13 @@ export const CashierPOSPage: React.FC = () => {
                           </div>
                         )}
 
+                        {pointsDiscount > 0 && (
+                          <div className="flex justify-between text-[#0C831F]">
+                            <span>AURA Points Discount ({currentBill.pointsRedeemed || 0} PTS)</span>
+                            <span>- ₹{pointsDiscount.toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
+
                         <div className="flex justify-between text-slate-400">
                           <span>CGST (2.5%)</span>
                           <span>₹{netCgst.toLocaleString('en-IN')}</span>
@@ -945,6 +1067,16 @@ export const CashierPOSPage: React.FC = () => {
                           <span>Net Total Payable</span>
                           <span className="font-mono text-amber-400 text-lg font-black">
                             ₹{finalGrandTotal.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg text-[11px] text-amber-300">
+                          <span className="flex items-center gap-1 font-bold">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Loyalty Points to Credit:</span>
+                          </span>
+                          <span className="font-mono font-black text-amber-400">
+                            +{Math.floor(finalGrandTotal / 10)} PTS
                           </span>
                         </div>
                       </div>
@@ -1314,6 +1446,12 @@ export const CashierPOSPage: React.FC = () => {
                   <span>- ₹{invoiceBill.discountAmount.toLocaleString('en-IN')}</span>
                 </div>
               )}
+              {invoiceBill.pointsDiscount !== undefined && invoiceBill.pointsDiscount > 0 && (
+                <div className="flex justify-between text-[#0C831F] font-bold">
+                  <span>AURA Points Discount ({invoiceBill.pointsRedeemed || 0} PTS)</span>
+                  <span>- ₹{invoiceBill.pointsDiscount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-600">
                 <span>CGST (2.5%)</span>
                 <span>₹{invoiceBill.cgst.toLocaleString('en-IN')}</span>
@@ -1328,6 +1466,12 @@ export const CashierPOSPage: React.FC = () => {
                   ₹{invoiceBill.total.toLocaleString('en-IN')}
                 </span>
               </div>
+              {invoiceBill.paymentStatus !== 'REFUNDED' && (
+                <div className="flex justify-between text-[11px] font-bold text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-1">
+                  <span>AURA Club Points Credited:</span>
+                  <span className="font-mono font-black">+{invoiceBill.pointsEarned || Math.floor(invoiceBill.total / 10)} PTS</span>
+                </div>
+              )}
 
               {/* Refund Audit Section if applicable */}
               {invoiceBill.refundAmount !== undefined && invoiceBill.refundAmount > 0 && (

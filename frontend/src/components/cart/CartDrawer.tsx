@@ -5,7 +5,7 @@ import { orderService } from '../../services/order.service';
 import { Coupon, MenuItem } from '../../types/menu.types';
 import { OrderConfirmationModal } from './OrderConfirmationModal';
 import { DishDetailModal } from '../menu/DishDetailModal';
-import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2, Sparkles, Gift, Zap, Flame, Leaf, Star, ChefHat, ChevronLeft, ChevronRight, Check, ArrowRight } from 'lucide-react';
+import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2, Sparkles, Gift, Zap, Flame, Leaf, Star, ChefHat, ChevronLeft, ChevronRight, Check, ArrowRight, Award } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useTableStore } from '../../store/use-table-store';
@@ -13,6 +13,7 @@ import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useBackHandler } from '../../hooks/useBackHandler';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AI_RECOMMENDED_PAIRINGS, getSpendMoreProgress } from '../../services/aiPairingEngine';
+import { loyaltyService } from '../../services/loyalty.service';
 
 const CART_TIPS = [
   { icon: '🔥', text: 'Add a dessert before you place your order — served at the perfect moment!' },
@@ -46,6 +47,22 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [couponCode, setCouponCode] = useState('');
   const [includeServiceCharge, setIncludeServiceCharge] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  // Loyalty Points Redemption States
+  const [userPoints, setUserPoints] = useState<number>(user?.loyaltyPoints ?? 0);
+  const [isRedeemingPoints, setIsRedeemingPoints] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
+
+  // Sync user points live when drawer opens
+  useEffect(() => {
+    if (isOpen && user?.phone) {
+      loyaltyService.getLoyaltyBalance(user.phone)
+        .then(res => {
+          setUserPoints(res.loyaltyPoints || 0);
+        })
+        .catch(() => {});
+    }
+  }, [isOpen, user?.phone]);
 
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [tempNote, setTempNote] = useState('');
@@ -144,10 +161,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   }, [subtotal, appliedCoupon, showToast]);
 
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const taxableSubtotal = Math.max(0, subtotal - discount);
+
+  // Maximum points user can redeem: up to 50% of subtotal, 1 pt = ₹0.50
+  const maxDiscountAllowed = Math.floor(Math.max(0, subtotal - discount) * 0.5);
+  const maxPointsPossible = Math.floor(maxDiscountAllowed / 0.5);
+  const maxRedeemablePoints = Math.min(userPoints, maxPointsPossible);
+
+  // Effective points to redeem
+  const effectivePointsToRedeem = isRedeemingPoints ? Math.min(pointsToRedeem || maxRedeemablePoints, maxRedeemablePoints) : 0;
+  const pointsDiscount = Math.round(effectivePointsToRedeem * 0.5 * 100) / 100;
+
+  const totalDiscount = discount + pointsDiscount;
+  const taxableSubtotal = Math.max(0, subtotal - totalDiscount);
   const gstAmount = taxableSubtotal * 0.05; // 5% Indian GST
   const serviceCharge = includeServiceCharge ? taxableSubtotal * 0.05 : 0;
   const grandTotal = taxableSubtotal + gstAmount + serviceCharge;
+
+  // Estimated points earned on this meal
+  const estimatedEarnedPoints = Math.floor(taxableSubtotal / 10);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -186,10 +217,22 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         subtotal,
         tax: gstAmount + serviceCharge,
         discount,
+        pointsRedeemed: effectivePointsToRedeem,
+        pointsDiscount: pointsDiscount,
         total: grandTotal,
         appliedCoupon: appliedCoupon?.code,
         sessionId: activeSessionId || undefined,
       });
+
+      // Update local loyalty points in auth store
+      if (effectivePointsToRedeem > 0 && user) {
+        useAuthStore.getState().updateUser({
+          ...user,
+          loyaltyPoints: Math.max(0, (user.loyaltyPoints ?? userPoints) - effectivePointsToRedeem)
+        });
+        setUserPoints(prev => Math.max(0, prev - effectivePointsToRedeem));
+      }
+
       setIsConfirmOpen(false);
       clearCart();
       if (onOrderPlaced) {
@@ -666,6 +709,83 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 )}
               </div>
             )}
+
+            {/* Loyalty Points Redemption Card */}
+            {items.length > 0 && (
+              <div className="p-3.5 bg-gradient-to-r from-amber-50/70 via-white to-emerald-50/60 border border-amber-200/80 rounded-2xl space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-slate-800">
+                    <Award className="w-4 h-4 text-amber-600" />
+                    <span>AURA Club Points</span>
+                  </div>
+                  {user && (
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-900 rounded-full border border-amber-300">
+                      {userPoints} PTS (₹{(userPoints * 0.5).toFixed(0)} val)
+                    </span>
+                  )}
+                </div>
+
+                {user ? (
+                  userPoints >= 50 && maxRedeemablePoints >= 50 ? (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center space-x-2 text-xs font-bold text-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isRedeemingPoints}
+                            onChange={(e) => {
+                              setIsRedeemingPoints(e.target.checked);
+                              if (e.target.checked && pointsToRedeem === 0) {
+                                setPointsToRedeem(maxRedeemablePoints);
+                              }
+                            }}
+                            className="rounded accent-[#0C831F] w-4 h-4 cursor-pointer"
+                          />
+                          <span>Redeem Points for Bill Discount</span>
+                        </label>
+                        {isRedeemingPoints && (
+                          <span className="text-xs font-mono font-black text-[#0C831F]">
+                            -₹{pointsDiscount.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+
+                      {isRedeemingPoints && (
+                        <div className="p-2.5 bg-white border border-amber-200 rounded-xl space-y-1.5 text-xs">
+                          <div className="flex justify-between text-[11px] font-semibold text-slate-600">
+                            <span>Redeeming: <strong className="text-amber-800 font-mono">{effectivePointsToRedeem} PTS</strong></span>
+                            <span className="text-emerald-700 font-mono font-bold">Save ₹{(effectivePointsToRedeem * 0.5).toFixed(2)}</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={50}
+                            max={maxRedeemablePoints}
+                            step={10}
+                            value={effectivePointsToRedeem}
+                            onChange={(e) => setPointsToRedeem(Number(e.target.value))}
+                            className="w-full accent-[#0C831F] cursor-pointer"
+                          />
+                          <div className="flex justify-between text-[9px] text-slate-400 font-mono">
+                            <span>Min 50 PTS</span>
+                            <span>Max {maxRedeemablePoints} PTS (50% bill limit)</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500">
+                      {userPoints < 50
+                        ? `You have ${userPoints} PTS. Earn at least 50 PTS to redeem at checkout!`
+                        : `Order subtotal too low to redeem points (Max 50% discount allowed).`}
+                    </p>
+                  )
+                ) : (
+                  <p className="text-[11px] text-slate-500">
+                    Sign in to use your AURA points and earn rewards on this meal!
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Pricing Summary & Checkout Button */}
@@ -679,8 +799,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                 {appliedCoupon && (
                   <div className="flex justify-between text-c-primary font-bold">
-                    <span>Discount</span>
+                    <span>Coupon Discount</span>
                     <span className="font-mono">-₹{discount.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {pointsDiscount > 0 && (
+                  <div className="flex justify-between text-[#0C831F] font-bold">
+                    <span>Points Discount ({effectivePointsToRedeem} PTS)</span>
+                    <span className="font-mono">-₹{pointsDiscount.toFixed(2)}</span>
                   </div>
                 )}
 
@@ -701,6 +828,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </label>
                   {includeServiceCharge && <span className="font-mono font-bold">₹{serviceCharge.toFixed(2)}</span>}
                 </div>
+
+                {estimatedEarnedPoints > 0 && (
+                  <div className="pt-1.5 flex items-center justify-between text-[10px] text-amber-800 bg-amber-50/80 border border-amber-200/80 px-2 py-1 rounded-lg font-bold">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      Points to earn upon payment:
+                    </span>
+                    <span className="font-mono font-black">+{estimatedEarnedPoints} PTS</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between text-sm font-extrabold text-slate-900 pt-2 border-t border-slate-200">
                   <span>To Pay</span>

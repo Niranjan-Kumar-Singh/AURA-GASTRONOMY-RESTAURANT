@@ -96,6 +96,9 @@ async function executeToolCall(rawArgs) {
 
   let query = model.find(filter);
   if (args.collection === 'menu_items') query = query.select(MENU_ITEM_PROJECTION);
+  if (args.collection === 'coupons') query = query.select({ code: 1, title: 1, discountAmount: 1, minOrderAmount: 1, description: 1 });
+  if (args.collection === 'faqs') query = query.select({ question: 1, answer: 1, category: 1 });
+  if (args.collection === 'categories') query = query.select({ id: 1, name: 1, icon: 1, displayOrder: 1 });
   if (Object.keys(sort).length > 0) query = query.sort(sort);
   const results = await query.limit(limit).lean();
 

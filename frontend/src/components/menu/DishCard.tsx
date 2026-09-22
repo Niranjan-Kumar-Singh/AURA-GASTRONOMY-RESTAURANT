@@ -43,7 +43,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
       className="bg-white border border-slate-300 hover:border-[#0C831F] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_2px_8px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_20px_rgba(12,131,31,0.12)] group relative transition-all duration-200 hover:-translate-y-1"
     >
       {/* Top Image Box */}
-      <div className="relative h-36 sm:h-48 w-full bg-slate-100 border-b border-slate-200 overflow-hidden">
+      <div className="relative h-28 sm:h-48 w-full bg-slate-100 border-b border-slate-200 overflow-hidden">
         {!imageLoaded && (
           <div className="absolute inset-0 bg-slate-200/70 animate-pulse" />
         )}
@@ -68,65 +68,66 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
         )}
 
         {/* Veg / Non-Veg Indicator & Special Badges (Top Left) */}
-        <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 flex items-center space-x-1.5 z-10">
+        <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 flex items-center space-x-1 sm:space-x-1.5 z-10">
           <span
-            className={`w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-md border-2 flex items-center justify-center bg-white/95 backdrop-blur-md shadow-sm ${
+            className={`w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-md border-2 flex items-center justify-center bg-white/95 backdrop-blur-md shadow-xs ${
               item.isVegetarian ? 'border-emerald-600' : 'border-rose-600'
             }`}
           >
             <span
-              className={`w-2 h-2 rounded-full ${
+              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
                 item.isVegetarian ? 'bg-emerald-600' : 'bg-rose-600'
               }`}
             />
           </span>
 
           {item.isChefSpecial && (
-            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-c-accent text-slate-900 flex items-center space-x-1 shadow-sm">
-              <Sparkles className="w-2.5 h-2.5 text-slate-900" />
+            <span className="text-[8px] sm:text-[9px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-md bg-c-accent text-slate-900 flex items-center space-x-0.5 sm:space-x-1 shadow-xs tracking-tight">
+              <Sparkles className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-slate-900" />
               <span>SPECIAL</span>
             </span>
           )}
 
           {item.isBestSeller && !item.isChefSpecial && (
-            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-c-primary text-white shadow-sm">
+            <span className="text-[8px] sm:text-[9px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-md bg-c-primary text-white shadow-xs tracking-tight">
               BESTSELLER
             </span>
           )}
         </div>
 
         {/* Top Right Controls (Wishlist) */}
-        <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 flex items-center space-x-1 z-10">
+        <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 flex items-center space-x-1 z-10">
           <button
             onClick={handleToggleLike}
-            className={`w-8 h-8 rounded-full backdrop-blur-md shadow-sm border transition-all flex items-center justify-center cursor-pointer active:scale-75 ${
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-md shadow-xs border transition-all flex items-center justify-center cursor-pointer active:scale-75 ${
               isLiked
                 ? 'bg-rose-500 text-white border-rose-400 shadow-rose-500/25 scale-105'
                 : 'bg-white/90 hover:bg-white text-slate-600 border-slate-200/80 hover:text-rose-500'
             }`}
             title={isLiked ? 'Remove from Wishlist' : 'Add to Wishlist'}
           >
-            <Heart className={`w-4 h-4 ${isLiked ? 'fill-white' : ''}`} />
+            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-white' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Dish Content Body */}
-      <div className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col justify-between bg-white">
-        <div className="space-y-1">
+      <div className="p-2 sm:p-4 space-y-1.5 sm:space-y-2 flex-1 flex flex-col justify-between bg-white">
+        <div className="space-y-0.5 sm:space-y-1">
           <div className="flex items-start justify-between gap-1.5">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-c-primary transition-colors line-clamp-2 leading-snug min-h-[32px] sm:min-h-[36px]">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-c-primary transition-colors line-clamp-1 sm:line-clamp-2 leading-tight min-h-[16px] sm:min-h-[36px]">
               {item.name}
             </h3>
           </div>
 
-          <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+          {/* Hide long description on mobile screen to keep 2-column cards clean & balanced */}
+          <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed hidden sm:block">
             {item.description}
           </p>
 
           {/* Applied Add-ons Badge Preview */}
           {cartItem?.addonNames && cartItem.addonNames.length > 0 && (
-            <div className="flex items-center space-x-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <div className="flex items-center space-x-1 text-[9px] sm:text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded border border-emerald-200">
               <Sparkles className="w-2.5 h-2.5 text-[#0C831F] shrink-0" />
               <span className="truncate">Add-ons: {cartItem.addonNames.join(', ')}</span>
             </div>

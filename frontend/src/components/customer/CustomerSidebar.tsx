@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  X, User, Utensils, Clock, History, Heart, Tag, BookOpen, HelpCircle, LogIn, LogOut, Edit2, Star, FileText, ChevronRight, Sparkles, ShieldCheck, Bell, Zap
+  X, User, Utensils, Clock, History, Heart, Tag, BookOpen, HelpCircle, LogIn, LogOut, Edit2, Star, FileText, ChevronRight, Sparkles, ShieldCheck, Bell, Zap, Award
 } from 'lucide-react';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useOrderStore } from '../../store/use-order-store';
@@ -28,6 +28,7 @@ interface CustomerSidebarProps {
   onOpenFaq: () => void;
   onOpenProfile: () => void;
   onOpenFeedback?: () => void;
+  onOpenLoyalty?: () => void;
 }
 
 export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
@@ -43,6 +44,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
   onOpenGallery,
   onOpenFaq,
   onOpenFeedback,
+  onOpenLoyalty,
 }) => {
   useBodyScrollLock(isOpen);
   useBackHandler(isOpen, onClose);
@@ -79,6 +81,16 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
   const cartCount = getItemCount();
 
   const links = [
+    {
+      label: 'AURA Club Rewards',
+      badge: `${user?.loyaltyPoints ?? 100} PTS`,
+      badgeColor: 'bg-amber-100 text-amber-900 border border-amber-300 font-mono font-bold',
+      icon: <Award className="w-4 h-4 text-amber-600" />,
+      action: () => {
+        onClose();
+        if (onOpenLoyalty) onOpenLoyalty();
+      },
+    },
     {
       label: 'View Table Cart',
       badge: cartCount > 0 ? `${cartCount} Items` : undefined,
@@ -204,10 +216,15 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
                   {isAuthenticated ? user?.name : `Table ${tableId} Guest`}
                 </h3>
                 <div className="flex items-center space-x-1.5 mt-0.5">
-                  <span className="px-2 py-0.5 bg-emerald-100/90 text-[9px] uppercase tracking-wider text-emerald-900 rounded-full font-bold flex items-center space-x-1">
+                  <button 
+                    onClick={() => {
+                      if (onOpenLoyalty) onOpenLoyalty();
+                    }}
+                    className="px-2 py-0.5 bg-emerald-100/90 hover:bg-emerald-200 text-[9px] uppercase tracking-wider text-emerald-900 rounded-full font-bold flex items-center space-x-1 cursor-pointer transition-colors"
+                  >
                     <ShieldCheck className="w-3 h-3 text-[#0C831F] inline mr-0.5" />
-                    <span>{isAuthenticated ? 'MEMBER • 250 PTS' : `TABLE ${tableId} ACTIVE`}</span>
-                  </span>
+                    <span>{isAuthenticated ? `${(user?.loyaltyTier || 'MEMBER').toUpperCase()} • ${user?.loyaltyPoints ?? 0} PTS` : `TABLE ${tableId} ACTIVE`}</span>
+                  </button>
                 </div>
               </div>
             </div>
