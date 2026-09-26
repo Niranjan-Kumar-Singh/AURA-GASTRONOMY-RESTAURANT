@@ -46,16 +46,13 @@ import {
   Sliders,
 } from 'lucide-react';
 
-// Default initial dataset of tables with rich zone info (Tables 1 to 12)
-const INITIAL_TABLES: TableResponse[] = Array.from({ length: 12 }, (_, i) => {
+// Default initial dataset of tables with rich zone info (Tables 1 to 30)
+const INITIAL_TABLES: TableResponse[] = Array.from({ length: 30 }, (_, i) => {
   const num = i + 1;
-  const isVip = num === 10;
-  const isTerrace = num === 11;
-  const isBar = num === 12;
   return {
     _id: `tbl-${num}`,
     tableNumber: num,
-    capacity: isVip ? 12 : isBar ? 2 : isTerrace ? 4 : (num % 2 === 0 ? 6 : 4),
+    capacity: num % 4 === 0 ? 6 : num % 2 === 0 ? 4 : 2,
     status: 'AVAILABLE' as any,
     qrCodeToken: `tok_aura_tbl_${String(num).padStart(2, '0')}_secure`,
   };
@@ -91,7 +88,7 @@ export const QrGeneratorPage: React.FC = () => {
   const [isBatchRunning, setIsBatchRunning] = useState(false);
 
   // Bulk Generator State
-  const [bulkCount, setBulkCount] = useState<number>(12);
+  const [bulkCount, setBulkCount] = useState<number>(30);
 
   // Print Mode State ('STAND_SINGLE', 'POSTER_SINGLE', 'STICKER_SINGLE', 'ALL_STANDS', 'ALL_POSTERS', 'STICKER_SHEET')
   const [printTarget, setPrintTarget] = useState<{
