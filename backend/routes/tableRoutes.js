@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const Table = require('../models/Table');
 const TableSession = require('../models/TableSession');
 const Order = require('../models/Order');
+const WaiterAlert = require('../models/WaiterAlert');
 const router = express.Router();
 
 // Helper to generate unique session ID
@@ -506,25 +507,52 @@ router.post('/call-waiter', async (req, res) => {
   try {
     const { tableId, reason } = req.body;
     const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || String(tableId || '1');
+    const alertId = Date.now();
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const newAlert = {
-      id: Date.now(),
+      id: alertId,
       tableId: cleanTableNum,
+      tableNumber: cleanTableNum,
       reason: reason || 'Call Waiter to Table',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: timeStr,
       status: 'PENDING',
     };
 
+    // 1. Keep in memory for instant millisecond response
     globalWaiterAlerts.unshift(newAlert);
     if (globalWaiterAlerts.length > 50) globalWaiterAlerts.pop();
 
-    // If reason is Bill Request, automatically update physical table status to 'billing'
-    if (reason && reason.toLowerCase().includes('bill')) {
+    // 2. Persist to MongoDB so alerts survive serverless restarts
+    try {
+      await WaiterAlert.create({
+        id: alertId,
+        tableId: cleanTableNum,
+        tableNumber: cleanTableNum,
+        reason: reason || 'Call Waiter to Table',
+        timestamp: timeStr,
+        status: 'PENDING',
+      });
+    } catch (dbErr) {
+      console.warn('WaiterAlert MongoDB create warning:', dbErr.message);
+    }
+
+    // 3. Update Table document with active alert & billing status if bill request
+    try {
       let table = await Table.findOne({ tableNumber: cleanTableNum });
       if (table) {
-        table.status = 'billing';
+        table.activeWaiterCall = {
+          reason: newAlert.reason,
+          timestamp: timeStr,
+          status: 'PENDING',
+        };
+        if (reason && reason.toLowerCase().includes('bill')) {
+          table.status = 'billing';
+        }
         await table.save();
       }
+    } catch (tblErr) {
+      console.warn('Table update for waiter call warning:', tblErr.message);
     }
 
     res.json({ success: true, data: newAlert });
@@ -534,16 +562,79 @@ router.post('/call-waiter', async (req, res) => {
   }
 });
 
-// GET all active waiter calls
-router.get('/waiter-calls', (req, res) => {
-  res.json({ data: globalWaiterAlerts });
+// GET all active waiter calls (DB prioritized, memory fallback)
+router.get('/waiter-calls', async (req, res) => {
+  try {
+    let dbAlerts = [];
+    try {
+      dbAlerts = await WaiterAlert.find().sort({ createdAt: -1 }).limit(50).lean();
+    } catch (e) {
+      // DB fallback
+    }
+
+    if (dbAlerts && dbAlerts.length > 0) {
+      // Sync memory with DB
+      globalWaiterAlerts = dbAlerts.map(a => ({
+        id: a.id,
+        tableId: a.tableId || a.tableNumber,
+        tableNumber: a.tableNumber || a.tableId,
+        reason: a.reason,
+        timestamp: a.timestamp,
+        status: a.status,
+      }));
+      return res.json({ data: globalWaiterAlerts });
+    }
+
+    res.json({ data: globalWaiterAlerts });
+  } catch (error) {
+    console.error('Error fetching waiter calls:', error);
+    res.json({ data: globalWaiterAlerts });
+  }
 });
 
 // PUT acknowledge/resolve waiter call
-router.put('/waiter-calls/:id/resolve', (req, res) => {
-  const alertId = Number(req.params.id);
-  globalWaiterAlerts = globalWaiterAlerts.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a);
-  res.json({ success: true, data: globalWaiterAlerts });
+router.put('/waiter-calls/:id/resolve', async (req, res) => {
+  try {
+    const alertId = Number(req.params.id);
+    globalWaiterAlerts = globalWaiterAlerts.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a);
+
+    let targetTableNum = null;
+    const foundInMemory = globalWaiterAlerts.find(a => a.id === alertId);
+    if (foundInMemory) targetTableNum = foundInMemory.tableNumber || foundInMemory.tableId;
+
+    // Persist resolution in DB
+    try {
+      const updatedDbAlert = await WaiterAlert.findOneAndUpdate(
+        { id: alertId },
+        { status: 'RESOLVED', resolvedAt: new Date() },
+        { new: true }
+      );
+      if (updatedDbAlert) {
+        targetTableNum = updatedDbAlert.tableNumber || updatedDbAlert.tableId;
+      }
+    } catch (dbErr) {
+      console.warn('WaiterAlert DB resolve warning:', dbErr.message);
+    }
+
+    // Clear activeWaiterCall from Table document
+    if (targetTableNum) {
+      try {
+        const cleanTableNum = String(targetTableNum).match(/\d+/)?.[0] || String(targetTableNum);
+        const table = await Table.findOne({ tableNumber: cleanTableNum });
+        if (table && table.activeWaiterCall) {
+          table.activeWaiterCall = undefined;
+          await table.save();
+        }
+      } catch (tblErr) {
+        console.warn('Table activeWaiterCall clear warning:', tblErr.message);
+      }
+    }
+
+    res.json({ success: true, data: globalWaiterAlerts });
+  } catch (error) {
+    console.error('Error resolving waiter call:', error);
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // GET Table by Table Number

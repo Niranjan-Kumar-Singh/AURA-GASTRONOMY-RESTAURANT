@@ -202,20 +202,38 @@ export const WaiterDashboardPage: React.FC = () => {
 
   const syncWaiterCalls = async () => {
     try {
-      const remoteCalls = await tableService.getWaiterCalls().catch(() => []);
-      const localCalls = JSON.parse(localStorage.getItem('aura_waiter_alerts') || '[]');
-      const combined = [...remoteCalls];
+      const remoteCalls: WaiterAlert[] = await tableService.getWaiterCalls().catch(() => []);
+      const localCalls: WaiterAlert[] = JSON.parse(localStorage.getItem('aura_waiter_alerts') || '[]');
+      
+      const map = new Map<number, WaiterAlert>();
 
-      localCalls.forEach((lc: any) => {
-        if (!combined.some(rc => rc.id === lc.id)) {
-          combined.push(lc);
+      // 1. Load local cache first
+      localCalls.forEach((lc) => {
+        if (lc && lc.id) map.set(lc.id, lc);
+      });
+
+      // 2. Overlay remote calls from MongoDB
+      remoteCalls.forEach((rc) => {
+        if (rc && rc.id) {
+          const existing = map.get(rc.id);
+          // If locally resolved, keep RESOLVED status
+          if (existing && existing.status === 'RESOLVED' && rc.status === 'PENDING') {
+            map.set(rc.id, existing);
+          } else {
+            map.set(rc.id, rc);
+          }
         }
       });
 
-      const pendingCount = combined.filter((a: any) => a.status === 'PENDING').length;
+      const combined = Array.from(map.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
+
+      // 3. Cache combined alerts to local storage so they never vanish
+      localStorage.setItem('aura_waiter_alerts', JSON.stringify(combined));
+
+      const pendingCount = combined.filter((a) => a.status === 'PENDING').length;
       if (pendingCount > prevPendingAlertsCountRef.current && prevPendingAlertsCountRef.current !== 0) {
         playAudioChime();
-        const latestAlert = combined.find((a: any) => a.status === 'PENDING');
+        const latestAlert = combined.find((a) => a.status === 'PENDING');
         if (latestAlert) {
           showToast(`🔔 Table ${latestAlert.tableId} requested: "${latestAlert.reason}"`, 'info', 'Customer Call Alert');
         }
@@ -254,7 +272,7 @@ export const WaiterDashboardPage: React.FC = () => {
       console.error('Failed to resolve waiter call on API:', err);
     }
 
-    showToast('Customer call acknowledged & cleared', 'success');
+    showToast('Customer call acknowledged & resolved', 'success');
   };
 
   // Instant Table Status Updater with Strict Business Rule Validation
@@ -758,74 +776,99 @@ export const WaiterDashboardPage: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
-                {filteredTables.map((table) => (
-                  <div
-                    key={table.tableNumber}
-                    onClick={() => setSelectedTable(table)}
-                    className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] shadow-md flex flex-col justify-between space-y-2.5 relative overflow-hidden ${getStatusBadgeStyle(
-                      table.status,
-                      table.orderStatus
-                    )}`}
-                  >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-base sm:text-lg font-black tracking-tight">
-                          T-{table.tableNumber < 10 ? `0${table.tableNumber}` : table.tableNumber}
-                        </span>
-                        <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-current">
-                          {table.orderStatus === 'ready'
-                            ? 'READY'
-                            : table.status === 'cleaning'
-                            ? `CLEAN (${getCleaningTimeRemaining(table.cleaningStartedAt)})`
-                            : table.status}
-                        </span>
+                {filteredTables.map((table) => {
+                  const pendingAlert = activePendingAlerts.find(
+                    (a) => String(a.tableId) === String(table.tableNumber) || Number(a.tableId) === table.tableNumber
+                  );
+
+                  return (
+                    <div
+                      key={table.tableNumber}
+                      onClick={() => setSelectedTable(table)}
+                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] shadow-md flex flex-col justify-between space-y-2.5 relative overflow-hidden ${
+                        pendingAlert ? 'ring-2 ring-rose-500 shadow-rose-500/20' : ''
+                      } ${getStatusBadgeStyle(table.status, table.orderStatus)}`}
+                    >
+                      {/* Active Waiter Call Urgent Banner */}
+                      {pendingAlert && (
+                        <div className="py-1 px-2 bg-rose-600 text-white rounded-lg flex items-center justify-between text-[10px] font-black tracking-tight shadow-sm animate-pulse">
+                          <span className="flex items-center space-x-1 truncate">
+                            <Bell className="w-3 h-3 shrink-0 text-white" />
+                            <span className="truncate">{pendingAlert.reason}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAcknowledgeAlert(pendingAlert.id);
+                            }}
+                            className="ml-1 px-1.5 py-0.5 bg-white text-rose-700 hover:bg-rose-100 rounded font-black uppercase text-[8px] cursor-pointer shrink-0"
+                            title="Acknowledge & clear call"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-base sm:text-lg font-black tracking-tight">
+                            T-{table.tableNumber < 10 ? `0${table.tableNumber}` : table.tableNumber}
+                          </span>
+                          <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-current">
+                            {table.orderStatus === 'ready'
+                              ? 'READY'
+                              : table.status === 'cleaning'
+                              ? `CLEAN (${getCleaningTimeRemaining(table.cleaningStartedAt)})`
+                              : table.status}
+                          </span>
+                        </div>
+
+                        {/* Capacity & Occupancy Badge */}
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-[10px] font-mono opacity-75">
+                            Cap: {table.capacity}
+                          </span>
+
+                          {table.status === 'occupied' || table.status === 'billing' ? (
+                            <span className="font-mono text-[10px] font-black px-1.5 py-0.2 rounded bg-current/15 border border-current/30">
+                              👥 {table.guestCount || 2}
+                            </span>
+                          ) : table.status === 'cleaning' ? (
+                            <span className="font-mono text-[9px] font-bold text-amber-300 bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1">
+                              <span>🧹</span>
+                              <span>{getCleaningTimeRemaining(table.cleaningStartedAt)}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-mono opacity-70 truncate max-w-[65px]">
+                              {table.zone?.split(' ')[0]}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Capacity & Occupancy Badge */}
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-[10px] font-mono opacity-75">
-                          Cap: {table.capacity}
-                        </span>
+                      {/* Active Order Total */}
+                      {table.orderTotal !== undefined && table.orderTotal > 0 && table.status !== 'available' && (
+                        <div className="py-1 px-2 bg-black/40 rounded-lg border border-current/20 text-[11px] flex justify-between items-center font-mono">
+                          <span className="opacity-70 text-[10px]">Total</span>
+                          <span className="font-bold font-mono">₹{Math.round(table.orderTotal).toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
 
-                        {table.status === 'occupied' || table.status === 'billing' ? (
-                          <span className="font-mono text-[10px] font-black px-1.5 py-0.2 rounded bg-current/15 border border-current/30">
-                            👥 {table.guestCount || 2}
-                          </span>
-                        ) : table.status === 'cleaning' ? (
-                          <span className="font-mono text-[9px] font-bold text-amber-300 bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1">
-                            <span>🧹</span>
-                            <span>{getCleaningTimeRemaining(table.cleaningStartedAt)}</span>
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-mono opacity-70 truncate max-w-[65px]">
-                            {table.zone?.split(' ')[0]}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                      {/* Quick Mark Served if Hot Food is Ready */}
+                      {table.orderStatus === 'ready' && table.activeOrderId && (
+                        <button
+                          onClick={(e) => handleMarkServed(e, table.activeOrderId!, table.tableNumber)}
+                          className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1"
+                        >
+                          <Check className="w-3.5 h-3.5 font-bold" />
+                          <span>Serve</span>
+                        </button>
+                      )}
 
-                    {/* Active Order Total */}
-                    {table.orderTotal !== undefined && table.orderTotal > 0 && table.status !== 'available' && (
-                      <div className="py-1 px-2 bg-black/40 rounded-lg border border-current/20 text-[11px] flex justify-between items-center font-mono">
-                        <span className="opacity-70 text-[10px]">Total</span>
-                        <span className="font-bold font-mono">₹{Math.round(table.orderTotal).toLocaleString('en-IN')}</span>
-                      </div>
-                    )}
-
-                    {/* Quick Mark Served if Hot Food is Ready */}
-                    {table.orderStatus === 'ready' && table.activeOrderId && (
-                      <button
-                        onClick={(e) => handleMarkServed(e, table.activeOrderId!, table.tableNumber)}
-                        className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1"
-                      >
-                        <Check className="w-3.5 h-3.5 font-bold" />
-                        <span>Serve</span>
-                      </button>
-                    )}
-
-                    {/* DIRECT 1-TAP STATUS SWITCHER TOOLBAR ON CARD */}
-                    <div className="pt-2 border-t border-current/20">
-                      <div className="grid grid-cols-4 gap-1">
+                      {/* DIRECT 1-TAP STATUS SWITCHER TOOLBAR ON CARD */}
+                      <div className="pt-2 border-t border-current/20">
+                        <div className="grid grid-cols-4 gap-1">
                         <button
                           onClick={(e) => handleUpdateTableStatus(e, table._id, table.tableNumber, 'available')}
                           className={`py-1 text-[9px] font-bold rounded-lg transition-all border cursor-pointer text-center ${
@@ -878,7 +921,8 @@ export const WaiterDashboardPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           </div>
@@ -903,25 +947,25 @@ export const WaiterDashboardPage: React.FC = () => {
             </div>
 
             {activePendingAlerts.length === 0 ? (
-              <div className="py-16 text-center text-aura-slate text-xs space-y-3 bg-aura-obsidian/40 border border-aura-border/40 rounded-2xl">
-                <PhoneCall className="w-12 h-12 mx-auto text-aura-slate/40" />
+              <div className="py-12 text-center text-aura-slate text-xs space-y-3 bg-aura-obsidian/40 border border-aura-border/40 rounded-2xl">
+                <PhoneCall className="w-10 h-10 mx-auto text-aura-slate/40" />
                 <p className="text-sm font-semibold text-aura-ivory">All Customers Attended!</p>
                 <p className="text-xs text-aura-slate">No pending waiter assistance calls right now.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {activePendingAlerts.map((alert) => (
-                  <div key={alert.id} className="p-5 bg-aura-obsidian border border-rose-500/40 rounded-2xl flex flex-col justify-between space-y-4 shadow-xl">
+                  <div key={alert.id} className="p-5 bg-aura-obsidian border-2 border-rose-500 rounded-2xl flex flex-col justify-between space-y-4 shadow-xl shadow-rose-950/30 animate-pulse">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-serif font-black text-aura-ivory text-xl">Table {alert.tableId}</span>
-                        <span className="text-[10px] font-mono text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded-full border border-rose-500/30">
-                          URGENT
+                        <span className="text-[10px] font-mono text-rose-300 bg-rose-500/30 px-2.5 py-0.5 rounded-full border border-rose-400 font-black">
+                          🔔 CALLING NOW
                         </span>
                       </div>
 
-                      <p className="text-sm text-rose-300 font-bold flex items-center space-x-1.5">
-                        <PhoneCall className="w-4 h-4 text-rose-400" />
+                      <p className="text-sm text-rose-200 font-bold flex items-center space-x-2">
+                        <PhoneCall className="w-4 h-4 text-rose-400 shrink-0" />
                         <span>{alert.reason}</span>
                       </p>
 
@@ -930,13 +974,39 @@ export const WaiterDashboardPage: React.FC = () => {
 
                     <button
                       onClick={() => handleAcknowledgeAlert(alert.id)}
-                      className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1.5"
+                      className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1.5 active:scale-95"
                     >
                       <Check className="w-4 h-4" />
-                      <span>Acknowledge & Resolve Call</span>
+                      <span>Acknowledge &amp; Mark Attended</span>
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Resolved Calls History Today */}
+            {alerts.some(a => a.status === 'RESOLVED') && (
+              <div className="pt-6 border-t border-aura-border/50 space-y-3">
+                <h3 className="text-xs font-bold text-aura-slate uppercase font-mono tracking-wider flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Recently Attended Calls ({alerts.filter(a => a.status === 'RESOLVED').length})</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {alerts.filter(a => a.status === 'RESOLVED').slice(0, 9).map((alert) => (
+                    <div key={alert.id} className="p-3 bg-aura-obsidian/60 border border-emerald-500/20 rounded-xl flex items-center justify-between text-xs">
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-aura-ivory font-mono">Table {alert.tableId}</span>
+                        <p className="text-[10px] text-aura-slate truncate max-w-[180px]">{alert.reason}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                          ✓ Attended
+                        </span>
+                        <span className="text-[9px] text-aura-slate block font-mono mt-0.5">{alert.timestamp}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -1121,6 +1191,33 @@ export const WaiterDashboardPage: React.FC = () => {
 
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+              {/* Active Waiter Call Alert in Modal */}
+              {(() => {
+                const tableAlert = activePendingAlerts.find(
+                  (a) => String(a.tableId) === String(selectedTable.tableNumber) || Number(a.tableId) === selectedTable.tableNumber
+                );
+                if (!tableAlert) return null;
+                return (
+                  <div className="p-4 bg-rose-500/20 border-2 border-rose-500 rounded-2xl flex items-center justify-between shadow-lg animate-pulse">
+                    <div className="space-y-0.5">
+                      <span className="text-xs font-black text-rose-300 flex items-center space-x-1.5 uppercase tracking-wide">
+                        <Bell className="w-4 h-4 text-rose-400" />
+                        <span>Active Assistance Call</span>
+                      </span>
+                      <p className="text-sm font-bold text-white">{tableAlert.reason}</p>
+                      <span className="text-[10px] text-rose-200/70 font-mono block">Requested: {tableAlert.timestamp}</span>
+                    </div>
+                    <button
+                      onClick={() => handleAcknowledgeAlert(tableAlert.id)}
+                      className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center space-x-1 shrink-0 ml-2"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Attended</span>
+                    </button>
+                  </div>
+                );
+              })()}
+
               {/* Quick Seating Action for Available Tables */}
               {selectedTable.status === 'available' && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">

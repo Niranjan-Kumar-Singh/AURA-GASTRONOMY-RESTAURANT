@@ -6,7 +6,12 @@ const tableSchema = new mongoose.Schema({
   guestCount: { type: Number, default: 0 },
   qrToken: { type: String, required: true }, // The secure token embedded in the QR code
   status: { type: String, enum: ['available', 'occupied', 'billing', 'cleaning', 'reserved', 'maintenance'], default: 'available' },
-  cleaningStartedAt: { type: Date }
+  cleaningStartedAt: { type: Date },
+  activeWaiterCall: {
+    reason: { type: String },
+    timestamp: { type: String },
+    status: { type: String }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Table', tableSchema);
