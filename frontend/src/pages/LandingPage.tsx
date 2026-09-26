@@ -32,7 +32,7 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#090A0F] text-white font-sans overflow-x-hidden selection:bg-[#38BDF8] selection:text-[#090A0F]">
       {/* Navigation Header */}
-      <header className="fixed top-0 left-0 w-full px-6 lg:px-12 py-4 flex items-center justify-between bg-[#090A0F]/85 backdrop-blur-xl border-b border-[#38BDF8]/20 z-50 transition-all duration-300">
+      <header className="fixed top-0 left-0 w-full px-4 sm:px-6 lg:px-12 py-3 sm:py-4 flex items-center justify-between bg-[#090A0F]/85 backdrop-blur-xl border-b border-[#38BDF8]/20 z-50 transition-all duration-300">
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <div className="w-10 h-10 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-xl flex items-center justify-center group-hover:border-[#38BDF8] transition-colors">
             <Utensils className="w-5 h-5 text-[#38BDF8]" />
@@ -71,7 +71,7 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-6 overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-12 px-4 sm:px-6 overflow-hidden">
         {/* Background Image & Gradient Overlay */}
         <div 
           className="absolute inset-0 z-0"
@@ -79,7 +79,7 @@ export const LandingPage: React.FC = () => {
             backgroundImage: 'url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1934&auto=format&fit=crop")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundAttachment: 'fixed'
+            backgroundAttachment: 'scroll'
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-[#07090E]/95 via-[#07090E]/85 to-[#07090E] z-0" />
@@ -129,8 +129,8 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* The Experience Section */}
-      <section id="experience" className="py-28 px-6 relative bg-[#090A0F]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section id="experience" className="py-16 sm:py-28 px-4 sm:px-6 relative bg-[#090A0F]">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
           <div className="space-y-8">
             <div className="inline-flex items-center space-x-2 text-[#38BDF8] text-xs uppercase tracking-widest font-mono">
               <span className="w-8 h-[1px] bg-[#38BDF8]" />
@@ -177,7 +177,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Culinary Vision Showcase */}
-      <section id="menu" className="py-28 px-6 bg-[#0c0d10] border-y border-[#38BDF8]/20">
+      <section id="menu" className="py-16 sm:py-28 px-4 sm:px-6 bg-[#0c0d10] border-y border-[#38BDF8]/20">
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center space-y-4 max-w-3xl mx-auto">
             <div className="inline-flex items-center space-x-2 text-[#38BDF8] text-xs uppercase tracking-widest font-mono">
@@ -252,14 +252,14 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Critical Acclaim & Reviews */}
-      <section id="acclaim" className="py-24 px-6 bg-[#090A0F]">
+      <section id="acclaim" className="py-16 sm:py-24 px-4 sm:px-6 bg-[#090A0F]">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-3">
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white">Critical <span className="text-[#38BDF8]">Acclaim</span></h2>
             <p className="text-aura-slate text-xs uppercase tracking-widest font-mono">Recognized by World-Renowned Critics</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <div className="p-8 rounded-3xl bg-[#121520] border border-[#38BDF8]/20 space-y-4 relative shadow-xl">
               <Quote className="w-8 h-8 text-[#38BDF8]/30" />
               <p className="text-aura-slate text-sm italic leading-relaxed">
@@ -297,8 +297,8 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Stats Bar */}
-      <section className="py-16 px-6 bg-[#0a0b0d] border-t border-[#38BDF8]/20">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-aura-border/40">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 bg-[#0a0b0d] border-t border-[#38BDF8]/20">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           <div className="text-center space-y-1 px-4">
             <h3 className="font-serif text-4xl font-bold text-[#38BDF8]">4.9 / 5</h3>
             <p className="text-[10px] text-aura-slate uppercase tracking-widest font-mono">Over 500+ Guest Reviews</p>
@@ -319,8 +319,8 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Footer / Location */}
-      <footer id="visit" className="bg-[#090A0F] border-t border-[#38BDF8]/20 pt-20 pb-10 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+      <footer id="visit" className="bg-[#090A0F] border-t border-[#38BDF8]/20 pt-12 sm:pt-20 pb-8 sm:pb-10 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-12 sm:mb-16">
           <div className="col-span-1 md:col-span-2 space-y-6">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-lg flex items-center justify-center text-[#38BDF8]">
@@ -357,9 +357,9 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto pt-8 border-t border-aura-border/40 text-center flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-aura-slate/60 font-mono">
+        <div className="max-w-7xl mx-auto pt-6 sm:pt-8 border-t border-aura-border/40 text-center flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-aura-slate/60 font-mono">
           <p>&copy; {new Date().getFullYear()} AURA Gastronomy Ltd. All rights reserved.</p>
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center flex-wrap justify-center gap-4 sm:gap-6">
             <a href="#" className="hover:text-[#38BDF8] transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-[#38BDF8] transition-colors">Terms of Service</a>
             <a href="/login" className="hover:text-[#38BDF8] transition-colors text-[#38BDF8]/80">Staff Portal</a>

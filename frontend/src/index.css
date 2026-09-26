@@ -534,8 +534,13 @@ button:disabled,
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.2);
 }
 
-/* Print Media Styles — Thermal & GST Tax Receipts Only */
+/* Print Media Styles — Thermal Receipts, GST Tax Invoices & Luxury Table QR Stands */
 @media print {
+  @page {
+    margin: 8mm;
+    size: auto;
+  }
+
   body {
     background: #ffffff !important;
     color: #000000 !important;
@@ -546,7 +551,9 @@ button:disabled,
   }
 
   .printable-invoice,
-  .printable-invoice * {
+  .printable-invoice *,
+  .printable-qr-sheet,
+  .printable-qr-sheet * {
     visibility: visible !important;
   }
 
@@ -562,6 +569,24 @@ button:disabled,
     border: none !important;
     background: #ffffff !important;
     color: #111827 !important;
+  }
+
+  .printable-qr-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .printable-qr-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
   .no-print {
