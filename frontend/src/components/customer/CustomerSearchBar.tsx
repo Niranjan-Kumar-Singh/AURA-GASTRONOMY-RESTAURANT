@@ -16,21 +16,23 @@ export const CustomerSearchBar: React.FC<CustomerSearchBarProps> = ({
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   const placeholders = [
-    'Search Dal AURA 36-Hour Dum...',
-    'Search Kashmiri Saffron Tikka...',
-    'Search Awadhi Lamb Biryani...',
-    'Search Black Truffle Tagliolini...',
-    'Search 24K Gold Chocolate Sphere...',
+    'Search Masala Tea & Black Tea...',
+    'Search Boba Tea & Taro...',
+    'Search Matcha Latte & Frappes...',
+    'Search Peri Peri Fries & Burgers...',
+    'Search Chowmein & Fried Rice...',
+    'Search Arrabbiata Pasta...',
   ];
 
   const popularSearches = [
-    'Dal AURA',
-    'Butter Chicken',
-    'Lamb Biryani',
-    'Wagyu Ribeye',
-    'Truffle Pasta',
-    'Gold Sphere',
-    'Saffron Elixir',
+    'Masala Tea',
+    'Boba Tea',
+    'Iced Matcha Latte',
+    'Tandoori Chicken Sandwich',
+    'Peri Peri Fries',
+    'Chicken Chowmein',
+    'Oreo Frappe',
+    'Arrabbiata Pasta',
   ];
 
   useEffect(() => {

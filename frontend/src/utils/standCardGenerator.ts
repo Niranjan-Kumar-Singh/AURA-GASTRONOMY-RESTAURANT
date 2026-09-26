@@ -210,7 +210,7 @@ export const generateStandCardCanvas = async (
   ctx.textAlign = 'center';
   ctx.fillStyle = accentColor;
   ctx.font = 'bold 36px "Cinzel", "Playfair Display", Georgia, serif';
-  ctx.fillText('✦  A U R A  ✦', width / 2, 135);
+  ctx.fillText('✦  GOOD FOOD • BETTER CHAI • HAPPIER PEOPLE  ✦', width / 2, 135);
 
   // 4. Brand Name
   ctx.fillStyle = textPrimary;
@@ -520,7 +520,7 @@ export const generateBoardPosterCanvas = async (
   ctx.textAlign = 'center';
   ctx.fillStyle = accentColor;
   ctx.font = 'bold 44px "Cinzel", "Playfair Display", Georgia, serif';
-  ctx.fillText('✦  A U R A   G A S T R O N O M Y  ✦', width / 2, 170);
+  ctx.fillText('✦  CHAI  •  FOOD  •  PEOPLE  •  STORIES  ✦', width / 2, 170);
 
   ctx.fillStyle = textPrimary;
   ctx.font = 'bold 64px "Cinzel", "Playfair Display", serif';
@@ -659,7 +659,7 @@ export const generateBoardPosterCanvas = async (
     const wBoxH = 100;
     const wBoxX = (width - wBoxW) / 2;
     ctx.fillStyle = theme === 'MINIMAL_IVORY' ? '#F4F4F5' : 'rgba(16, 185, 129, 0.15)';
-    roundRect(ctx, wBoxW, curY, wBoxW, wBoxH, 24);
+    roundRect(ctx, wBoxX, curY, wBoxW, wBoxH, 24);
     ctx.fill();
     ctx.strokeStyle = accentColor;
     ctx.lineWidth = 2;
@@ -746,7 +746,7 @@ export const generateTableStickerCanvas = async (
   ctx.textAlign = 'center';
   ctx.fillStyle = accentCol;
   ctx.font = 'bold 30px "Cinzel", Georgia, serif';
-  ctx.fillText('✦  AURA GASTRONOMY  ✦', size / 2, 85);
+  ctx.fillText(`✦  ${(config.brandName || "SILIGURI'S CHAI ADDAA").toUpperCase()}  ✦`, size / 2, 85);
 
   ctx.fillStyle = textPrimary;
   ctx.font = 'bold 54px "Cinzel", Georgia, serif';

@@ -2,6 +2,7 @@ import { apiClient } from './api-client';
 import { ApiResponse } from '../types/user.types';
 import { orderService } from './order.service';
 import { tableService } from './table.service';
+import { SILIGURI_MENU_ITEMS } from '../data/siliguriMenuData';
 
 export interface DashboardAnalytics {
   totalRevenueToday: number;
@@ -166,14 +167,8 @@ export const adminService = {
     settledList.forEach((o: any) => {
       if (Array.isArray(o.items)) {
         o.items.forEach((it: any) => {
-          const cleanName = (it.name || '').toLowerCase().trim();
-          let catName = "Chef's Signature Specials";
-          if (cleanName.includes('pizza')) catName = "Wood-Fired Neapolitan Pizza";
-          else if (cleanName.includes('tikka') || cleanName.includes('murgh')) catName = "Today's Popular Specials";
-          else if (cleanName.includes('biryani') || cleanName.includes('pulao')) catName = "Royal Dum Biryani & Pulao";
-          else if (cleanName.includes('naan') || cleanName.includes('roti')) catName = "Artisanal Breads & Naan";
-          else if (cleanName.includes('pasta') || cleanName.includes('tagliolini')) catName = "Italian Pastas & Truffles";
-          else if (cleanName.includes('dessert') || cleanName.includes('cake')) catName = "Gourmet Desserts & Sweets";
+          const matchedItem = SILIGURI_MENU_ITEMS.find((m) => m.id === it.menuItemId || m.name.toLowerCase() === (it.name || '').toLowerCase());
+          const catName = matchedItem?.categoryName || (it.categoryName || 'Chai & Hot Teas');
 
           const itemRev = (it.price || 0) * (it.quantity || 1);
           catRevenueMap[catName] = (catRevenueMap[catName] || 0) + itemRev;
