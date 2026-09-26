@@ -33,40 +33,33 @@ import {
   Settings,
   Globe,
   Wifi,
-  Palette,
   Layers,
-  Smartphone,
   Plus,
   Trash2,
   Edit3,
-  Eye,
   CheckCircle2,
   RefreshCw,
-  Sliders,
   Maximize2,
   Grid,
   FileText,
   CreditCard,
-  HelpCircle,
-  Shield,
-  Zap,
+  Sliders,
 } from 'lucide-react';
 
-// Default initial dataset of tables with rich zone info
-const INITIAL_TABLES: TableResponse[] = [
-  { _id: 'tbl-1', tableNumber: 1, capacity: 2, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_01_secure' },
-  { _id: 'tbl-2', tableNumber: 2, capacity: 4, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_02_secure' },
-  { _id: 'tbl-3', tableNumber: 3, capacity: 4, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_03_secure' },
-  { _id: 'tbl-4', tableNumber: 4, capacity: 6, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_04_secure' },
-  { _id: 'tbl-5', tableNumber: 5, capacity: 2, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_05_secure' },
-  { _id: 'tbl-6', tableNumber: 6, capacity: 8, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_06_secure' },
-  { _id: 'tbl-7', tableNumber: 7, capacity: 4, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_07_secure' },
-  { _id: 'tbl-8', tableNumber: 8, capacity: 6, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_08_secure' },
-  { _id: 'tbl-9', tableNumber: 9, capacity: 4, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_09_secure' },
-  { _id: 'tbl-10', tableNumber: 10, capacity: 12, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_10_vip' },
-  { _id: 'tbl-11', tableNumber: 11, capacity: 4, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_11_terrace' },
-  { _id: 'tbl-12', tableNumber: 12, capacity: 6, status: 'AVAILABLE' as any, qrCodeToken: 'tok_aura_tbl_12_bar' },
-];
+// Default initial dataset of tables with rich zone info (Tables 1 to 12)
+const INITIAL_TABLES: TableResponse[] = Array.from({ length: 12 }, (_, i) => {
+  const num = i + 1;
+  const isVip = num === 10;
+  const isTerrace = num === 11;
+  const isBar = num === 12;
+  return {
+    _id: `tbl-${num}`,
+    tableNumber: num,
+    capacity: isVip ? 12 : isBar ? 2 : isTerrace ? 4 : (num % 2 === 0 ? 6 : 4),
+    status: 'AVAILABLE' as any,
+    qrCodeToken: `tok_aura_tbl_${String(num).padStart(2, '0')}_secure`,
+  };
+});
 
 export const QrGeneratorPage: React.FC = () => {
   const { showToast } = useToast();
@@ -97,20 +90,14 @@ export const QrGeneratorPage: React.FC = () => {
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [isBatchRunning, setIsBatchRunning] = useState(false);
 
+  // Bulk Generator State
+  const [bulkCount, setBulkCount] = useState<number>(12);
+
   // Print Mode State ('STAND_SINGLE', 'POSTER_SINGLE', 'STICKER_SINGLE', 'ALL_STANDS', 'ALL_POSTERS', 'STICKER_SHEET')
   const [printTarget, setPrintTarget] = useState<{
     mode: 'STAND_SINGLE' | 'POSTER_SINGLE' | 'STICKER_SINGLE' | 'ALL_STANDS' | 'ALL_POSTERS' | 'STICKER_SHEET' | null;
     tableNumber?: number | string;
   }>({ mode: null });
-
-  // Custom Table Modal / Drawer for editing a specific table
-  const [editingTable, setEditingTable] = useState<{
-    tableNumber: number | string;
-    capacity: number;
-    zone: string;
-    note: string;
-    token: string;
-  } | null>(null);
 
   // Cache of generated QR code data URLs (tableNumber -> dataUrl)
   const [qrCache, setQrCache] = useState<{ [key: string]: string }>({});
@@ -212,7 +199,7 @@ export const QrGeneratorPage: React.FC = () => {
     const url = computeTableDineUrl(token, config);
     navigator.clipboard.writeText(url);
     setCopiedKey(String(tableNum));
-    showToast(`Table ${tableNum} Dine URL copied to clipboard!`, 'success');
+    showToast(`Table ${tableNum} Dine URL copied!`, 'success');
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -223,13 +210,33 @@ export const QrGeneratorPage: React.FC = () => {
       showToast(`Regenerated cryptographic token for Table ${table.tableNumber}!`, 'success');
       fetchTables();
     } catch (err: any) {
-      // Local fallback token generation if offline
       const newToken = `tok_aura_${table.tableNumber}_${Math.random().toString(36).substring(2, 8)}`;
       setTables((prev) =>
         prev.map((t) => (t.tableNumber === table.tableNumber ? { ...t, qrCodeToken: newToken } : t))
       );
       showToast(`Generated new client-side token for Table ${table.tableNumber}`, 'success');
     }
+  };
+
+  // Bulk Generator for N Tables
+  const handleGenerateBulkTables = (count: number) => {
+    const targetCount = Math.max(1, Math.min(100, count));
+    const newTablesList: TableResponse[] = Array.from({ length: targetCount }, (_, i) => {
+      const num = i + 1;
+      const isVip = num === 10;
+      const isTerrace = num === 11;
+      const isBar = num === 12;
+      return {
+        _id: `tbl-${num}`,
+        tableNumber: num,
+        capacity: isVip ? 12 : isBar ? 2 : isTerrace ? 4 : (num % 2 === 0 ? 6 : 4),
+        status: 'AVAILABLE' as any,
+        qrCodeToken: `tok_aura_tbl_${String(num).padStart(2, '0')}_secure`,
+      };
+    });
+    setTables(newTablesList);
+    setSelectedTableNumber(1);
+    showToast(`Generated QR codes for all ${targetCount} tables!`, 'success');
   };
 
   // Download Handlers
@@ -242,16 +249,16 @@ export const QrGeneratorPage: React.FC = () => {
     try {
       if (format === 'STAND') {
         await downloadStandCard(table, config);
-        showToast(`Table ${table.tableNumber} Acrylic Stand Card PNG downloaded!`, 'success');
+        showToast(`Table ${table.tableNumber} Stand Card downloaded!`, 'success');
       } else if (format === 'POSTER') {
         await downloadBoardPoster(table, config);
-        showToast(`Table ${table.tableNumber} Large Board Poster PNG downloaded!`, 'success');
+        showToast(`Table ${table.tableNumber} Board Poster downloaded!`, 'success');
       } else if (format === 'STICKER') {
         await downloadTableSticker(table, config);
-        showToast(`Table ${table.tableNumber} Square Sticker Badge PNG downloaded!`, 'success');
+        showToast(`Table ${table.tableNumber} Square Sticker downloaded!`, 'success');
       } else {
         await downloadQrOnly(table, config);
-        showToast(`Table ${table.tableNumber} Raw High-Res QR Code PNG downloaded!`, 'success');
+        showToast(`Table ${table.tableNumber} Raw QR Code downloaded!`, 'success');
       }
     } catch (err) {
       console.error(err);
@@ -317,26 +324,6 @@ export const QrGeneratorPage: React.FC = () => {
     showToast(`Table ${nextNum} added successfully!`, 'success');
   };
 
-  // Save Edited Table
-  const handleSaveEditedTable = () => {
-    if (!editingTable) return;
-    setTables((prev) =>
-      prev.map((t) =>
-        String(t.tableNumber) === String(editingTable.tableNumber)
-          ? {
-              ...t,
-              tableNumber: editingTable.tableNumber,
-              capacity: editingTable.capacity,
-              qrCodeToken: editingTable.token,
-            }
-          : t
-      )
-    );
-    setSelectedTableNumber(editingTable.tableNumber);
-    setEditingTable(null);
-    showToast(`Table ${editingTable.tableNumber} details updated!`, 'success');
-  };
-
   // Delete Table
   const handleDeleteTable = (num: number | string) => {
     if (tables.length <= 1) {
@@ -361,9 +348,7 @@ export const QrGeneratorPage: React.FC = () => {
         cardBorder: 'border-sky-400/60 shadow-[0_0_25px_rgba(56,189,248,0.2)]',
         innerBorder: 'border-sky-400/30',
         textAccent: 'text-sky-400',
-        accentBg: 'bg-sky-500',
         plaqueBg: 'bg-[#0E172A] border-sky-400/80 text-sky-200',
-        textColor: 'text-slate-100',
       };
     }
     if (t === 'SUNSET_AMBER') {
@@ -372,9 +357,7 @@ export const QrGeneratorPage: React.FC = () => {
         cardBorder: 'border-orange-500/70 shadow-[0_0_25px_rgba(249,115,22,0.2)]',
         innerBorder: 'border-orange-500/30',
         textAccent: 'text-amber-400',
-        accentBg: 'bg-amber-500',
         plaqueBg: 'bg-[#33180E] border-orange-400/80 text-orange-200',
-        textColor: 'text-orange-50',
       };
     }
     if (t === 'CYBER_NEON') {
@@ -383,9 +366,7 @@ export const QrGeneratorPage: React.FC = () => {
         cardBorder: 'border-purple-500/70 shadow-[0_0_25px_rgba(168,85,247,0.2)]',
         innerBorder: 'border-purple-500/30',
         textAccent: 'text-green-400',
-        accentBg: 'bg-purple-500',
         plaqueBg: 'bg-[#1D1438] border-purple-400/80 text-green-300',
-        textColor: 'text-purple-50',
       };
     }
     if (t === 'MINIMAL_IVORY') {
@@ -394,9 +375,7 @@ export const QrGeneratorPage: React.FC = () => {
         cardBorder: 'border-zinc-800 shadow-xl',
         innerBorder: 'border-zinc-400/40',
         textAccent: 'text-emerald-700',
-        accentBg: 'bg-zinc-800',
         plaqueBg: 'bg-zinc-900 border-zinc-700 text-white',
-        textColor: 'text-zinc-900',
       };
     }
     // EMERALD_GOLD
@@ -405,9 +384,7 @@ export const QrGeneratorPage: React.FC = () => {
       cardBorder: 'border-amber-500/70 shadow-[0_0_30px_rgba(245,158,11,0.2)]',
       innerBorder: 'border-amber-400/30',
       textAccent: 'text-amber-400',
-      accentBg: 'bg-amber-500',
       plaqueBg: 'bg-[#092B1F] border-amber-400/80 text-amber-200',
-      textColor: 'text-slate-100',
     };
   };
 
@@ -432,11 +409,11 @@ export const QrGeneratorPage: React.FC = () => {
                   Table QR &amp; Stand Studio
                 </h1>
                 <span className="px-2 py-0.5 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-bold rounded-full">
-                  High-DPI • Print &amp; Board Ready
+                  All {tables.length} Tables Active
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 truncate max-w-md sm:max-w-xl">
-                Pre-filled table details, real-time customizer, instant 1-by-1 downloads &amp; direct board printing.
+                Automatic QR codes for every table. 1-click downloads, live customizer, and direct board printing.
               </p>
             </div>
           </div>
@@ -444,12 +421,12 @@ export const QrGeneratorPage: React.FC = () => {
           {/* Quick Action Navigation & Global Print/Download buttons */}
           <div className="flex items-center space-x-2 flex-wrap gap-y-2">
             <button
-              onClick={() => setActiveTab('BATCH_PRINT')}
+              onClick={() => triggerPrint('ALL_STANDS')}
               className="px-3 py-1.5 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-sm"
-              title="Open Batch Print Station"
+              title="Print all table stands"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print Station</span>
+              <span>Print All ({tables.length})</span>
             </button>
 
             <button
@@ -479,6 +456,44 @@ export const QrGeneratorPage: React.FC = () => {
           </div>
         </header>
 
+        {/* Bulk Table Generator & Quick Setup Bar */}
+        <div className="bg-[#080D1A] border-b border-slate-800 px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
+            <span className="text-slate-400 font-semibold">Quick Setup Total Tables:</span>
+            {[6, 10, 12, 16, 20, 24, 30].map((count) => (
+              <button
+                key={count}
+                onClick={() => handleGenerateBulkTables(count)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  tables.length === count
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-black shadow-sm'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                {count} Tables
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-slate-400">Custom Count:</span>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={bulkCount}
+              onChange={(e) => setBulkCount(Number(e.target.value) || 1)}
+              className="w-16 px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white text-center font-bold focus:outline-none focus:border-emerald-500"
+            />
+            <button
+              onClick={() => handleGenerateBulkTables(bulkCount)}
+              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-300 rounded-lg text-xs font-bold cursor-pointer"
+            >
+              Set
+            </button>
+          </div>
+        </div>
+
         {/* Studio Sub-Navigation Tabs */}
         <div className="bg-[#090E1D] border-b border-slate-800/80 px-3 sm:px-6 py-2 flex items-center space-x-2 overflow-x-auto no-scrollbar">
           <button
@@ -502,7 +517,7 @@ export const QrGeneratorPage: React.FC = () => {
             }`}
           >
             <Maximize2 className="w-3.5 h-3.5" />
-            <span>Live Inspector &amp; Single Card Focus</span>
+            <span>Live Inspector &amp; Single Table Customizer</span>
           </button>
 
           <button
@@ -514,7 +529,7 @@ export const QrGeneratorPage: React.FC = () => {
             }`}
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Batch Print &amp; Sticker Sheets</span>
+            <span>Print Station &amp; Sticker Sheets</span>
           </button>
 
           <button
@@ -561,11 +576,11 @@ export const QrGeneratorPage: React.FC = () => {
               {/* Zone Chips */}
               <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
                 {[
-                  { id: 'ALL', label: 'All Tables' },
-                  { id: 'VIP', label: 'VIP Suites' },
-                  { id: 'MAIN', label: 'Main Dining' },
+                  { id: 'ALL', label: `All Tables (${tables.length})` },
+                  { id: 'VIP', label: 'VIP' },
+                  { id: 'MAIN', label: 'Main Hall' },
                   { id: 'TERRACE', label: 'Terrace' },
-                  { id: 'BAR', label: 'Bar Lounge' },
+                  { id: 'BAR', label: 'Bar' },
                 ].map((chip) => (
                   <button
                     key={chip.id}
@@ -581,7 +596,7 @@ export const QrGeneratorPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Quick Format & Theme Selector */}
+              {/* Quick Theme Selector */}
               <div className="flex items-center space-x-2">
                 <select
                   value={config.themeStyle}
@@ -598,24 +613,6 @@ export const QrGeneratorPage: React.FC = () => {
                   <option value="MINIMAL_IVORY">📄 Theme: Minimal Ivory (Print)</option>
                 </select>
               </div>
-            </div>
-
-            {/* Active Base URL Informational Banner */}
-            <div className="bg-emerald-950/30 border border-emerald-500/30 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div className="flex items-center space-x-2">
-                <Globe className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-slate-300">
-                  Target Customer Domain:{' '}
-                  <strong className="text-emerald-300 font-mono font-bold">{config.baseUrl}</strong>
-                  <span className="text-slate-500 ml-1">({config.urlFormat}:token)</span>
-                </span>
-              </div>
-              <button
-                onClick={() => setActiveTab('SETTINGS')}
-                className="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer text-left sm:text-right"
-              >
-                Change Domain / Wi-Fi
-              </button>
             </div>
 
             {/* Table Cards Grid */}
@@ -670,38 +667,9 @@ export const QrGeneratorPage: React.FC = () => {
                             <RefreshCw className="w-6 h-6 animate-spin" />
                           </div>
                         )}
-                        <p className="text-[9px] font-mono text-slate-700 mt-1.5 font-bold tracking-wider">
-                          AURA • TABLE {table.tableNumber}
+                        <p className="text-[9px] font-serif text-slate-700 mt-1.5 font-bold tracking-wider uppercase">
+                          {config.brandName || 'AURA'} • TABLE {table.tableNumber}
                         </p>
-                      </div>
-
-                      {/* URL Snippet */}
-                      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-2 flex items-center justify-between text-[11px] font-mono text-slate-300 mb-3">
-                        <span className="truncate max-w-[170px] text-slate-400" title={dineUrl}>
-                          {dineUrl}
-                        </span>
-                        <div className="flex items-center space-x-1 shrink-0">
-                          <button
-                            onClick={() => handleCopyLink(table.tableNumber, token)}
-                            className="p-1 text-slate-400 hover:text-emerald-400 transition-colors"
-                            title="Copy Dine URL"
-                          >
-                            {copiedKey === String(table.tableNumber) ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                          <a
-                            href={dineUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1 text-slate-400 hover:text-sky-400 transition-colors"
-                            title="Open in new tab"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
                       </div>
                     </div>
 
@@ -928,12 +896,12 @@ export const QrGeneratorPage: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Security Footer */}
+                      {/* Clean Dining Guarantee Footer (No ugly technical target URL string!) */}
                       <div className={`text-[8px] font-mono ${currentTheme.textAccent} mt-2.5 font-bold tracking-wider`}>
-                        ⚡ NO APP REQUIRED • ZERO DOWNLOADS • INSTANT ORDERING
+                        ⚡ NO APP REQUIRED • INSTANT CONTACTLESS ORDERING
                       </div>
-                      <div className="text-[7px] font-mono text-slate-400 mt-1 truncate max-w-[280px]">
-                        Target: {computeTableDineUrl(activeFocusTable.qrCodeToken, config)}
+                      <div className="text-[8px] font-serif text-slate-400 mt-1 uppercase tracking-widest">
+                        ✦ {config.brandName || 'AURA'} • TABLE {activeFocusTable.tableNumber} ✦
                       </div>
                     </div>
                   )}
@@ -976,6 +944,10 @@ export const QrGeneratorPage: React.FC = () => {
                           📶 Guest Wi-Fi: {config.wifiSsid} • Key: {config.wifiPassword || 'None'}
                         </div>
                       )}
+
+                      <div className="text-[9px] font-serif text-slate-400 mt-3 uppercase tracking-wider">
+                        ✦ FINE DINING &amp; BOTANICAL BAR • TABLE {activeFocusTable.tableNumber} ✦
+                      </div>
                     </div>
                   )}
 
@@ -1134,7 +1106,7 @@ export const QrGeneratorPage: React.FC = () => {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                    Direct Customer Dine URL
+                    Direct Customer Dine Link
                   </label>
                   <div className="p-2 bg-slate-950 border border-slate-800 rounded-xl text-[11px] font-mono text-slate-300 flex items-center justify-between">
                     <span className="truncate max-w-[240px]">
@@ -1142,7 +1114,7 @@ export const QrGeneratorPage: React.FC = () => {
                     </span>
                     <button
                       onClick={() => handleCopyLink(activeFocusTable.tableNumber, activeFocusTable.qrCodeToken)}
-                      className="text-slate-400 hover:text-emerald-400 p-1"
+                      className="text-slate-400 hover:text-emerald-400 p-1 cursor-pointer"
                       title="Copy URL"
                     >
                       {copiedKey === String(activeFocusTable.tableNumber) ? (
@@ -1416,12 +1388,6 @@ export const QrGeneratorPage: React.FC = () => {
                     placeholder="https://your-restaurant-domain.com"
                     className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono text-emerald-300 focus:outline-none focus:border-emerald-500"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Sample Generated URL:{' '}
-                    <span className="font-mono text-slate-300">
-                      {draftConfig.baseUrl || 'https://domain.com'}{draftConfig.urlFormat}tok_aura_tbl_01
-                    </span>
-                  </p>
                 </div>
 
                 {/* Wi-Fi SSID */}
@@ -1543,7 +1509,6 @@ export const QrGeneratorPage: React.FC = () => {
               : tables
             ).map((t) => {
               const qrUrl = qrCache[String(t.tableNumber)];
-              const dineUrl = computeTableDineUrl(t.qrCodeToken, config);
 
               return (
                 <div
@@ -1588,15 +1553,15 @@ export const QrGeneratorPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Wi-Fi & Target */}
+                  {/* Wi-Fi */}
                   {config.showWifi && config.wifiSsid && (
                     <div className="border border-black rounded-lg py-1.5 px-4 text-xs font-bold my-1">
                       📶 Wi-Fi: {config.wifiSsid} • Password: {config.wifiPassword || 'None'}
                     </div>
                   )}
 
-                  <div className="text-[10px] font-mono text-gray-600 mt-2">
-                    Direct URL: {dineUrl}
+                  <div className="text-xs font-serif font-bold tracking-widest uppercase text-gray-800 mt-3">
+                    ✦ {config.brandName || 'AURA GASTRONOMY'} • TABLE {t.tableNumber} ✦
                   </div>
                 </div>
               );
@@ -1639,7 +1604,6 @@ export const QrGeneratorPage: React.FC = () => {
               : tables
             ).map((t) => {
               const qrUrl = qrCache[String(t.tableNumber)];
-              const dineUrl = computeTableDineUrl(t.qrCodeToken, config);
 
               return (
                 <div
@@ -1687,8 +1651,8 @@ export const QrGeneratorPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="text-xs font-mono text-gray-600 mt-2">
-                    Tamper-Proof 128-Bit HMAC Session Guard • {dineUrl}
+                  <div className="text-sm font-serif font-bold tracking-widest uppercase text-gray-800 mt-3">
+                    ✦ {config.brandName || 'AURA GASTRONOMY'} • TABLE {t.tableNumber} ✦
                   </div>
                 </div>
               );

@@ -406,19 +406,15 @@ export const generateStandCardCanvas = async (
     currentY += 20;
   }
 
-  // 10. Security & Zero-App Guarantee Badge
+  // 10. Dining Guarantee Badge
   ctx.fillStyle = accentColor;
-  ctx.font = 'bold 22px "Inter", sans-serif';
-  ctx.fillText('⚡ NO APP REQUIRED   •   ZERO DOWNLOADS   •   INSTANT CONTACTLESS DINING', width / 2, currentY + 45);
+  ctx.font = 'bold 24px "Inter", sans-serif';
+  ctx.fillText('⚡ NO APP REQUIRED   •   INSTANT CONTACTLESS ORDERING   •   DIRECT KITCHEN DISPATCH', width / 2, currentY + 50);
 
-  // 11. Security Watermark & URL Footer
-  ctx.fillStyle = textSecondary;
-  ctx.font = '500 18px "Inter", monospace, sans-serif';
-  ctx.fillText(`Target URL: ${dineUrl}`, width / 2, currentY + 90);
-
-  ctx.fillStyle = theme === 'MINIMAL_IVORY' ? '#71717A' : '#64748B';
-  ctx.font = '500 16px "Inter", monospace, sans-serif';
-  ctx.fillText('🔒 Tamper-Proof 128-Bit Cryptographic HMAC Session Guard • AURA Gastronomy Systems', width / 2, currentY + 125);
+  // 11. Clean Brand & Table Tag
+  ctx.fillStyle = theme === 'MINIMAL_IVORY' ? '#71717A' : '#94A3B8';
+  ctx.font = '600 20px "Cinzel", "Inter", serif';
+  ctx.fillText(`✦   ${config.brandName.toUpperCase()}   •   ATMOSPHERIC DINING   •   TABLE ${tableNum}   ✦`, width / 2, currentY + 95);
 
   return canvas;
 };
@@ -677,18 +673,14 @@ export const generateBoardPosterCanvas = async (
     curY += 40;
   }
 
-  // Security and URL Guarantee
+  // Dining Guarantee
   ctx.fillStyle = accentColor;
   ctx.font = 'bold 28px "Inter", sans-serif';
   ctx.fillText('⚡ ZERO APP INSTALLS REQUIRED   •   DIRECT LIVE KITCHEN CONNECTION   •   SPLIT BILLS & REORDERS', width / 2, curY + 50);
 
-  ctx.fillStyle = textSecondary;
-  ctx.font = '500 24px "Inter", monospace, sans-serif';
-  ctx.fillText(`Customer Dining URL: ${dineUrl}`, width / 2, curY + 105);
-
-  ctx.fillStyle = theme === 'MINIMAL_IVORY' ? '#71717A' : '#64748B';
-  ctx.font = '500 20px "Inter", monospace, sans-serif';
-  ctx.fillText('🔒 Tamper-Proof 128-Bit Cryptographic HMAC Session Guard • AURA Gastronomy Systems', width / 2, curY + 150);
+  ctx.fillStyle = theme === 'MINIMAL_IVORY' ? '#71717A' : '#94A3B8';
+  ctx.font = '600 22px "Cinzel", "Inter", serif';
+  ctx.fillText(`✦   ${config.brandName.toUpperCase()}   •   FINE DINING & BOTANICAL BAR   •   TABLE ${tableNum}   ✦`, width / 2, curY + 100);
 
   return canvas;
 };
