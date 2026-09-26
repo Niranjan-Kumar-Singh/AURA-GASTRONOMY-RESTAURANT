@@ -13,6 +13,7 @@ import { CashierPOSPage } from './pages/cashier/CashierPOSPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { OwnerDashboardPage } from './pages/admin/OwnerDashboardPage';
 import { SettingsPage } from './pages/admin/SettingsPage';
+import { QrGeneratorPage } from './pages/admin/QrGeneratorPage';
 import { ProfilePage } from './pages/user/ProfilePage';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { TableSessionRoute } from './routes/TableSessionRoute';
@@ -64,6 +65,9 @@ export const App: React.FC = () => {
           <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'RESTAURANT_OWNER', 'MANAGER']} />}>
             <Route path="/admin" element={<AppLayout><AdminDashboardPage /></AppLayout>} />
             <Route path="/admin/dashboard" element={<AppLayout><AdminDashboardPage /></AppLayout>} />
+            <Route path="/admin/qr-generator" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
+            <Route path="/admin/qr-stands" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
+            <Route path="/qr-generator" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
             <Route path="/owner" element={<AppLayout><OwnerDashboardPage /></AppLayout>} />
             <Route path="/owner/dashboard" element={<AppLayout><OwnerDashboardPage /></AppLayout>} />
             <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />

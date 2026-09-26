@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { CommandPalette } from '../navigation/CommandPalette';
 import { useAuthStore } from '../../store/use-auth-store';
 import {
-  ShieldCheck, Award, ChefHat, Layers, Receipt, Utensils,
+  ShieldCheck, Award, ChefHat, Layers, Receipt, Utensils, QrCode,
   Search, Bell, LogOut, Clock, ChevronLeft, ChevronRight, Menu, X, Activity
 } from 'lucide-react';
 
@@ -45,6 +45,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         items: [
           { name: 'Admin Operations', shortName: 'Admin', path: '/admin', icon: ShieldCheck, accent: 'text-indigo-400', activeBg: 'bg-indigo-500/15 border-indigo-500/40 text-indigo-300' },
           { name: 'Executive Cockpit', shortName: 'CEO', path: '/owner', icon: Award, accent: 'text-emerald-400', activeBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' },
+          { name: 'QR Table Stands & Print', shortName: 'QR Studio', path: '/admin/qr-generator', icon: QrCode, accent: 'text-emerald-400', activeBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' },
         ]
       });
     }

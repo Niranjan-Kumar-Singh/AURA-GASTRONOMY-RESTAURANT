@@ -6,8 +6,11 @@ export interface VenueQrConfig {
   showWifi: boolean;
   wifiSsid: string;
   wifiPassword: string;
-  themeStyle: 'EMERALD_GOLD' | 'ROYAL_NOIR' | 'MINIMAL_IVORY';
+  themeStyle: 'EMERALD_GOLD' | 'ROYAL_NOIR' | 'MINIMAL_IVORY' | 'SUNSET_AMBER' | 'CYBER_NEON';
   badgeText: string;
+  centerIcon?: 'CUTLERY' | 'WINE' | 'SPARKLES' | 'CHEF' | 'TEXT';
+  cardLayout?: 'STAND_4X6' | 'BOARD_POSTER' | 'STICKER_SQUARE' | 'RAW_QR';
+  customNote?: string;
 }
 
 export const STORAGE_KEY_VENUE_CONFIG = 'aura_venue_qr_settings';
@@ -23,6 +26,9 @@ export const DEFAULT_VENUE_CONFIG: VenueQrConfig = {
   wifiPassword: 'AuraDining2026',
   themeStyle: 'EMERALD_GOLD',
   badgeText: 'Atmospheric Gastronomy & Botanical Bar',
+  centerIcon: 'CUTLERY',
+  cardLayout: 'STAND_4X6',
+  customNote: 'Tamper-Proof 128-Bit Cryptographic HMAC Session Guard',
 };
 
 /**

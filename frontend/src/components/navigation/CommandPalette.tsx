@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Command, ArrowRight, ShieldCheck, ChefHat, Layers, Receipt, Award, Settings, User, Sparkles, X } from 'lucide-react';
+import { Search, Command, ArrowRight, ShieldCheck, ChefHat, Layers, Receipt, Award, Settings, User, Sparkles, X, QrCode } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface CommandItem {
@@ -46,6 +46,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   const items: CommandItem[] = [
     { id: 'nav-admin', title: 'Operational Admin Mission Control', category: 'Navigation', icon: ShieldCheck, action: () => { navigate('/admin/dashboard'); onClose(); } },
     { id: 'nav-owner', title: 'Owner CEO Financial Analytics', category: 'Navigation', icon: Award, action: () => { navigate('/owner/dashboard'); onClose(); } },
+    { id: 'nav-qr', title: 'Table QR Stands & Print Studio (All Tables)', category: 'Navigation', icon: QrCode, action: () => { navigate('/admin/qr-generator'); onClose(); } },
     { id: 'nav-kds', title: 'Kitchen Display System (KDS)', category: 'Navigation', icon: ChefHat, action: () => { navigate('/kitchen/kds'); onClose(); } },
     { id: 'nav-waiter', title: 'Waiter Floor Mission Control', category: 'Navigation', icon: Layers, action: () => { navigate('/waiter/dashboard'); onClose(); } },
     { id: 'nav-cashier', title: 'Cashier POS Terminal', category: 'Navigation', icon: Receipt, action: () => { navigate('/cashier/pos'); onClose(); } },

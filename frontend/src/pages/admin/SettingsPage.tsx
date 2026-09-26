@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Building2, Sliders, ShieldCheck, Receipt, Bell, CheckCircle2, Save, Globe, Wifi } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Settings, Building2, Sliders, ShieldCheck, Receipt, Bell, CheckCircle2, Save, Globe, Wifi, QrCode, ArrowRight } from 'lucide-react';
 import { getVenueConfig, saveVenueConfig } from '../../utils/venueConfig';
 
 export const SettingsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'GENERAL' | 'OPERATIONS' | 'RECEIPTS' | 'SECURITY'>('GENERAL');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -47,13 +49,23 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleSave}
-          className="px-5 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs rounded-xl shadow-lg shadow-[#0EA5E9]/20 flex items-center space-x-2 transition-all border border-[#7DD3FC]/50 cursor-pointer"
-        >
-          <Save className="w-4 h-4" />
-          <span>Save Settings</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => navigate('/admin/qr-generator')}
+            className="px-4 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 font-bold text-xs rounded-xl flex items-center space-x-2 transition-all cursor-pointer shadow-sm"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>Open QR Studio</span>
+          </button>
+
+          <button
+            onClick={handleSave}
+            className="px-5 py-2.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-[#090A0F] font-black text-xs rounded-xl shadow-lg shadow-[#0EA5E9]/20 flex items-center space-x-2 transition-all border border-[#7DD3FC]/50 cursor-pointer"
+          >
+            <Save className="w-4 h-4" />
+            <span>Save Settings</span>
+          </button>
+        </div>
       </div>
 
       {savedSuccess && (
