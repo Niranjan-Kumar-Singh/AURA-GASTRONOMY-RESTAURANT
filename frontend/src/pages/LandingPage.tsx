@@ -52,7 +52,7 @@ export const LandingPage: React.FC = () => {
 
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => navigate('/table/10/menu')}
+            onClick={() => navigate('/menu')}
             className="px-4 py-2 bg-[#0C831F] hover:bg-[#096918] text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center space-x-1.5 cursor-pointer"
           >
             <Utensils className="w-3.5 h-3.5" />
@@ -105,7 +105,7 @@ export const LandingPage: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
-              onClick={() => navigate('/table/10/menu')}
+              onClick={() => navigate('/menu')}
               className="w-full sm:w-auto px-8 py-4 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-sm transition-transform hover:scale-105 shadow-xl flex items-center justify-center space-x-2 cursor-pointer shadow-emerald-950/40"
             >
               <Utensils className="w-5 h-5" />

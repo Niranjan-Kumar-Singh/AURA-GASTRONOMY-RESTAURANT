@@ -6,6 +6,8 @@ import { RevenueAreaChart, PeakHoursBarChart, CategoryDonutChart, OccupancyGauge
 import { adminService, AdminMetrics } from '../../services/admin.service';
 import { menuService } from '../../services/menu.service';
 import { orderService } from '../../services/order.service';
+import { tableService } from '../../services/table.service';
+import { TableQrStandsModal } from '../../components/tables/TableQrStandsModal';
 import { MenuItem, Category } from '../../types/menu.types';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
@@ -13,7 +15,7 @@ import { OrderRefundModal } from '../../components/orders/OrderRefundModal';
 import {
   DollarSign, ShoppingBag, LayoutGrid, ChefHat, TrendingUp, RefreshCw, Layers, ShieldCheck,
   Calendar, Users, Play, Pause, AlertTriangle, Sparkles, Clock, Heart, Award, Utensils, Receipt, CheckCircle2,
-  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer, RotateCcw
+  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer, RotateCcw, QrCode
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -33,6 +35,21 @@ export const AdminDashboardPage: React.FC = () => {
 
   // Dish Modal State
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [allTables, setAllTables] = useState<any[]>([]);
+
+  const fetchAllTables = async () => {
+    try {
+      const data = await tableService.getAllTables();
+      setAllTables(data);
+    } catch (err) {
+      console.error('Failed to load tables in Admin:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllTables();
+  }, []);
   const [editingDish, setEditingDish] = useState<MenuItem | null>(null);
   const [dishName, setDishName] = useState('');
   const [dishDescription, setDishDescription] = useState('');
@@ -381,6 +398,15 @@ export const AdminDashboardPage: React.FC = () => {
             >
               <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isLoadingRealOrders ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
+            </button>
+
+            <button
+              onClick={() => setIsQrModalOpen(true)}
+              className="px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+              title="View and print table QR code stands"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Table QR Stands</span>
             </button>
 
             <a
@@ -1554,6 +1580,14 @@ export const AdminDashboardPage: React.FC = () => {
         onSuccess={() => {
           fetchMetricsAndOrders(true);
         }}
+      />
+
+      {/* Table QR Stand Cards Modal */}
+      <TableQrStandsModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        tables={allTables}
+        onRefreshTables={fetchAllTables}
       />
     </div>
   );

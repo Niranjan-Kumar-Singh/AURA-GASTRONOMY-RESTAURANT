@@ -109,7 +109,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
       action: () => {
         if (activeOrderId) {
           onClose();
-          navigate(`/table/${tableId}/order/${activeOrderId}`);
+          navigate(`/order/${activeOrderId}`);
         } else {
           showToast('No active orders to track currently.', 'info');
         }

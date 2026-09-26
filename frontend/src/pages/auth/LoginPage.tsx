@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
 import { useAuthStore } from '../../store/use-auth-store';
-import { ShieldCheck, Utensils, Eye, EyeOff, Lock, User as UserIcon, ArrowRight, ArrowLeft, ChefHat, UserCheck, CreditCard, LayoutDashboard, Award, Sparkles } from 'lucide-react';
+import { ShieldCheck, Utensils, Eye, EyeOff, Lock, User as UserIcon, ArrowRight, ArrowLeft, ChefHat, UserCheck, CreditCard, LayoutDashboard, Award, Sparkles, KeyRound, CheckCircle2, Tablet } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [identifier, setIdentifier] = useState('chef@aura.com');
@@ -10,6 +10,42 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Terminal Authorization State (Restricts 1-Click Fast Login to authorized restaurant devices)
+  const [searchParams] = useSearchParams();
+  const terminalKeyParam = searchParams.get('terminalKey') || searchParams.get('stationKey');
+
+  const [isTerminalAuthorized, setIsTerminalAuthorized] = useState<boolean>(() => {
+    if (terminalKeyParam && ['AURA2026', '8888', 'AURA'].includes(terminalKeyParam.toUpperCase())) {
+      localStorage.setItem('aura_terminal_authorized', 'true');
+      return true;
+    }
+    return localStorage.getItem('aura_terminal_authorized') === 'true';
+  });
+
+  const [showPasscodeForm, setShowPasscodeForm] = useState(false);
+  const [passcodeInput, setPasscodeInput] = useState('');
+  const [passcodeError, setPasscodeError] = useState<string | null>(null);
+
+  const handleUnlockTerminal = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = passcodeInput.trim().toUpperCase();
+    if (clean === 'AURA2026' || clean === '8888' || clean === 'AURA' || clean === 'STAFF') {
+      localStorage.setItem('aura_terminal_authorized', 'true');
+      setIsTerminalAuthorized(true);
+      setShowPasscodeForm(false);
+      setPasscodeInput('');
+      setPasscodeError(null);
+    } else {
+      setPasscodeError('Invalid Master Passcode. (Hint: Default is AURA2026)');
+    }
+  };
+
+  const handleLockTerminal = () => {
+    localStorage.removeItem('aura_terminal_authorized');
+    setIsTerminalAuthorized(false);
+    setShowPasscodeForm(false);
+  };
 
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
@@ -197,32 +233,107 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick Staff Workspace Access Selectors */}
-          <div className="pt-4 border-t border-slate-800/80 space-y-2.5">
-            <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest text-center">
-              1-Click Staff Access Presets
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {quickRoles.map((item) => (
-                <button
-                  key={item.role}
-                  onClick={() => {
-                    setIdentifier(item.email);
-                    setPassword(item.pass);
-                    handleLoginSubmit(item.email, item.pass);
-                  }}
-                  className="p-2.5 bg-[#070A12]/90 border border-slate-800/90 hover:border-slate-600 text-left rounded-xl transition-all flex items-center space-x-2 group cursor-pointer"
-                >
-                  <div className="p-1.5 bg-slate-900 rounded-lg border border-slate-800 group-hover:border-slate-600">
-                    {item.icon}
+          {/* Fast Staff Access Presets (Protected by Terminal Authorization) */}
+          <div className="pt-4 border-t border-slate-800/80 space-y-3">
+            {isTerminalAuthorized ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-[11px] font-mono font-bold text-emerald-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Authorized Terminal (1-Click Active)</span>
                   </div>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-xs text-white truncate">{item.title}</h4>
-                    <span className="text-[9px] text-slate-500 font-mono block truncate">{item.email}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  <button
+                    type="button"
+                    onClick={handleLockTerminal}
+                    className="text-[10px] text-slate-400 hover:text-rose-400 font-mono underline cursor-pointer"
+                    title="Lock 1-Click Presets on this Device"
+                  >
+                    Lock Station
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {quickRoles.map((item) => (
+                    <button
+                      key={item.role}
+                      type="button"
+                      onClick={() => {
+                        setIdentifier(item.email);
+                        setPassword(item.pass);
+                        handleLoginSubmit(item.email, item.pass);
+                      }}
+                      className="p-2.5 bg-[#070A12]/90 border border-slate-800/90 hover:border-emerald-500/50 text-left rounded-xl transition-all flex items-center space-x-2 group cursor-pointer"
+                    >
+                      <div className="p-1.5 bg-slate-900 rounded-lg border border-slate-800 group-hover:border-emerald-500/40">
+                        {item.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-xs text-white truncate">{item.title}</h4>
+                        <span className="text-[9px] text-slate-500 font-mono block truncate">{item.email}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="p-4 bg-[#070A12]/95 border border-slate-800/90 rounded-2xl text-center space-y-3 shadow-inner">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">1-Click Fast Login Locked</h4>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    1-Click role switching is secured to protect kitchen and POS stations from unauthorized guest access.
+                  </p>
+                </div>
+
+                {!showPasscodeForm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowPasscodeForm(true)}
+                    className="w-full py-2.5 px-3 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Authorize Restaurant Terminal</span>
+                  </button>
+                ) : (
+                  <form onSubmit={handleUnlockTerminal} className="space-y-2 pt-1 text-left">
+                    <label className="block text-[10px] font-mono text-slate-300 uppercase tracking-wider">
+                      Master Terminal Passcode (Default: <span className="text-emerald-400 font-bold">AURA2026</span>)
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="password"
+                        autoFocus
+                        value={passcodeInput}
+                        onChange={(e) => {
+                          setPasscodeInput(e.target.value);
+                          setPasscodeError(null);
+                        }}
+                        placeholder="e.g. AURA2026"
+                        className="flex-1 py-2 px-3 bg-[#0D121F] border border-slate-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
+                      />
+                      <button
+                        type="submit"
+                        className="py-2 px-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition-all cursor-pointer shrink-0"
+                      >
+                        Unlock
+                      </button>
+                    </div>
+                    {passcodeError && (
+                      <p className="text-[10px] text-rose-400 font-mono">{passcodeError}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPasscodeForm(false)}
+                      className="text-[10px] text-slate-500 hover:text-slate-400 underline font-mono cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -160,6 +160,7 @@ router.get('/', async (req, res) => {
         activeOrderId,
         orderTotal,
         guestCount,
+        qrToken: table.qrToken,
         cleaningStartedAt: table.cleaningStartedAt
       };
     }));
@@ -208,6 +209,123 @@ router.post('/validate', async (req, res) => {
     res.json({ data: { tableNumber: table.tableNumber, session } });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// GET / POST Scan Table QR Code by opaque token (Used by customer mobile when scanning physical QR stand)
+router.all('/scan/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const userId = req.body?.userId || req.query?.userId;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Missing table QR token.' });
+    }
+
+    const table = await Table.findOne({ qrToken: token });
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invalid or expired table QR code. Please scan the official QR code placed on your dining table.'
+      });
+    }
+
+    // Find or create active session
+    let session = await TableSession.findOne({ tableId: table._id, status: 'active' }).populate('users');
+    if (!session) {
+      session = await TableSession.create({
+        tableId: table._id,
+        sessionId: generateSessionId(),
+        users: userId ? [userId] : [],
+      });
+      if (table.status === 'available') {
+        table.status = 'occupied';
+        table.guestCount = table.guestCount || 2;
+        await table.save().catch(() => {});
+      }
+    } else {
+      if (userId && !session.users.some(u => u._id?.toString() === userId || u.toString() === userId)) {
+        session.users.push(userId);
+        await session.save().catch(() => {});
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        tableNumber: String(table.tableNumber),
+        qrToken: table.qrToken,
+        sessionId: session.sessionId,
+        capacity: table.capacity,
+        status: table.status,
+        session
+      }
+    });
+  } catch (error) {
+    console.error('Error handling table QR scan:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET QR Token for a specific Table Number (e.g. for generating table stands or redirects)
+router.get('/qr-token/:tableNumber', async (req, res) => {
+  try {
+    const cleanTableNum = String(req.params.tableNumber || '').match(/\d+/)?.[0] || '1';
+    let table = await Table.findOne({ tableNumber: cleanTableNum });
+
+    if (!table) {
+      table = await Table.create({
+        tableNumber: cleanTableNum,
+        capacity: Number(cleanTableNum) % 4 === 0 ? 6 : Number(cleanTableNum) % 2 === 0 ? 4 : 2,
+        status: 'available',
+        qrToken: crypto.randomBytes(16).toString('hex')
+      });
+    } else if (!table.qrToken) {
+      table.qrToken = crypto.randomBytes(16).toString('hex');
+      await table.save().catch(() => {});
+    }
+
+    res.json({
+      success: true,
+      data: {
+        tableNumber: table.tableNumber,
+        qrToken: table.qrToken
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST rotate/regenerate QR Code Token for a Table (Security enhancement for managers)
+router.post(['/:tableId/rotate-qr', '/rotate-qr/:tableId'], async (req, res) => {
+  try {
+    const { tableId } = req.params;
+    const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || '1';
+    const isObjectId = String(tableId).match(/^[0-9a-fA-F]{24}$/);
+
+    const table = await Table.findOne({
+      $or: [{ tableNumber: cleanTableNum }, { _id: isObjectId ? tableId : null }]
+    });
+
+    if (!table) {
+      return res.status(404).json({ success: false, message: 'Table not found.' });
+    }
+
+    // Generate fresh cryptographic token
+    table.qrToken = crypto.randomBytes(16).toString('hex');
+    await table.save();
+
+    res.json({
+      success: true,
+      message: `Table ${table.tableNumber} QR token regenerated successfully.`,
+      data: {
+        tableNumber: table.tableNumber,
+        qrToken: table.qrToken
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

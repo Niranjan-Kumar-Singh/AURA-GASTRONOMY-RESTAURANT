@@ -191,12 +191,32 @@ router.post('/', async (req, res) => {
     const verifiedCouponDiscount = Math.min(verifiedSubtotal, Math.max(0, parseFloat(discount) || 0));
     const calculatedTotal = Math.max(0, Math.round((verifiedSubtotal + computedTax - verifiedCouponDiscount - verifiedPtsDiscount) * 100) / 100);
 
-    const cleanTableNum = String(tableId || '1').match(/\d+/)?.[0] || '1';
-    const isObjectId = String(tableId).match(/^[0-9a-fA-F]{24}$/);
-    const physicalTable = await Table.findOne({
-      $or: [{ tableNumber: cleanTableNum }, { _id: isObjectId ? tableId : null }]
-    });
+    const clientQrToken = req.body.qrToken;
+    let physicalTable = null;
 
+    // 1. If secure QR token was provided, verify physical table directly from token
+    if (clientQrToken) {
+      physicalTable = await Table.findOne({ qrToken: clientQrToken });
+    }
+
+    // 2. If sessionId was provided, verify table from active session
+    if (!physicalTable && sessionId) {
+      const activeSess = await TableSession.findOne({ sessionId }).populate('tableId');
+      if (activeSess && activeSess.tableId) {
+        physicalTable = activeSess.tableId;
+      }
+    }
+
+    // 3. Fallback to tableId / tableNumber
+    if (!physicalTable) {
+      const cleanTableNum = String(tableId || '1').match(/\d+/)?.[0] || '1';
+      const isObjectId = String(tableId).match(/^[0-9a-fA-F]{24}$/);
+      physicalTable = await Table.findOne({
+        $or: [{ tableNumber: cleanTableNum }, { _id: isObjectId ? tableId : null }]
+      });
+    }
+
+    const cleanTableNum = String(tableId || '1').match(/\d+/)?.[0] || '1';
     const queryTableId = physicalTable ? String(physicalTable.tableNumber) : cleanTableNum;
 
     // Check if an active unpaid order ALREADY exists for this table session

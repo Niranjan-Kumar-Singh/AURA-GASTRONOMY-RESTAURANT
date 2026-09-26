@@ -18,6 +18,21 @@ export const tableService = {
     return response.data.data;
   },
 
+  async scanTable(token: string, userId?: string) {
+    const response = await apiClient.post(`/tables/scan/${token}`, { userId });
+    return response.data.data;
+  },
+
+  async getQrToken(tableNumber: string | number) {
+    const response = await apiClient.get(`/tables/qr-token/${tableNumber}`);
+    return response.data.data;
+  },
+
+  async rotateQrToken(tableId: string | number) {
+    const response = await apiClient.post(`/tables/${tableId}/rotate-qr`);
+    return response.data.data;
+  },
+
   async devSeedAndValidate(tableNumber: string, userId?: string) {
     const response = await apiClient.post('/tables/dev-seed', { tableNumber, userId });
     return response.data.data;

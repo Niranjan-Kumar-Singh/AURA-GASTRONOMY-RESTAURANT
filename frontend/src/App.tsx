@@ -6,6 +6,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { MenuPage } from './pages/customer/MenuPage';
 import { OrderTrackingPage } from './pages/customer/OrderTrackingPage';
+import { DineScanPage } from './pages/customer/DineScanPage';
 import { KitchenDisplayPage } from './pages/kitchen/KitchenDisplayPage';
 import { WaiterDashboardPage } from './pages/waiter/WaiterDashboardPage';
 import { CashierPOSPage } from './pages/cashier/CashierPOSPage';
@@ -24,13 +25,22 @@ export const App: React.FC = () => {
           {/* Public Customer Menu & Landing Routes */}
           <Route path="/" element={<LandingPage />} />
 
+          {/* Opaque QR Scan Routes for Physical Dining Tables */}
+          <Route path="/dine/:token" element={<DineScanPage />} />
+          <Route path="/t/:token" element={<DineScanPage />} />
+
+          {/* Masked Customer Digital Menu & Order Tracking (No Table ID in URL) */}
           <Route element={<TableSessionRoute />}>
+            <Route path="/menu" element={<MenuPage />} />
+            <Route path="/order/:orderId" element={<OrderTrackingPage />} />
+            {/* Backward-compatible legacy routes: Auto-cleaned to /menu */}
             <Route path="/table/:tableId/menu" element={<MenuPage />} />
             <Route path="/table/:tableId/order/:orderId" element={<OrderTrackingPage />} />
           </Route>
 
           {/* Staff Authentication */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/staff" element={<Navigate to="/login" replace />} />
 
           {/* Kitchen KDS Routes */}
           <Route element={<ProtectedRoute allowedRoles={['CHEF', 'ADMIN', 'RESTAURANT_OWNER']} />}>

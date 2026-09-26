@@ -12,6 +12,7 @@ import { DishDetailModal } from '../../components/menu/DishDetailModal';
 import { CartDrawer } from '../../components/cart/CartDrawer';
 import { useCartStore } from '../../store/use-cart-store';
 import { useAuthStore } from '../../store/use-auth-store';
+import { useTableStore } from '../../store/use-table-store';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 import { menuService } from '../../services/menu.service';
@@ -109,7 +110,9 @@ const GASTRONOMY_REELS = [
 ];
 
 export const OrderTrackingPage: React.FC = () => {
-  const { tableId = '10', orderId } = useParams<{ tableId?: string; orderId?: string }>();
+  const { tableId: paramTableId, orderId } = useParams<{ tableId?: string; orderId?: string }>();
+  const activeStoreTableId = useTableStore((state) => state.activeTableId);
+  const tableId = activeStoreTableId || paramTableId || '10';
   const navigate = useNavigate();
   const { items, addItem, updateQuantity, clearCart, getItemCount } = useCartStore();
   const { showToast } = useToast();
@@ -319,7 +322,7 @@ export const OrderTrackingPage: React.FC = () => {
       {/* Sticky Top Header */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shadow-sm gap-2">
         <button
-          onClick={() => navigate(`/table/${tableId}/menu`)}
+          onClick={() => navigate('/menu')}
           className="flex items-center space-x-1 sm:space-x-1.5 text-xs font-bold text-slate-600 hover:text-[#0C831F] transition-colors cursor-pointer shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -378,7 +381,7 @@ export const OrderTrackingPage: React.FC = () => {
                 </p>
               </div>
               <button
-                onClick={() => navigate(`/table/${tableId}/menu`)}
+                onClick={() => navigate('/menu')}
                 className="px-6 py-3 bg-[#0C831F] hover:bg-[#096918] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center space-x-1.5 mx-auto cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -727,7 +730,7 @@ export const OrderTrackingPage: React.FC = () => {
                     <span>While You Wait — Add More To Table?</span>
                   </div>
                   <button
-                    onClick={() => navigate(`/table/${tableId}/menu`)}
+                    onClick={() => navigate('/menu')}
                     className="text-[10px] text-[#0C831F] font-bold flex items-center space-x-0.5 hover:underline cursor-pointer"
                   >
                     <span>Browse all</span>
@@ -812,7 +815,7 @@ export const OrderTrackingPage: React.FC = () => {
                     <button
                       onClick={() => {
                         const slug = QUICK_ADD_SUGGESTIONS.find((s) => s.id === selectedWaitFilter)?.categorySlug;
-                        navigate(slug ? `/table/${tableId}/menu?category=${slug}` : `/table/${tableId}/menu`);
+                        navigate(slug ? `/menu?category=${slug}` : '/menu');
                       }}
                       className="text-[10px] text-[#0C831F] font-bold flex items-center space-x-0.5 hover:underline cursor-pointer shrink-0 ml-1"
                     >
@@ -1073,7 +1076,7 @@ export const OrderTrackingPage: React.FC = () => {
 
             {/* === 8. BIG CTA: ADD MORE DISHES === */}
             <button
-              onClick={() => navigate(`/table/${tableId}/menu`)}
+              onClick={() => navigate('/menu')}
               className="w-full py-4 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-sm uppercase tracking-wider transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
             >
               <Plus className="w-5 h-5" />

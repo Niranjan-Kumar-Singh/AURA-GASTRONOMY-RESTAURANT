@@ -27,10 +27,14 @@ import { useCartStore } from '../../store/use-cart-store';
 import { useOrderStore } from '../../store/use-order-store';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useWishlistStore } from '../../store/use-wishlist-store';
+import { useTableStore } from '../../store/use-table-store';
 import { ShoppingBag, Utensils, Menu, Sparkles, Flame, ChefHat, RotateCcw, AlertCircle, Heart } from 'lucide-react';
 
 export const MenuPage: React.FC = () => {
-  const { tableId = '10' } = useParams<{ tableId?: string }>();
+  const { tableId: paramTableId } = useParams<{ tableId?: string }>();
+  const activeStoreTableId = useTableStore((state) => state.activeTableId);
+  const isTableVerified = useTableStore((state) => state.isVerified);
+  const tableId = activeStoreTableId || paramTableId || '10';
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -361,7 +365,7 @@ export const MenuPage: React.FC = () => {
                   {/* 5. Track Order (Active Kitchen Order) */}
                   {activeOrderId && (
                     <button
-                      onClick={() => navigate(`/table/${tableId}/order/${activeOrderId}`)}
+                      onClick={() => navigate(`/order/${activeOrderId}`)}
                       className="relative p-2 sm:px-3 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer font-black text-xs shrink-0 active:scale-95"
                       title="Track Active Kitchen Order"
                     >
@@ -590,7 +594,7 @@ export const MenuPage: React.FC = () => {
           setIsCartOpen(false);
           setActiveOrderId(orderId);
           clearCart();
-          navigate(`/table/${tableId}/order/${orderId}`);
+          navigate(`/order/${orderId}`);
         }}
       />
 

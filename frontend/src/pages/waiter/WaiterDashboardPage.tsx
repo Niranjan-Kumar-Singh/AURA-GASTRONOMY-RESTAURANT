@@ -5,6 +5,8 @@ import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
+import { TableQrStandsModal } from '../../components/tables/TableQrStandsModal';
+
 interface TableState {
   _id: string;
   tableNumber: number;
@@ -15,6 +17,7 @@ interface TableState {
   activeOrderId?: string;
   orderTotal?: number;
   orderStatus?: string;
+  qrToken?: string;
   items?: { name: string; quantity: number }[];
   cleaningStartedAt?: string | Date;
 }
@@ -43,6 +46,7 @@ export const WaiterDashboardPage: React.FC = () => {
   const [tables, setTables] = useState<TableState[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableState | null>(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Lock background body scroll when table modal is open
   useBodyScrollLock(selectedTable !== null);
@@ -582,6 +586,16 @@ export const WaiterDashboardPage: React.FC = () => {
                 {billingCount}
               </span>
             )}
+          </button>
+
+          {/* Table QR Stand Generator & Print Manager */}
+          <button
+            onClick={() => setIsQrModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 cursor-pointer shadow-sm"
+            title="View & Print Table QR Code Stands"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>QR Stands</span>
           </button>
 
           <div className="h-4 w-px bg-theme-border flex-shrink-0 mx-1" />
@@ -1148,13 +1162,13 @@ export const WaiterDashboardPage: React.FC = () => {
               {/* Digital Menu Link Launcher */}
               <div>
                 <a
-                  href={`/table/${selectedTable.tableNumber}/menu`}
+                  href={selectedTable.qrToken ? `/dine/${selectedTable.qrToken}` : `/table/${selectedTable.tableNumber}/menu`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-2.5 bg-theme-bg border border-theme-border hover:border-theme-primary text-theme-primary text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-sm"
+                  className="w-full py-2.5 bg-theme-bg border border-theme-border hover:border-emerald-500 text-emerald-400 text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-sm"
                 >
-                  <QrCode className="w-4 h-4 text-theme-primary" />
-                  <span>Open Digital Menu for Table {selectedTable.tableNumber}</span>
+                  <QrCode className="w-4 h-4 text-emerald-400" />
+                  <span>Launch Verified Menu (Table {selectedTable.tableNumber})</span>
                   <ExternalLink className="w-3.5 h-3.5 text-theme-muted" />
                 </a>
               </div>
@@ -1366,6 +1380,14 @@ export const WaiterDashboardPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Table QR Stand Cards Modal */}
+      <TableQrStandsModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        tables={tables as any}
+        onRefreshTables={fetchFloorState}
+      />
     </div>
   );
 };
