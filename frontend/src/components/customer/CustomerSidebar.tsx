@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  X, User, Utensils, Clock, History, Heart, Tag, BookOpen, HelpCircle, LogIn, LogOut, Edit2, Star, FileText, ChevronRight, Sparkles, ShieldCheck, Bell, Zap, Award
+  X, User, Utensils, Clock, History, Heart, Tag, BookOpen, HelpCircle, LogIn, LogOut, Edit2, Star, FileText, ChevronRight, Sparkles, ShieldCheck, Bell, Zap, Award, Phone
 } from 'lucide-react';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useOrderStore } from '../../store/use-order-store';
@@ -213,7 +213,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
                   <span className="font-extrabold text-[11px] text-[#0C831F] uppercase tracking-wider">GASTRONOMY</span>
                 </div>
                 <h3 className="font-bold text-xs text-slate-700 truncate mt-1">
-                  {isAuthenticated ? user?.name : `Table ${tableId} Guest`}
+                  {isAuthenticated ? (user?.name || `+91 ${user?.phone}`) : `Table ${tableId} Guest`}
                 </h3>
                 <div className="flex items-center space-x-1.5 mt-0.5">
                   <button 
@@ -306,8 +306,8 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
               }}
               className="w-full py-2.5 px-4 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95 cursor-pointer"
             >
-              <LogIn className="w-4 h-4" />
-              <span>Sign In / Register</span>
+              <Phone className="w-4 h-4" />
+              <span>Quick Login (Number Only)</span>
             </button>
           ) : (
             <button

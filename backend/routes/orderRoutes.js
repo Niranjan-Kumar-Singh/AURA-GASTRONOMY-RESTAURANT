@@ -108,6 +108,61 @@ router.post('/', async (req, res) => {
       pointsDiscount
     } = req.body;
     
+    // 0. Mandatory Customer Mobile Number Validation (Essential for live alerts & diner retention)
+    if (!customerPhone || typeof customerPhone !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'A valid 10-digit mobile number is required to place your order and track live kitchen preparation.' 
+      });
+    }
+
+    const cleanCustomerPhone = customerPhone.replace(/\D/g, '').slice(-10);
+    if (cleanCustomerPhone.length !== 10) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide a valid 10-digit mobile number (e.g. 9876543210).' 
+      });
+    }
+
+    // Auto-enroll customer in AURA Loyalty Club if account doesn't exist
+    let customerUser = await User.findOne({ 
+      $or: [{ phone: cleanCustomerPhone }, { phone: `+91${cleanCustomerPhone}` }] 
+    });
+
+    if (!customerUser) {
+      const guestName = (customerName && typeof customerName === 'string' && customerName.trim()) 
+        ? customerName.trim() 
+        : `Diner-${cleanCustomerPhone.slice(-4)}`;
+
+      customerUser = await User.create({
+        name: guestName,
+        phone: cleanCustomerPhone,
+        password: 'aura@' + cleanCustomerPhone,
+        role: 'customer',
+        status: 'Standard',
+        loyaltyPoints: 100, // 100 PTS Welcome Gift!
+        lifetimePoints: 100,
+        loyaltyTier: 'STANDARD'
+      }).catch(err => {
+        console.warn('Customer auto-create warning:', err.message);
+      });
+
+      if (customerUser) {
+        await LoyaltyTransaction.create({
+          userId: customerUser._id,
+          customerPhone: cleanCustomerPhone,
+          type: 'WELCOME_BONUS',
+          points: 100,
+          balanceAfter: 100,
+          description: 'AURA Club Welcome Dining Gift (+100 PTS)',
+          metadata: { reason: 'First Order Auto-Enrollment' }
+        }).catch(err => console.error('Failed to log welcome loyalty tx:', err));
+      }
+    } else if (customerName && typeof customerName === 'string' && customerName.trim() && customerUser.name && customerUser.name.startsWith('Diner-')) {
+      customerUser.name = customerName.trim();
+      await customerUser.save().catch(e => console.warn('Name update warn:', e.message));
+    }
+
     // 1. Data Integrity and Input Sanitization
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Order must contain at least one dish item.' });
@@ -244,7 +299,7 @@ router.post('/', async (req, res) => {
       existingOrder.pointsDiscount = (existingOrder.pointsDiscount || 0) + verifiedPtsDiscount;
       existingOrder.total = (existingOrder.total || 0) + calculatedTotal;
       
-      if (customerPhone) existingOrder.customerPhone = customerPhone;
+      if (cleanCustomerPhone) existingOrder.customerPhone = cleanCustomerPhone;
       if (customerName) existingOrder.customerName = customerName;
       if (appliedCoupon) existingOrder.appliedCoupon = appliedCoupon;
       
@@ -257,8 +312,8 @@ router.post('/', async (req, res) => {
       order = await Order.create({
         orderId: generateOrderId(),
         tableId: queryTableId,
-        customerPhone,
-        customerName,
+        customerPhone: cleanCustomerPhone,
+        customerName: customerName || (customerUser ? customerUser.name : `Diner-${cleanCustomerPhone.slice(-4)}`),
         items: verifiedNewItems,
         subtotal: verifiedSubtotal,
         tax: computedTax,

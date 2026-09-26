@@ -66,13 +66,178 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Fast Mobile / Number-Only Login for Customers, Staff, and Owners
+router.post(['/phone-login', '/customer-quick-login'], async (req, res) => {
+  try {
+    const { phone, name } = req.body;
+    if (!phone || typeof phone !== 'string') {
+      return res.status(400).json({ success: false, message: 'Please provide a valid mobile number or staff code.' });
+    }
+
+    const rawInput = phone.trim().toLowerCase();
+
+    // 1. Staff quick shortcuts and designated staff numbers
+    const staffShortcuts = {
+      owner: { role: 'owner', name: 'Restaurant Owner', email: 'owner@aura.com', phone: '9999900001' },
+      admin: { role: 'admin', name: 'System Administrator', email: 'admin@aura.com', phone: '9999900002' },
+      chef: { role: 'kitchen', name: 'Executive Chef', email: 'chef@aura.com', phone: '9999900003' },
+      kitchen: { role: 'kitchen', name: 'Executive Chef', email: 'chef@aura.com', phone: '9999900003' },
+      waiter: { role: 'waiter', name: 'Head Waiter', email: 'waiter@aura.com', phone: '9999900004' },
+      cashier: { role: 'cashier', name: 'Senior Cashier', email: 'cashier@aura.com', phone: '9999900005' },
+    };
+
+    const staffPhoneMap = {
+      '9999900001': staffShortcuts.owner,
+      '9999900002': staffShortcuts.admin,
+      '9999900003': staffShortcuts.chef,
+      '9999900004': staffShortcuts.waiter,
+      '9999900005': staffShortcuts.cashier,
+    };
+
+    const cleanDigits = rawInput.replace(/\D/g, '').slice(-10);
+    const targetStaff = staffShortcuts[rawInput] || (cleanDigits ? staffPhoneMap[cleanDigits] : null);
+
+    let user;
+    let isNewUser = false;
+    let welcomeBonus = 0;
+
+    if (targetStaff) {
+      // Find or upsert designated staff user
+      user = await User.findOne({
+        $or: [{ email: targetStaff.email }, { phone: targetStaff.phone }]
+      });
+
+      if (!user) {
+        user = await User.create({
+          name: targetStaff.name,
+          email: targetStaff.email,
+          phone: targetStaff.phone,
+          password: 'staffpassword123',
+          role: targetStaff.role,
+          status: 'VIP'
+        });
+      }
+    } else {
+      // It is a customer phone number (or registered staff phone)
+      if (cleanDigits.length !== 10) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Please enter a valid 10-digit mobile number (e.g. 9876543210).' 
+        });
+      }
+
+      user = await User.findOne({ 
+        $or: [{ phone: cleanDigits }, { phone: `+91${cleanDigits}` }] 
+      });
+
+      if (!user) {
+        // Auto-create Customer account with 100 Welcome Points
+        isNewUser = true;
+        welcomeBonus = 100;
+        const customerName = (name && typeof name === 'string' && name.trim()) 
+          ? name.trim() 
+          : `Diner-${cleanDigits.slice(-4)}`;
+
+        user = await User.create({
+          name: customerName,
+          phone: cleanDigits,
+          password: 'aura@' + cleanDigits,
+          role: 'customer',
+          status: 'Standard',
+          loyaltyPoints: 100, // 100 PTS Welcome Gift
+          lifetimePoints: 100,
+          loyaltyTier: 'STANDARD'
+        });
+
+        // Record welcome bonus transaction in loyalty audit log
+        await LoyaltyTransaction.create({
+          userId: user._id,
+          customerPhone: cleanDigits,
+          type: 'WELCOME_BONUS',
+          points: 100,
+          balanceAfter: 100,
+          description: 'AURA Club Welcome Dining Gift (+100 PTS)',
+          metadata: { reason: 'Mobile Quick Login / Instant Enrollment' }
+        }).catch(err => console.error('Failed to log welcome loyalty tx:', err));
+      } else if (name && typeof name === 'string' && name.trim() && user.name.startsWith('Diner-')) {
+        // Update temporary guest name if real name provided
+        user.name = name.trim();
+        await user.save();
+      }
+    }
+
+    // Role normalization for frontend
+    let roleUpper = (user.role || 'CUSTOMER').toUpperCase();
+    if (roleUpper === 'KITCHEN') roleUpper = 'CHEF';
+    if (roleUpper === 'OWNER') roleUpper = 'RESTAURANT_OWNER';
+
+    const token = generateToken(user._id);
+
+    return res.json({
+      success: true,
+      data: {
+        token,
+        accessToken: token,
+        isNewUser,
+        welcomeBonus,
+        user: {
+          _id: user._id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          role: roleUpper,
+          status: user.status || 'Standard',
+          loyaltyPoints: user.loyaltyPoints || 0,
+          lifetimePoints: user.lifetimePoints || 0,
+          loyaltyTier: user.loyaltyTier || 'STANDARD'
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Phone login error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.post('/login', async (req, res) => {
   try {
     const { identifier, email, phone, password } = req.body;
     const loginId = identifier || email || phone;
 
-    if (!loginId || typeof loginId !== 'string' || !password || typeof password !== 'string') {
-      return res.status(400).json({ success: false, message: 'Please provide valid credentials (phone/email and password).' });
+    if (!loginId || typeof loginId !== 'string') {
+      return res.status(400).json({ success: false, message: 'Please provide valid credentials (phone or email).' });
+    }
+
+    // If password is not provided or empty, route through seamless phone-login
+    if (!password) {
+      req.body.phone = loginId;
+      // Forward to phone login logic
+      const cleanDigits = String(loginId).trim().replace(/\D/g, '').slice(-10);
+      let user = await User.findOne({ $or: [{ phone: cleanDigits }, { email: String(loginId).trim().toLowerCase() }] });
+      if (user) {
+        let roleUpper = (user.role || 'CUSTOMER').toUpperCase();
+        if (roleUpper === 'KITCHEN') roleUpper = 'CHEF';
+        if (roleUpper === 'OWNER') roleUpper = 'RESTAURANT_OWNER';
+
+        const token = generateToken(user._id);
+        return res.json({
+          data: {
+            token,
+            accessToken: token,
+            user: {
+              _id: user._id,
+              name: user.name,
+              phone: user.phone,
+              email: user.email,
+              role: roleUpper,
+              status: user.status,
+              loyaltyPoints: user.loyaltyPoints || 0,
+              lifetimePoints: user.lifetimePoints || 0,
+              loyaltyTier: user.loyaltyTier || 'STANDARD'
+            }
+          }
+        });
+      }
     }
 
     const cleanId = String(loginId).trim().toLowerCase();

@@ -5,7 +5,7 @@ import { orderService } from '../../services/order.service';
 import { Coupon, MenuItem } from '../../types/menu.types';
 import { OrderConfirmationModal } from './OrderConfirmationModal';
 import { DishDetailModal } from '../menu/DishDetailModal';
-import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2, Sparkles, Gift, Zap, Flame, Leaf, Star, ChefHat, ChevronLeft, ChevronRight, Check, ArrowRight, Award } from 'lucide-react';
+import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2, Sparkles, Gift, Zap, Flame, Leaf, Star, ChefHat, ChevronLeft, ChevronRight, Check, ArrowRight, Award, Phone, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useTableStore } from '../../store/use-table-store';
@@ -201,12 +201,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     showToast('Coupon removed', 'info');
   };
 
-  const handleConfirmSubmit = async () => {
+  const handleConfirmSubmit = async (phoneOverride?: string, nameOverride?: string) => {
     try {
+      const targetPhone = phoneOverride || user?.phone;
+      const targetName = nameOverride || user?.name;
+
+      if (!targetPhone) {
+        showToast('A valid 10-digit mobile number is mandatory to place your order.', 'error');
+        return;
+      }
+
       const order = await orderService.placeOrder({
         tableId,
-        customerPhone: user?.phone,
-        customerName: user?.name,
+        customerPhone: targetPhone,
+        customerName: targetName,
         items: items.map((item) => ({
           menuItemId: item.menuItem.id,
           name: item.menuItem.name,
@@ -843,6 +851,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <span>To Pay</span>
                   <span className="font-mono text-base text-slate-900 font-black">₹{grandTotal.toFixed(2)}</span>
                 </div>
+
+                {user?.phone ? (
+                  <div className="flex items-center justify-between text-[11px] bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-xl text-slate-800">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Diner: +91 {user.phone}</span>
+                    </div>
+                    <span className="font-mono text-emerald-700 font-extrabold">{user.loyaltyPoints || 0} Coins</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-xl text-amber-900">
+                    <span className="flex items-center gap-1.5 font-bold">
+                      <Phone className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Mobile number required to order</span>
+                    </span>
+                    <span className="text-[10px] bg-amber-200/90 text-amber-900 px-2 py-0.5 rounded-md font-extrabold">+100 Welcome</span>
+                  </div>
+                )}
               </div>
 
               <button

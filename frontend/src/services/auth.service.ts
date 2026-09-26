@@ -15,6 +15,11 @@ export const authService = {
     return response.data.data;
   },
 
+  async loginWithPhone(phone: string, name?: string): Promise<{ user: User; accessToken: string; token: string; isNewUser?: boolean; welcomeBonus?: number }> {
+    const response = await apiClient.post<ApiResponse<{ user: User; accessToken: string; token: string; isNewUser?: boolean; welcomeBonus?: number }>>('/auth/phone-login', { phone, name });
+    return response.data.data;
+  },
+
   async updateProfile(userId: string, name: string, phone: string): Promise<User> {
     const response = await apiClient.put<ApiResponse<User>>('/auth/profile', { userId, name, phone });
     return response.data.data;
