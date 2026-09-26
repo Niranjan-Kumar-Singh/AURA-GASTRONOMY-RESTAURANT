@@ -162,8 +162,8 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           )}
         </div>
 
-        {/* Bottom Row: Price & Blinkit ADD Button */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5">
+        {/* Bottom Row: Price & Attached Ribbon View & Add / Stepper */}
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
           <div className="flex flex-col min-w-0 pr-1 shrink-0">
             <div className="flex items-baseline space-x-1 flex-wrap">
               <span className="text-xs sm:text-base font-black text-slate-900 font-mono leading-tight">
@@ -178,16 +178,16 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
             </span>
           </div>
 
-          {/* Right Action: Direct Stepper if in Cart, else View & Add */}
-          <div className="shrink-0 flex items-center">
+          {/* Right Action: Attached Ribbon Tab */}
+          <div className="shrink-0 flex items-center -mr-2 sm:-mr-4">
             {item.isAvailable === false ? (
-              <span className="px-2.5 py-1 bg-slate-100 text-slate-400 font-bold text-[9px] sm:text-[10px] rounded-lg uppercase">
+              <span className="px-2.5 py-1 bg-slate-100 text-slate-400 font-bold text-[9px] sm:text-[10px] rounded-l-lg uppercase mr-2 sm:mr-4">
                 Unavailable
               </span>
             ) : quantity > 0 ? (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center space-x-1 sm:space-x-1.5 bg-[#0C831F] text-white px-1.5 sm:px-2 py-1 rounded-xl shadow-xs"
+                className="flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-[#0C831F] to-[#096918] text-white pl-2 pr-2.5 sm:pl-3 sm:pr-3.5 py-1 sm:py-1.5 rounded-l-full sm:rounded-l-2xl shadow-sm border-y border-l border-emerald-500/40"
               >
                 <button
                   type="button"
@@ -195,12 +195,12 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
                     e.stopPropagation();
                     updateQuantity(item.id, quantity - 1);
                   }}
-                  className="w-5 h-5 sm:w-6 sm:h-6 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
+                  className="w-5 h-5 sm:w-6 sm:h-6 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors cursor-pointer active:scale-90"
                   title="Decrease quantity"
                 >
                   <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
                 </button>
-                <span className="font-mono font-black text-xs sm:text-sm min-w-[18px] text-center">
+                <span className="font-mono font-black text-xs sm:text-sm min-w-[16px] text-center">
                   {quantity}
                 </span>
                 <button
@@ -209,7 +209,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
                     e.stopPropagation();
                     updateQuantity(item.id, quantity + 1);
                   }}
-                  className="w-5 h-5 sm:w-6 sm:h-6 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
+                  className="w-5 h-5 sm:w-6 sm:h-6 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors cursor-pointer active:scale-90"
                   title="Increase quantity"
                 >
                   <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
@@ -219,11 +219,11 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
               <button
                 type="button"
                 onClick={() => onClick(item)}
-                className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-tight transition-all flex items-center space-x-1 bg-[#0C831F] hover:bg-[#096918] text-white shadow-xs hover:shadow-md active:scale-95 cursor-pointer shrink-0 group/btn"
+                className="pl-2.5 sm:pl-3.5 pr-2 sm:pr-3 py-1 sm:py-1.5 rounded-l-full sm:rounded-l-2xl text-[10px] sm:text-xs font-black uppercase tracking-tight transition-all flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-[#0C831F] to-[#0A6D1A] hover:from-[#0A6D1A] hover:to-[#085514] text-white shadow-xs hover:shadow-md hover:shadow-emerald-700/20 active:scale-95 cursor-pointer shrink-0 group/btn border-y border-l border-emerald-400/40"
                 title="View dish details, chef pairings & add to order"
               >
                 <span>View &amp; Add</span>
-                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/btn:translate-x-0.5 transition-transform shrink-0" />
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/btn:translate-x-1 transition-transform shrink-0 stroke-[2.5]" />
               </button>
             )}
           </div>
