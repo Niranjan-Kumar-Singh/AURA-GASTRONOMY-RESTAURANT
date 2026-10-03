@@ -103,10 +103,11 @@ export const useCartStore = create<CartState>()(
             ];
           }
 
-          const targetTableId = state.tableId || '10';
-          get().syncWithServer(targetTableId, updatedItems);
+          if (state.tableId) {
+            get().syncWithServer(state.tableId, updatedItems);
+          }
 
-          return { items: updatedItems, tableId: targetTableId };
+          return { items: updatedItems };
         });
       },
 
@@ -116,10 +117,11 @@ export const useCartStore = create<CartState>()(
             (item) => item.menuItem.id !== menuItemId
           );
 
-          const targetTableId = state.tableId || '10';
-          get().syncWithServer(targetTableId, updatedItems);
+          if (state.tableId) {
+            get().syncWithServer(state.tableId, updatedItems);
+          }
 
-          return { items: updatedItems, tableId: targetTableId };
+          return { items: updatedItems };
         });
       },
 
@@ -136,10 +138,11 @@ export const useCartStore = create<CartState>()(
               : item
           );
 
-          const targetTableId = state.tableId || '10';
-          get().syncWithServer(targetTableId, updatedItems);
+          if (state.tableId) {
+            get().syncWithServer(state.tableId, updatedItems);
+          }
 
-          return { items: updatedItems, tableId: targetTableId };
+          return { items: updatedItems };
         });
       },
 
@@ -151,10 +154,11 @@ export const useCartStore = create<CartState>()(
               : item
           );
 
-          const targetTableId = state.tableId || '10';
-          get().syncWithServer(targetTableId, updatedItems);
+          if (state.tableId) {
+            get().syncWithServer(state.tableId, updatedItems);
+          }
 
-          return { items: updatedItems, tableId: targetTableId };
+          return { items: updatedItems };
         });
       },
 
@@ -176,10 +180,11 @@ export const useCartStore = create<CartState>()(
               : item
           );
 
-          const targetTableId = state.tableId || '10';
-          get().syncWithServer(targetTableId, updatedItems);
+          if (state.tableId) {
+            get().syncWithServer(state.tableId, updatedItems);
+          }
 
-          return { items: updatedItems, tableId: targetTableId };
+          return { items: updatedItems };
         });
       },
 
@@ -200,18 +205,18 @@ export const useCartStore = create<CartState>()(
 
       getTaxAmount: () => {
         // 5% GST on Subtotal
-        return get().getSubtotal() * 0.05;
+        return Math.round(get().getSubtotal() * 0.05 * 100) / 100;
       },
 
       getServiceCharge: () => {
-        // Optional 5% service charge
-        return get().getSubtotal() * 0.05;
+        // Transparent dining with zero hidden surcharge
+        return 0;
       },
 
       getGrandTotal: () => {
         const subtotal = get().getSubtotal();
         const gst = get().getTaxAmount();
-        return subtotal + gst;
+        return Math.round((subtotal + gst) * 100) / 100;
       },
 
       getItemCount: () => {

@@ -141,7 +141,7 @@ router.post('/', async (req, res) => {
       customerUser = await User.create({
         name: guestName,
         phone: cleanCustomerPhone,
-        password: 'aura@' + cleanCustomerPhone,
+        password: crypto.randomBytes(24).toString('hex'),
         role: 'customer',
         status: 'Standard',
         loyaltyPoints: 100, // 100 PTS Welcome Gift!
@@ -192,25 +192,38 @@ router.post('/', async (req, res) => {
     });
 
     let verifiedSubtotal = 0;
-    const verifiedNewItems = items.map(it => {
+    const missingItems = [];
+    const verifiedNewItems = [];
+
+    for (const it of items) {
       const targetId = String(it.menuItemId || it.id || '');
       const dbItem = dbMenuMap.get(targetId);
+      if (!dbItem) {
+        missingItems.push(it.name || targetId);
+        continue;
+      }
       const quantity = Math.max(1, parseInt(it.quantity || it.qty || 1));
-      // Use authentic DB price if found; otherwise fallback to sanitized client price
-      const price = dbItem ? dbItem.price : Math.max(0, parseFloat(it.price || it.unitPrice || 0));
+      const price = dbItem.price;
       verifiedSubtotal += price * quantity;
 
-      return {
-        menuItemId: dbItem ? dbItem.id : (parseInt(it.menuItemId || it.id) || 101),
-        name: dbItem ? dbItem.name : String(it.name || 'Artisanal Dish').slice(0, 100),
+      verifiedNewItems.push({
+        menuItemId: dbItem.id,
+        name: dbItem.name,
         quantity,
         price,
         notes: String(it.notes || '').slice(0, 200),
         customizations: Array.isArray(it.customizations) ? it.customizations : [],
         status: 'received',
         isPrepared: false
-      };
-    });
+      });
+    }
+
+    if (missingItems.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `The following dish item(s) are invalid or no longer available: ${missingItems.join(', ')}.`
+      });
+    }
 
     // 3. Loyalty Points Validation & Fraud Prevention
     let verifiedRedeemed = 0;
@@ -269,9 +282,10 @@ router.post('/', async (req, res) => {
       verifiedAppliedCouponCode = couponCode;
     }
 
-    // 5. Server-Side Tax & Total Calculation (5% GST)
-    const computedTax = Math.round(verifiedSubtotal * 0.05 * 100) / 100;
-    const calculatedTotal = Math.max(0, Math.round((verifiedSubtotal + computedTax - verifiedCouponDiscount - verifiedPtsDiscount) * 100) / 100);
+    // 5. Server-Side Tax & Total Calculation (5% GST calculated on net taxable dining base)
+    const netTaxableBase = Math.max(0, verifiedSubtotal - verifiedCouponDiscount - verifiedPtsDiscount);
+    const computedTax = Math.round(netTaxableBase * 0.05 * 100) / 100;
+    const calculatedTotal = Math.max(0, Math.round((netTaxableBase + computedTax) * 100) / 100);
 
     const clientQrToken = req.body.qrToken;
     let physicalTable = null;

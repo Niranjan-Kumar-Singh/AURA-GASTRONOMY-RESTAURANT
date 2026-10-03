@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const LoyaltyTransaction = require('../models/LoyaltyTransaction');
@@ -124,7 +125,7 @@ router.post(['/phone-login', '/customer-quick-login'], async (req, res) => {
       user = await User.create({
         name: customerName,
         phone: cleanDigits,
-        password: 'aura@' + cleanDigits,
+        password: crypto.randomBytes(24).toString('hex'),
         role: 'customer',
         status: 'Standard',
         loyaltyPoints: 100, // 100 PTS Welcome Gift

@@ -4,7 +4,7 @@ const Table = require('../models/Table');
 const TableSession = require('../models/TableSession');
 const Order = require('../models/Order');
 const WaiterAlert = require('../models/WaiterAlert');
-const { protect, requireRole } = require('../middleware/authMiddleware');
+const { protect, requireRole, optionalAuth } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Helper to generate unique session ID
@@ -82,37 +82,23 @@ router.post('/dev-seed', async (req, res) => {
   }
 });
 
-// GET all tables (For Waiter Dashboard - Ensures strictly 30 tables exist: 1 to 30)
-router.get('/', async (req, res) => {
+// GET all tables (For Waiter Dashboard & Floor Map - Pure Read Query)
+router.get('/', optionalAuth, async (req, res) => {
   try {
-    const validTableNumbers = Array.from({ length: 30 }, (_, i) => String(i + 1));
+    const isStaff = req.user && ['ADMIN', 'MANAGER', 'OWNER', 'WAITER', 'CASHIER'].includes(req.user.role?.toUpperCase());
+
+    let tables = await Table.find({});
     
-    // Purge any legacy/invalid tables outside 1-30
-    await Table.deleteMany({ tableNumber: { $nin: validTableNumbers } }).catch(() => {});
-
-    let tables = await Table.find({ tableNumber: { $in: validTableNumbers } });
-    
-    // Auto-seed missing tables within 1 to 30 range
-    if (tables.length < 30) {
-      const existingNumbers = new Set(tables.map(t => String(t.tableNumber)));
-      const tablesToCreate = [];
-
-      for (let i = 1; i <= 30; i++) {
-        const numStr = String(i);
-        if (!existingNumbers.has(numStr)) {
-          tablesToCreate.push({
-            tableNumber: numStr,
-            capacity: i % 4 === 0 ? 6 : i % 2 === 0 ? 4 : 2,
-            status: 'available',
-            qrToken: crypto.randomBytes(16).toString('hex'),
-          });
-        }
-      }
-
-      if (tablesToCreate.length > 0) {
-        await Table.insertMany(tablesToCreate);
-        tables = await Table.find({ tableNumber: { $in: validTableNumbers } });
-      }
+    // Auto-seed strictly if tables collection is completely empty
+    if (tables.length === 0) {
+      const initialTables = Array.from({ length: 30 }, (_, i) => ({
+        tableNumber: String(i + 1),
+        capacity: (i + 1) % 4 === 0 ? 6 : (i + 1) % 2 === 0 ? 4 : 2,
+        status: 'available',
+        qrToken: crypto.randomBytes(16).toString('hex'),
+      }));
+      await Table.insertMany(initialTables).catch(() => {});
+      tables = await Table.find({});
     }
 
     // Strictly sort numerically 1 to 30
@@ -137,7 +123,8 @@ router.get('/', async (req, res) => {
             orderStatus = latestOrder.status; // 'received' | 'preparing' | 'ready' | 'served' | 'completed'
             orderTotal = unpaidOrders.reduce((sum, order) => sum + (order.total || order.totalAmount || 0), 0);
 
-            // Auto-heal table status to 'occupied' if active unpaid orders exist!
+            // Auto-heal table status to 'occupied' ONLY if currently available.
+            // Never overwrite operational states like 'billing' or 'cleaning'.
             if (table.status === 'available') {
               table.status = 'occupied';
               await table.save().catch(() => {});
@@ -159,7 +146,7 @@ router.get('/', async (req, res) => {
         activeOrderId,
         orderTotal,
         guestCount,
-        qrToken: table.qrToken,
+        qrToken: isStaff ? table.qrToken : undefined,
         cleaningStartedAt: table.cleaningStartedAt
       };
     }));
@@ -266,20 +253,17 @@ router.all('/scan/:token', async (req, res) => {
   }
 });
 
-// GET QR Token for a specific Table Number (e.g. for generating table stands or redirects)
-router.get('/qr-token/:tableNumber', async (req, res) => {
+// GET QR Token for a specific Table Number (Protected: Admin / Manager / Owner)
+router.get('/qr-token/:tableNumber', protect, requireRole('ADMIN', 'MANAGER', 'OWNER'), async (req, res) => {
   try {
     const cleanTableNum = String(req.params.tableNumber || '').match(/\d+/)?.[0] || '1';
     let table = await Table.findOne({ tableNumber: cleanTableNum });
 
     if (!table) {
-      table = await Table.create({
-        tableNumber: cleanTableNum,
-        capacity: Number(cleanTableNum) % 4 === 0 ? 6 : Number(cleanTableNum) % 2 === 0 ? 4 : 2,
-        status: 'available',
-        qrToken: crypto.randomBytes(16).toString('hex')
-      });
-    } else if (!table.qrToken) {
+      return res.status(404).json({ success: false, message: `Table ${cleanTableNum} not found.` });
+    }
+
+    if (!table.qrToken) {
       table.qrToken = crypto.randomBytes(16).toString('hex');
       await table.save().catch(() => {});
     }
