@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const Category = require('../models/Category');
 const MenuItem = require('../models/MenuItem');
 
+const { protect, requireRole } = require('../middleware/authMiddleware');
+
 const router = express.Router();
 
 // Helper to construct query matching numeric id, string id, OR Mongoose _id
@@ -22,7 +24,7 @@ const getQueryById = (paramId) => {
   return { $or: conditions };
 };
 
-// GET all categories
+// GET all categories (Public for diners)
 router.get('/categories', async (req, res) => {
   try {
     const categories = await Category.find().sort('displayOrder');
@@ -32,8 +34,8 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-// POST create new category
-router.post('/categories', async (req, res) => {
+// POST create new category (Protected: ADMIN / MANAGER / OWNER)
+router.post('/categories', protect, requireRole('ADMIN', 'MANAGER', 'OWNER'), async (req, res) => {
   try {
     const { name, icon, displayOrder } = req.body;
     if (!name) return res.status(400).json({ message: 'Category name is required' });
@@ -54,8 +56,8 @@ router.post('/categories', async (req, res) => {
   }
 });
 
-// PUT update category
-router.put('/categories/:id', async (req, res) => {
+// PUT update category (Protected: ADMIN / MANAGER / OWNER)
+router.put('/categories/:id', protect, requireRole('ADMIN', 'MANAGER', 'OWNER'), async (req, res) => {
   try {
     const query = getQueryById(req.params.id);
     const category = await Category.findOneAndUpdate(
@@ -70,8 +72,8 @@ router.put('/categories/:id', async (req, res) => {
   }
 });
 
-// DELETE category
-router.delete('/categories/:id', async (req, res) => {
+// DELETE category (Protected: ADMIN / MANAGER / OWNER)
+router.delete('/categories/:id', protect, requireRole('ADMIN', 'MANAGER', 'OWNER'), async (req, res) => {
   try {
     const query = getQueryById(req.params.id);
     await Category.findOneAndDelete(query);
@@ -122,8 +124,8 @@ router.get('/menu-items/:id', async (req, res) => {
   }
 });
 
-// POST create new menu item
-router.post('/menu-items', async (req, res) => {
+// POST create new menu item (Protected: ADMIN / MANAGER / OWNER)
+router.post('/menu-items', protect, requireRole('ADMIN', 'MANAGER', 'OWNER'), async (req, res) => {
   try {
     const {
       name, description, price, categoryId, imageUrl,
@@ -161,8 +163,8 @@ router.post('/menu-items', async (req, res) => {
   }
 });
 
-// PUT update menu item
-router.put('/menu-items/:id', async (req, res) => {
+// PUT update menu item (Protected: ADMIN / MANAGER / OWNER / CHEF)
+router.put('/menu-items/:id', protect, requireRole('ADMIN', 'MANAGER', 'OWNER', 'CHEF'), async (req, res) => {
   try {
     const query = getQueryById(req.params.id);
     const item = await MenuItem.findOneAndUpdate(
@@ -177,8 +179,8 @@ router.put('/menu-items/:id', async (req, res) => {
   }
 });
 
-// DELETE menu item
-router.delete('/menu-items/:id', async (req, res) => {
+// DELETE menu item (Protected: ADMIN / MANAGER / OWNER)
+router.delete('/menu-items/:id', protect, requireRole('ADMIN', 'MANAGER', 'OWNER'), async (req, res) => {
   try {
     const query = getQueryById(req.params.id);
     await MenuItem.findOneAndDelete(query);

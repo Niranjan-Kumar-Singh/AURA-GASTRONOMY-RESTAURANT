@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, Tag, Copy, Loader, Sparkles } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { couponService } from '../../services/coupon.service';
@@ -65,7 +65,7 @@ export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) =
           >
         <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-[#0C831F] shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-[#059669] shadow-sm">
               <Tag className="w-5 h-5" />
             </div>
             <div>
@@ -80,7 +80,7 @@ export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) =
 
         <div className="p-5 sm:p-6 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
           {loading ? (
-            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#0C831F]" /></div>
+            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#059669]" /></div>
           ) : offers.length === 0 ? (
             <div className="text-center py-20 space-y-3">
               <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400">
@@ -92,7 +92,7 @@ export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) =
           ) : (
             offers.map((offer, i) => (
               <div key={i} className="relative bg-slate-50 border border-slate-200 hover:border-emerald-300 transition-all rounded-2xl p-5 overflow-hidden shadow-sm group">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-[#0C831F] mb-1">
+                <div className="flex items-center space-x-1.5 text-xs font-bold text-[#059669] mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="uppercase tracking-wider font-extrabold">Instant Savings</span>
                 </div>
@@ -100,10 +100,10 @@ export const OffersDrawer: React.FC<OffersDrawerProps> = ({ isOpen, onClose }) =
                 <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-4">Min Order: ₹{offer.minOrderAmount}</p>
                 
                 <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 pl-4 shadow-inner">
-                  <span className="font-mono font-black text-[#0C831F] tracking-widest text-sm">{offer.code}</span>
+                  <span className="font-mono font-black text-[#059669] tracking-widest text-sm">{offer.code}</span>
                   <button 
                     onClick={() => handleCopy(offer.code)}
-                    className="bg-emerald-50 hover:bg-[#0C831F] text-[#0C831F] hover:text-white border border-emerald-300 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1.5 cursor-pointer active:scale-95 text-xs font-bold"
+                    className="bg-emerald-50 hover:bg-[#059669] text-[#059669] hover:text-white border border-emerald-300 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1.5 cursor-pointer active:scale-95 text-xs font-bold"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>Copy</span>

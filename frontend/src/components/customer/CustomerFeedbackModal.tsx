@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Star, X, MessageSquare, ExternalLink, CheckCircle2, Heart, Award, Sparkles } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useBackHandler } from '../../hooks/useBackHandler';
@@ -154,7 +154,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 placeholder="Share your thoughts about food taste, ambiance, or service..."
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white h-20 resize-none transition-colors"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#059669] focus:bg-white h-20 resize-none transition-colors"
               />
             </div>
 
@@ -162,7 +162,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
             <div className="space-y-2 pt-2">
               <button
                 type="submit"
-                className="w-full py-3.5 px-6 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+                className="w-full py-3.5 px-6 bg-[#059669] hover:bg-[#047857] text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
               >
                 Submit Feedback
               </button>
@@ -170,7 +170,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
           </form>
         ) : (
           <div className="py-6 space-y-5 text-center">
-            <div className="w-16 h-16 bg-emerald-100 text-[#0C831F] border border-emerald-300 rounded-full flex items-center justify-center mx-auto shadow-md animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-emerald-100 text-[#059669] border border-emerald-300 rounded-full flex items-center justify-center mx-auto shadow-md animate-in zoom-in-95 duration-300">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
@@ -190,17 +190,17 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
             {rating >= 4 && (
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-3 shadow-sm">
                 <div className="space-y-1">
-                  <span className="text-xs font-bold text-[#0C831F] uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-[#059669] uppercase tracking-wider block">
                     🎁 Bonus Reward Offer
                   </span>
                   <p className="text-xs text-slate-800 font-medium">
-                    Post your review on Google to claim <strong className="text-[#0C831F] font-bold">+100 Loyalty Points</strong>!
+                    Post your review on Google to claim <strong className="text-[#059669] font-bold">+100 Loyalty Points</strong>!
                   </p>
                 </div>
 
                 <button
                   onClick={handleGoogleReview}
-                  className="w-full py-3 px-4 bg-[#0C831F] hover:bg-[#096918] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
+                  className="w-full py-3 px-4 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Post on Google Reviews</span>

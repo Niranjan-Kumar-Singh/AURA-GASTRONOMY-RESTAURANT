@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CommandPalette } from '../navigation/CommandPalette';
 import { useAuthStore } from '../../store/use-auth-store';
@@ -72,7 +72,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     sections.push({
       section: 'GUEST EXPERIENCE',
       items: [
-        { name: 'Customer Menu', shortName: 'Menu', path: '/menu', icon: Utensils, accent: 'text-[#0C831F]', activeBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' }
+        { name: 'Customer Menu', shortName: 'Menu', path: '/menu', icon: Utensils, accent: 'text-[#059669]', activeBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' }
       ]
     });
 

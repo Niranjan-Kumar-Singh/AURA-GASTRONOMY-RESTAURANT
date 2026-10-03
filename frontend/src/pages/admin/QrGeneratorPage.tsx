@@ -429,7 +429,7 @@ export const QrGeneratorPage: React.FC = () => {
             <button
               onClick={() => handleBatchDownload('STAND')}
               disabled={isBatchRunning || filteredTables.length === 0}
-              className="px-3 py-1.5 bg-[#0C831F] hover:bg-[#096918] text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border border-emerald-400/50 shadow-md shadow-emerald-950/30 disabled:opacity-50"
+              className="px-3 py-1.5 bg-[#059669] hover:bg-[#047857] text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border border-emerald-400/50 shadow-md shadow-emerald-950/30 disabled:opacity-50"
               title="Batch download all stand cards as PNG"
             >
               {isBatchRunning ? (

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   X, User, Utensils, Clock, History, Tag, LogIn, LogOut, Edit2, Star, FileText, ChevronRight, Sparkles, ShieldCheck, Bell, Zap, Award, Phone
@@ -86,8 +86,8 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
     {
       label: 'View Table Cart',
       badge: cartCount > 0 ? `${cartCount} Items` : undefined,
-      badgeColor: 'bg-[#0C831F] text-white font-black',
-      icon: <Utensils className="w-4 h-4 text-[#0C831F]" />,
+      badgeColor: 'bg-[#059669] text-white font-black',
+      icon: <Utensils className="w-4 h-4 text-[#059669]" />,
       action: () => {
         onClose();
         onOpenCart();
@@ -137,7 +137,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
       label: 'Offers & Coupons',
       badge: 'OFFERS',
       badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono',
-      icon: <Tag className="w-4 h-4 text-[#0C831F]" />,
+      icon: <Tag className="w-4 h-4 text-[#059669]" />,
       action: () => {
         onClose();
         onOpenOffers();
@@ -170,13 +170,13 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
         <div className="p-3.5 sm:p-5 border-b border-slate-200 bg-gradient-to-r from-emerald-50/70 via-white to-slate-50 relative z-10 space-y-2.5 sm:space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 min-w-0">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-emerald-500 to-[#0C831F] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-emerald-500 to-[#059669] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md">
                 {isAuthenticated ? <User className="w-5 h-5" /> : <Utensils className="w-5 h-5" />}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 leading-none">
                   <span className="font-black text-sm text-slate-900 tracking-tight">AURA</span>
-                  <span className="font-extrabold text-[11px] text-[#0C831F] uppercase tracking-wider">GASTRONOMY</span>
+                  <span className="font-extrabold text-[11px] text-[#059669] uppercase tracking-wider">GASTRONOMY</span>
                 </div>
                 <h3 className="font-bold text-xs text-slate-700 truncate mt-1">
                   {isAuthenticated ? (user?.name || `+91 ${user?.phone}`) : `Table ${tableId} Guest`}
@@ -188,7 +188,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
                     }}
                     className="px-2 py-0.5 bg-emerald-100/90 hover:bg-emerald-200 text-[9px] uppercase tracking-wider text-emerald-900 rounded-full font-bold flex items-center space-x-1 cursor-pointer transition-colors"
                   >
-                    <ShieldCheck className="w-3 h-3 text-[#0C831F] inline mr-0.5" />
+                    <ShieldCheck className="w-3 h-3 text-[#059669] inline mr-0.5" />
                     <span>{isAuthenticated ? `${(user?.loyaltyTier || 'MEMBER').toUpperCase()} • ${user?.loyaltyPoints ?? 0} PTS` : `TABLE ${tableId} ACTIVE`}</span>
                   </button>
                 </div>
@@ -219,7 +219,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
           <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-2 text-[10px] font-bold">
             <button
               onClick={() => handleCallWaiter('Water Refill')}
-              className="p-2 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-[#0C831F] rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
+              className="p-2 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-[#059669] rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
             >
               <Bell className="w-3.5 h-3.5 text-emerald-600" />
               <span>Water Refill</span>
@@ -227,7 +227,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
 
             <button
               onClick={() => handleCallWaiter('Call Waiter')}
-              className="p-2 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-[#0C831F] rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
+              className="p-2 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-[#059669] rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
             >
               <Bell className="w-3.5 h-3.5 text-emerald-600" />
               <span>Call Waiter</span>
@@ -270,7 +270,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
                 onClose();
                 onOpenAuth();
               }}
-              className="w-full py-2.5 px-4 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95 cursor-pointer"
+              className="w-full py-2.5 px-4 bg-[#059669] hover:bg-[#047857] text-white font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95 cursor-pointer"
             >
               <Phone className="w-4 h-4" />
               <span>Quick Login (Number Only)</span>

@@ -51,7 +51,6 @@ export const WaiterDashboardPage: React.FC = () => {
 
   // Seating & action state
   const [seatGuestCount, setSeatGuestCount] = useState<number>(2);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
 
   const prevReadyCountRef = useRef<number>(0);
@@ -92,12 +91,30 @@ export const WaiterDashboardPage: React.FC = () => {
         orderService.getActiveOrders().catch(() => []),
       ]);
 
-      // Group ALL active unpaid orders by tableId to support multi-order sessions
+      // Build robust table resolution map for tableId, _id, and tableNumber
+      const tableIdToNumberMap = new Map<string, string>();
+      tableData.forEach((t: any) => {
+        if (t._id) tableIdToNumberMap.set(String(t._id), String(t.tableNumber));
+        if (t.tableNumber) tableIdToNumberMap.set(String(t.tableNumber), String(t.tableNumber));
+      });
+
+      // Group ALL active unpaid orders by table number accurately
       const tableOrdersMap = new Map<string, any[]>();
       activeOrders.forEach((ord: any) => {
-        let numKey = String(ord.tableId || '');
-        const matched = numKey.match(/\d+/);
-        if (matched) numKey = String(parseInt(matched[0], 10));
+        const rawId = String(ord.tableId || '').trim();
+        let numKey = tableIdToNumberMap.get(rawId);
+        if (!numKey) {
+          if (ord.tableNumber) {
+            numKey = String(ord.tableNumber);
+          } else {
+            const matched = rawId.match(/\d+/);
+            if (matched && tableIdToNumberMap.has(matched[0])) {
+              numKey = matched[0];
+            } else {
+              numKey = matched ? String(parseInt(matched[0], 10)) : rawId;
+            }
+          }
+        }
 
         if (!tableOrdersMap.has(numKey)) {
           tableOrdersMap.set(numKey, []);
@@ -383,22 +400,9 @@ export const WaiterDashboardPage: React.FC = () => {
     setSelectedTable(null);
   };
 
-  const handleSettlePayment = async (tableNum: number) => {
-    setIsProcessingPayment(true);
-    try {
-      const res = await orderService.settleTableBill(tableNum, 'CASH');
-      const invNum = res?.data?.invoiceNumber || 'INV-SETTLED';
-
-      showToast(`Cash collected! Invoice #${invNum} generated. Table ${tableNum} set to Cleaning.`, 'success');
-      playAudioChime();
-      setSelectedTable(null);
-      await fetchFloorState();
-    } catch (error: any) {
-      const errMsg = error?.response?.data?.message || error?.message || 'Failed to settle bill';
-      showToast(errMsg, 'error');
-    } finally {
-      setIsProcessingPayment(false);
-    }
+  const handleNotifyCashier = (tableNum: number) => {
+    showToast(`🔔 Cashier POS notified for Table ${tableNum} bill settlement`, 'info', 'Cashier Alert Sent');
+    playAudioChime();
   };
 
   const handleMarkServed = async (e: React.MouseEvent, orderId: string, tableNumber?: number) => {
@@ -1119,9 +1123,10 @@ export const WaiterDashboardPage: React.FC = () => {
 
                     <button
                       onClick={() => setSelectedTable(tbl)}
-                      className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-aura-obsidian font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer"
+                      className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1.5"
                     >
-                      View Details & Pay
+                      <Receipt className="w-3.5 h-3.5" />
+                      <span>View Bill Details &amp; Status</span>
                     </button>
                   </div>
                 ))}
@@ -1287,29 +1292,33 @@ export const WaiterDashboardPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Payment Settlement Terminal — only when status is billing */}
-              {selectedTable.status === 'billing' && selectedTable.orderTotal !== undefined && selectedTable.orderTotal > 0 && (
+              {/* Bill Status — Awaiting Cashier POS Settlement */}
+              {selectedTable.status === 'billing' && (
                 <div className="p-4 bg-purple-500/10 border border-purple-500/40 rounded-2xl space-y-3">
                   <div className="flex items-center justify-between border-b border-purple-500/30 pb-2">
                     <span className="text-xs font-bold text-purple-300 flex items-center space-x-1.5 font-mono">
                       <Receipt className="w-4 h-4 text-purple-400" />
-                      <span>BILL AWAITING SETTLEMENT</span>
+                      <span>AWAITING CASHIER SETTLEMENT</span>
                     </span>
                     <span className="text-xs font-mono font-black text-purple-300">
                       ₹{Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <p className="text-[11px] text-theme-muted">
-                    Guests requested bill. Payment can be settled at the Cashier POS, or confirm cash collection below.
+                    Table has requested the bill. Cashier POS has received this invoice for payment settlement (Cash, UPI, Card, or Loyalty). Once settled, table will transition to Cleaning.
                   </p>
-                  <button
-                    onClick={() => handleSettlePayment(selectedTable.tableNumber)}
-                    disabled={isProcessingPayment}
-                    className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-2"
-                  >
-                    <Check className="w-4 h-4 font-bold" />
-                    <span>{isProcessingPayment ? 'Settling...' : `Confirm Cash Collected at Table (₹${Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')})`}</span>
-                  </button>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-purple-400 font-mono font-bold flex items-center space-x-1.5">
+                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping inline-block" />
+                      <span>Queued at Cashier POS</span>
+                    </span>
+                    <button
+                      onClick={() => handleNotifyCashier(selectedTable.tableNumber)}
+                      className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 rounded-xl text-xs font-bold cursor-pointer transition-all"
+                    >
+                      Remind Cashier
+                    </button>
+                  </div>
                 </div>
               )}
 

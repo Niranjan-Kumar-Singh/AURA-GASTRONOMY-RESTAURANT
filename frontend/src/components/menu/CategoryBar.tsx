@@ -31,7 +31,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
               value={searchQuery}
               onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
               placeholder="Search dishes, drinks, desserts..."
-              className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-300 focus:border-[#0C831F] focus:bg-white rounded-xl text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none shadow-sm transition-all font-sans"
+              className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-300 focus:border-[#059669] focus:bg-white rounded-xl text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none shadow-sm transition-all font-sans"
             />
             {searchQuery && (
               <button
@@ -51,12 +51,12 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
         </div>
 
         {/* Scrollable Category Pills Rail */}
-        <div className="overflow-x-auto blinkit-scrollbar-x flex items-center space-x-2 px-1 pt-0.5 pb-1.5 min-w-full select-none scroll-smooth">
+        <div className="overflow-x-auto aura-scrollbar-x flex items-center space-x-2 px-1 pt-0.5 pb-1.5 min-w-full select-none scroll-smooth">
           <button
             onClick={() => onSelectCategory(null)}
             className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer flex items-center space-x-1.5 ${
               selectedCategoryId === null
-                ? 'bg-[#0C831F] text-white shadow-sm font-black scale-[1.02]'
+                ? 'bg-[#059669] text-white shadow-sm font-black scale-[1.02]'
                 : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-sm'
             }`}
           >
@@ -72,7 +72,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
                 onClick={() => onSelectCategory(category.id)}
                 className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all shrink-0 cursor-pointer flex items-center space-x-1.5 ${
                   isSelected
-                    ? 'bg-[#0C831F] text-white shadow-sm font-black scale-[1.02]'
+                    ? 'bg-[#059669] text-white shadow-sm font-black scale-[1.02]'
                     : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-sm'
                 }`}
               >

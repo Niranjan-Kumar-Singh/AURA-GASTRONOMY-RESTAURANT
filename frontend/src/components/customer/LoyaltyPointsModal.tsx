@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   X, Award, Sparkles, TrendingUp, History, ShieldCheck, Gift, Star, 
   ChevronRight, ArrowUpRight, ArrowDownLeft, RefreshCw, Zap, CheckCircle2
@@ -67,7 +67,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
       case 'WELCOME_BONUS':
         return { label: 'WELCOME GIFT', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: <Gift className="w-3 h-3" /> };
       case 'EARNED_DINING':
-        return { label: 'DINING SPEND', color: 'bg-emerald-100 text-[#0C831F] border-emerald-300', icon: <ArrowUpRight className="w-3 h-3" /> };
+        return { label: 'DINING SPEND', color: 'bg-emerald-100 text-[#059669] border-emerald-300', icon: <ArrowUpRight className="w-3 h-3" /> };
       case 'EARNED_FEEDBACK':
         return { label: 'REVIEW REWARD', color: 'bg-amber-100 text-amber-900 border-amber-300', icon: <Star className="w-3 h-3 fill-amber-500" /> };
       case 'REDEEMED_ORDER':
@@ -132,7 +132,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
           <div className="relative rounded-3xl p-5 sm:p-6 text-white overflow-hidden shadow-xl border border-amber-400/30 bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900">
             {/* Card Background Glow */}
             <div className="absolute top-0 right-0 w-44 h-44 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-36 h-36 bg-[#0C831F]/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-36 h-36 bg-[#059669]/20 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between">
@@ -178,7 +178,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
                   </div>
                   <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden p-0.5">
                     <div 
-                      className="h-full bg-gradient-to-r from-amber-400 to-[#0C831F] rounded-full transition-all duration-700"
+                      className="h-full bg-gradient-to-r from-amber-400 to-[#059669] rounded-full transition-all duration-700"
                       style={{ width: `${progressPct}%` }}
                     />
                   </div>
@@ -198,7 +198,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
                   onClose();
                   if (onOpenAuth) onOpenAuth();
                 }}
-                className="px-3.5 py-1.5 bg-[#0C831F] hover:bg-[#096918] text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
+                className="px-3.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
               >
                 Join Free
               </button>
@@ -211,7 +211,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
               onClick={() => setActiveTab('passbook')}
               className={`flex-1 py-2.5 text-center border-b-2 transition-colors cursor-pointer flex items-center justify-center space-x-1.5 ${
                 activeTab === 'passbook'
-                  ? 'border-[#0C831F] text-[#0C831F]'
+                  ? 'border-[#059669] text-[#059669]'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -222,7 +222,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
               onClick={() => setActiveTab('perks')}
               className={`flex-1 py-2.5 text-center border-b-2 transition-colors cursor-pointer flex items-center justify-center space-x-1.5 ${
                 activeTab === 'perks'
-                  ? 'border-[#0C831F] text-[#0C831F]'
+                  ? 'border-[#059669] text-[#059669]'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -259,7 +259,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
                       </div>
 
                       <div className="text-right shrink-0 pl-2">
-                        <span className={`font-mono font-black text-sm block ${isPositive ? 'text-[#0C831F]' : 'text-rose-600'}`}>
+                        <span className={`font-mono font-black text-sm block ${isPositive ? 'text-[#059669]' : 'text-rose-600'}`}>
                           {isPositive ? `+${tx.points}` : tx.points} PTS
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono">
@@ -293,7 +293,7 @@ export const LoyaltyPointsModal: React.FC<LoyaltyPointsModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-bold text-[#0C831F] uppercase tracking-wider block">Dining Spend</span>
+                  <span className="text-[10px] font-bold text-[#059669] uppercase tracking-wider block">Dining Spend</span>
                   <p className="font-bold text-slate-900">1 PT per ₹10</p>
                   <p className="text-[10px] text-slate-500">Calculated automatically on settled food bills.</p>
                 </div>

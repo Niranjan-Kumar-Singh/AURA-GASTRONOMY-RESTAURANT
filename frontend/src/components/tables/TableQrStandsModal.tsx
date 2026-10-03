@@ -326,7 +326,7 @@ export const TableQrStandsModal: React.FC<TableQrStandsModalProps> = ({
                 type="button"
                 onClick={handleBatchDownloadAll}
                 disabled={isBatchDownloading || filteredTables.length === 0}
-                className="px-3 py-2 bg-[#0C831F] hover:bg-[#096918] text-white text-xs font-bold rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer border border-emerald-400/50 shadow-md disabled:opacity-50"
+                className="px-3 py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer border border-emerald-400/50 shadow-md disabled:opacity-50"
                 title="Download All Stand Cards as PNG"
               >
                 {isBatchDownloading ? (
@@ -531,7 +531,7 @@ export const TableQrStandsModal: React.FC<TableQrStandsModalProps> = ({
                   <button
                     type="button"
                     onClick={handleSaveConfig}
-                    className="px-5 py-2 bg-[#0C831F] hover:bg-[#096918] text-white rounded-xl text-xs font-black shadow-md flex items-center space-x-1.5 cursor-pointer"
+                    className="px-5 py-2 bg-[#059669] hover:bg-[#047857] text-white rounded-xl text-xs font-black shadow-md flex items-center space-x-1.5 cursor-pointer"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>Save &amp; Re-generate All QRs</span>
@@ -737,7 +737,7 @@ export const TableQrStandsModal: React.FC<TableQrStandsModalProps> = ({
                           type="button"
                           onClick={() => handleDownloadStand(table)}
                           disabled={isDownloadingThis}
-                          className="py-2 px-2.5 bg-gradient-to-r from-emerald-600 to-[#0C831F] hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
+                          className="py-2 px-2.5 bg-gradient-to-r from-emerald-600 to-[#059669] hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
                           title="Download High-Res 1200x1750 Acrylic Stand Card (PNG)"
                         >
                           {isDownloadingThis ? (

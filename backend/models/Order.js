@@ -84,6 +84,8 @@ const orderSchema = new mongoose.Schema({
 // Production Performance Compound Indexes
 orderSchema.index({ tableId: 1, paymentStatus: 1 });
 orderSchema.index({ status: 1, paymentStatus: 1 });
+orderSchema.index({ paymentStatus: 1, paidAt: -1 });
+orderSchema.index({ paymentStatus: 1, createdAt: 1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ customerPhone: 1 });
 

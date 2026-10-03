@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { MenuItem, CustomizationOption } from '../../types/menu.types';
 import { X, Star, Clock, Plus, Minus, Sparkles, Check, Trash2, Gift, Flame } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
@@ -247,7 +247,7 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
             <div className="p-3.5 bg-gradient-to-br from-emerald-50/90 to-teal-50/50 border border-emerald-300/80 rounded-2xl space-y-2.5 shadow-2xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1.5 text-xs font-black text-emerald-950 uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-[#0C831F]" />
+                  <Sparkles className="w-4 h-4 text-[#059669]" />
                   <span>Chef's Recommended Pairings</span>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300/80 px-2 py-0.5 rounded-full flex items-center space-x-1">
@@ -269,12 +269,12 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
                       key={addon.id}
                       className={`p-2.5 rounded-xl border text-xs flex items-center justify-between transition-all ${
                         isAdded
-                          ? 'bg-white border-[#0C831F] text-emerald-950 shadow-sm ring-1 ring-emerald-500/20'
+                          ? 'bg-white border-[#059669] text-emerald-950 shadow-sm ring-1 ring-emerald-500/20'
                           : 'bg-white/80 hover:bg-white border-slate-200 text-slate-700 hover:border-emerald-300'
                       }`}
                     >
                       <div className="flex items-center space-x-2.5 min-w-0 flex-1 mr-2">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${isAdded ? 'bg-[#0C831F]' : 'bg-slate-300'}`} />
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${isAdded ? 'bg-[#059669]' : 'bg-slate-300'}`} />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center space-x-1.5 flex-wrap">
                             <span className="font-bold text-slate-900 text-xs truncate">{addon.name}</span>
@@ -284,7 +284,7 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
                               </span>
                             )}
                           </div>
-                          <span className="font-mono font-black text-[#0C831F] text-xs">
+                          <span className="font-mono font-black text-[#059669] text-xs">
                             +₹{addon.price}{qty > 1 ? ` (×${qty} = +₹${addon.price * qty})` : ''}
                           </span>
                         </div>
@@ -295,14 +295,14 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handleAddonIncrement(addon.id)}
-                          className="px-3 py-1 bg-emerald-50 hover:bg-[#0C831F] text-[#0C831F] hover:text-white border border-[#0C831F] font-bold rounded-lg text-xs shadow-2xs transition-all flex items-center space-x-1 cursor-pointer active:scale-95 shrink-0"
+                          className="px-3 py-1 bg-emerald-50 hover:bg-[#059669] text-[#059669] hover:text-white border border-[#059669] font-bold rounded-lg text-xs shadow-2xs transition-all flex items-center space-x-1 cursor-pointer active:scale-95 shrink-0"
                           title="Add this pairing"
                         >
                           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                           <span>+ Add</span>
                         </button>
                       ) : (
-                        <div className="flex items-center space-x-1.5 bg-[#0C831F] text-white px-1.5 py-0.5 rounded-lg shadow-sm shrink-0">
+                        <div className="flex items-center space-x-1.5 bg-[#059669] text-white px-1.5 py-0.5 rounded-lg shadow-sm shrink-0">
                           <button
                             type="button"
                             onClick={() => handleAddonDecrement(addon.id)}
@@ -395,8 +395,8 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
                     }}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer active:scale-95 flex items-center space-x-1 ${
                       isActive
-                        ? 'bg-[#0C831F] text-white border-[#0C831F] shadow-xs'
-                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-[#0C831F] border-slate-200'
+                        ? 'bg-[#059669] text-white border-[#059669] shadow-xs'
+                        : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-[#059669] border-slate-200'
                     }`}
                   >
                     <span>{chip.emoji}</span>
@@ -433,7 +433,7 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
             }
             return (
               <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center space-x-2 text-xs text-emerald-900 font-bold">
-                <Sparkles className="w-3.5 h-3.5 text-[#0C831F] shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-[#059669] shrink-0" />
                 <span className="text-[11px]">🎉 Table total qualifies for {spendTier.reward}!</span>
               </div>
             );

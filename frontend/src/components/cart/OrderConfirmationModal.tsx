@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { CartItem, Coupon } from '../../types/menu.types';
 import { Utensils, ShieldCheck, X, Clock, Loader2, Phone, User as UserIcon, Sparkles, CheckCircle2, Edit2 } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
@@ -94,7 +94,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
         </button>
 
         <div className="flex items-center space-x-3">
-          <div className="p-3 bg-emerald-100 border border-emerald-300 rounded-2xl text-[#0C831F] shadow-sm">
+          <div className="p-3 bg-emerald-100 border border-emerald-300 rounded-2xl text-[#059669] shadow-sm">
             <Utensils className="w-6 h-6" />
           </div>
           <div>
@@ -163,7 +163,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder="98765 43210"
-                  className="w-full pl-11 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] transition-all tracking-wider font-mono shadow-sm"
+                  className="w-full pl-11 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#059669] transition-all tracking-wider font-mono shadow-sm"
                 />
               </div>
 
@@ -174,7 +174,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your Name (Optional)"
-                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] transition-colors shadow-sm"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#059669] transition-colors shadow-sm"
                 />
               </div>
             </div>
@@ -199,7 +199,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   <p className="text-[10px] text-amber-700 italic font-medium">Note: {item.specialNotes}</p>
                 )}
               </div>
-              <span className="font-mono text-[#0C831F] font-black">₹{item.menuItem.price * item.quantity}</span>
+              <span className="font-mono text-[#059669] font-black">₹{item.menuItem.price * item.quantity}</span>
             </div>
           ))}
         </div>
@@ -212,7 +212,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           </div>
 
           {appliedCoupon && (
-            <div className="flex justify-between text-[#0C831F] font-bold">
+            <div className="flex justify-between text-[#059669] font-bold">
               <span>Coupon Discount ({appliedCoupon.code})</span>
               <span className="font-mono">-₹{discount.toFixed(2)}</span>
             </div>
@@ -225,7 +225,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
 
           <div className="flex justify-between text-base font-extrabold text-slate-900 pt-1.5 border-t border-slate-200">
             <span>Total Active Bill</span>
-            <span className="font-mono text-[#0C831F] font-black text-lg">₹{grandTotal.toFixed(2)}</span>
+            <span className="font-mono text-[#059669] font-black text-lg">₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -246,7 +246,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           <button
             onClick={handleConfirmClick}
             disabled={isSubmitting || (!isIdentified && !isPhoneValid)}
-            className="flex-1 py-3.5 bg-[#0C831F] hover:bg-[#096918] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
+            className="flex-1 py-3.5 bg-[#059669] hover:bg-[#047857] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
           >
             {isSubmitting ? (
               <>

@@ -295,7 +295,7 @@ export const MenuPage: React.FC = () => {
   const todaysSpecials = applyDietaryFilter(menuItems.filter((it) => it.categoryId === 2 || it.isBestSeller));
 
   return (
-    <div className="page-theme-customer min-h-screen flex flex-col bg-[#F4F6F8] text-slate-800 font-sans selection:bg-[#0C831F] selection:text-white">
+    <div className="page-theme-customer min-h-screen flex flex-col bg-[#F8FAFC] text-slate-800 font-sans selection:bg-[#059669] selection:text-white">
       {/* Unified Coordinated Sticky Navigation: Brand Header & Category Bar */}
       <div className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-300 shadow-sm">
         {/* Top Restaurant Brand & Table Navigation Bar with GPU-Accelerated Smooth Dynamic Collapse */}
@@ -325,7 +325,7 @@ export const MenuPage: React.FC = () => {
                   </button>
 
                   {/* 2. Logo Emblem (Visible on Mobile & Desktop) */}
-                  <div className="flex w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 via-[#0C831F] to-emerald-800 border border-emerald-400/40 items-center justify-center text-white shadow-xs shrink-0">
+                  <div className="flex w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 via-[#059669] to-emerald-800 border border-emerald-400/40 items-center justify-center text-white shadow-xs shrink-0">
                     <Utensils className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-emerald-50" />
                   </div>
 
@@ -335,7 +335,7 @@ export const MenuPage: React.FC = () => {
                       <span className="font-black text-xs sm:text-base text-slate-900 tracking-tight font-serif uppercase">
                         AURA
                       </span>
-                      <span className="font-black text-[9px] sm:text-xs text-[#0C831F] tracking-widest uppercase">
+                      <span className="font-black text-[9px] sm:text-xs text-[#059669] tracking-widest uppercase">
                         GASTRONOMY
                       </span>
                     </div>
@@ -343,7 +343,7 @@ export const MenuPage: React.FC = () => {
                     {/* 4. Active Table Badge */}
                     <div className="flex items-center space-x-1 mt-0.5">
                       <span className="inline-flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 bg-emerald-50 border border-emerald-200/90 rounded-full text-[9px] sm:text-[10px] font-black text-emerald-900 shadow-2xs whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#0C831F] animate-pulse shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#059669] animate-pulse shrink-0" />
                         <span>Table {tableId}</span>
                         <span className="text-emerald-700 font-semibold hidden xs:inline">• {zoneName}</span>
                       </span>
@@ -351,7 +351,7 @@ export const MenuPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right: 5. Track Order -> 6. Wishlist -> 7. Cart */}
+                {/* Right: 5. Track Order -> 6. Cart */}
                 <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
                   {/* 5. Track Order (Active Kitchen Order) */}
                   {activeOrderId && (
@@ -370,12 +370,12 @@ export const MenuPage: React.FC = () => {
                   {/* Table Cart Button */}
                   <button
                     onClick={() => setIsCartOpen(true)}
-                    className="relative p-2 sm:p-2.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-[#0C831F] text-slate-800 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                    className="relative p-2 sm:p-2.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-[#059669] text-slate-800 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
                     title="View Active Table Cart"
                   >
                     <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-slate-800" />
                     {getItemCount() > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-[#0C831F] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-150">
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-[#059669] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-150">
                         {getItemCount()}
                       </span>
                     )}
@@ -445,7 +445,7 @@ export const MenuPage: React.FC = () => {
           {/* Section Demarcation Header */}
           <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-slate-300">
             <div className="flex items-center space-x-2.5">
-              <div className="w-2.5 h-6 bg-[#0C831F] rounded-full shadow-sm" />
+              <div className="w-2.5 h-6 bg-[#059669] rounded-full shadow-sm" />
               <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <span>
                   {selectedCategoryId
@@ -463,7 +463,7 @@ export const MenuPage: React.FC = () => {
             {selectedCategoryId !== null && (
               <button
                 onClick={() => setSelectedCategoryId(null)}
-                className="text-xs font-bold text-[#0C831F] hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#059669] hover:underline cursor-pointer"
               >
                 View All Dishes
               </button>
@@ -481,7 +481,7 @@ export const MenuPage: React.FC = () => {
               <p className="font-bold text-base text-slate-800">{fetchError}</p>
               <button
                 onClick={fetchMenuData}
-                className="px-5 py-2.5 bg-[#0C831F] text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 mx-auto shadow-sm cursor-pointer"
+                className="px-5 py-2.5 bg-[#059669] text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 mx-auto shadow-sm cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Retry Connection</span>
@@ -494,7 +494,7 @@ export const MenuPage: React.FC = () => {
               <p className="text-xs text-slate-500 leading-relaxed">Try clearing your dietary filters or searching for another dish.</p>
               <button
                 onClick={handleResetFilters}
-                className="px-5 py-2.5 bg-[#0C831F] text-white font-bold text-xs rounded-xl shadow-md transition-transform hover:scale-105 cursor-pointer"
+                className="px-5 py-2.5 bg-[#059669] text-white font-bold text-xs rounded-xl shadow-md transition-transform hover:scale-105 cursor-pointer"
               >
                 Reset All Filters
               </button>
@@ -518,8 +518,8 @@ export const MenuPage: React.FC = () => {
               {/* Sentinel Div for Infinite Scroll Batch Loading */}
               {visibleCount < filteredItems.length && (
                 <div ref={sentinelRef} className="py-6 text-center flex items-center justify-center space-x-2">
-                  <div className="w-2 h-2 bg-[#0C831F] rounded-full animate-ping" />
-                  <span className="text-[11px] text-[#0C831F] font-mono uppercase font-bold tracking-wider">
+                  <div className="w-2 h-2 bg-[#059669] rounded-full animate-ping" />
+                  <span className="text-[11px] text-[#059669] font-mono uppercase font-bold tracking-wider">
                     Loading More Dishes ({visibleCount} of {filteredItems.length})...
                   </span>
                 </div>
@@ -533,15 +533,15 @@ export const MenuPage: React.FC = () => {
       <TableServiceModal tableId={tableId} />
 
 
-      {/* Floating Active Cart Bar (Desktop & Mobile - Blinkit Green Style) */}
+      {/* Floating Active Cart Bar (Desktop & Mobile - AURA Luxury Emerald Style) */}
       {getItemCount() > 0 && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-40">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full py-3.5 px-5 sm:px-6 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-xs sm:text-sm transition-all duration-150 shadow-[0_8px_30px_rgba(12,131,31,0.5)] flex items-center justify-between border-2 border-emerald-400 active:scale-95 cursor-pointer"
+            className="w-full py-3.5 px-5 sm:px-6 bg-[#059669] hover:bg-[#047857] text-white font-black rounded-2xl text-xs sm:text-sm transition-all duration-150 shadow-[0_8px_30px_rgba(5,150,105,0.45)] flex items-center justify-between border-2 border-emerald-400 active:scale-95 cursor-pointer"
           >
             <div className="flex items-center space-x-2.5">
-              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-white text-[#0C831F] rounded-full text-xs flex items-center justify-center font-black shrink-0 shadow-sm">
+              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-white text-[#059669] rounded-full text-xs flex items-center justify-center font-black shrink-0 shadow-sm">
                 {getItemCount()}
               </span>
               <span className="tracking-wide uppercase font-black text-white text-xs sm:text-sm">View Table Cart</span>

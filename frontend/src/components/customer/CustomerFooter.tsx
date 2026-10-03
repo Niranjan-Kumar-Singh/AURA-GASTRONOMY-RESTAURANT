@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Utensils, Heart, Mail, Instagram, Facebook, Twitter } from 'lucide-react';
 
 export const CustomerFooter: React.FC = () => {
@@ -69,9 +69,9 @@ export const CustomerFooter: React.FC = () => {
             <input
               type="email"
               placeholder="Enter your email"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-20 text-xs text-slate-800 focus:outline-none focus:border-[#0C831F]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-20 text-xs text-slate-800 focus:outline-none focus:border-[#059669]"
             />
-            <button className="absolute right-1 top-1 bottom-1 bg-[#0C831F] hover:bg-[#096918] text-white font-bold px-3 rounded-lg text-[10px] uppercase tracking-wider transition-colors cursor-pointer">
+            <button className="absolute right-1 top-1 bottom-1 bg-[#059669] hover:bg-[#047857] text-white font-bold px-3 rounded-lg text-[10px] uppercase tracking-wider transition-colors cursor-pointer">
               Join
             </button>
           </div>

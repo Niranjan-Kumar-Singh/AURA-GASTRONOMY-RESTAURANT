@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, History, Utensils, CalendarClock, ChevronRight, Loader } from 'lucide-react';
 import { orderService } from '../../services/order.service';
 import { useAuthStore } from '../../store/use-auth-store';
@@ -107,7 +107,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
 
         <div className="p-5 sm:p-6 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
           {loading ? (
-            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#0C831F]" /></div>
+            <div className="flex justify-center py-20"><Loader className="w-8 h-8 animate-spin text-[#059669]" /></div>
           ) : orders.length === 0 ? (
             <div className="text-center py-20 text-slate-500 text-sm space-y-2">
               <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400">
@@ -179,7 +179,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                     </span>
                   </div>
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm text-[#0C831F]">
+                    <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm text-[#059669]">
                       <Utensils className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -194,8 +194,8 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                     </div>
                   </div>
                   <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
-                    <span className="font-mono font-black text-[#0C831F] text-sm">₹{receiptGroup.total.toLocaleString('en-IN')}</span>
-                    <div className="flex items-center space-x-1 text-xs text-[#0C831F] group-hover:underline font-bold">
+                    <span className="font-mono font-black text-[#059669] text-sm">₹{receiptGroup.total.toLocaleString('en-IN')}</span>
+                    <div className="flex items-center space-x-1 text-xs text-[#059669] group-hover:underline font-bold">
                       <span>View Receipt</span>
                       <ChevronRight className="w-4 h-4" />
                     </div>
@@ -269,7 +269,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                   <span>₹{(selectedReceipt.subtotal || 0).toLocaleString('en-IN')}</span>
                 </div>
                 {selectedReceipt.pointsDiscount && selectedReceipt.pointsDiscount > 0 ? (
-                  <div className="flex justify-between text-[#0C831F] font-bold">
+                  <div className="flex justify-between text-[#059669] font-bold">
                     <span>Points Discount ({selectedReceipt.pointsRedeemed || 0} PTS)</span>
                     <span className="font-mono">-₹{(selectedReceipt.pointsDiscount || 0).toLocaleString('en-IN')}</span>
                   </div>
@@ -303,7 +303,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({ isOpen, 
                       </p>
                     )}
                     {selectedReceipt.paymentStatus !== 'REFUNDED' && (
-                      <div className="flex justify-between text-xs font-black text-[#0C831F] pt-1 border-t border-slate-200 font-mono">
+                      <div className="flex justify-between text-xs font-black text-[#059669] pt-1 border-t border-slate-200 font-mono">
                         <span>NET SETTLED:</span>
                         <span>₹{Math.max(0, (selectedReceipt.total || 0) - selectedReceipt.refundAmount).toLocaleString('en-IN')}</span>
                       </div>

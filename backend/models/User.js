@@ -8,7 +8,6 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['customer', 'waiter', 'cashier', 'kitchen', 'owner', 'admin'], default: 'customer' },
   status: { type: String, enum: ['VIP', 'Standard'], default: 'Standard' },
-  wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem' }],
   loyaltyPoints: { type: Number, default: 0, min: 0 },
   lifetimePoints: { type: Number, default: 0, min: 0 },
   loyaltyTier: { 

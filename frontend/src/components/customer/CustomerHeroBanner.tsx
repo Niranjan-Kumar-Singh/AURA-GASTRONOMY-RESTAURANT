@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Star, Tag, Zap, Check, Sparkles, MapPin, Award, Clock } from 'lucide-react';
 
 interface CustomerHeroBannerProps {
@@ -26,7 +26,7 @@ export const CustomerHeroBanner: React.FC<CustomerHeroBannerProps> = ({
         <div className="space-y-3 min-w-0 flex-1">
           {/* Status Badges Row */}
           <div className="flex items-center space-x-2.5 flex-wrap gap-y-1.5">
-            <div className="flex items-center space-x-1.5 bg-[#0C831F] text-white px-2.5 py-0.5 rounded-full text-[11px] font-black shadow-xs shrink-0">
+            <div className="flex items-center space-x-1.5 bg-[#059669] text-white px-2.5 py-0.5 rounded-full text-[11px] font-black shadow-xs shrink-0">
               <Zap className="w-3.5 h-3.5" />
               <span>12–15m PREP GUARANTEE</span>
             </div>
@@ -49,7 +49,7 @@ export const CustomerHeroBanner: React.FC<CustomerHeroBannerProps> = ({
               <span className="font-serif font-black text-2xl lg:text-3xl text-slate-950 tracking-tight uppercase">
                 AURA GASTRONOMY
               </span>
-              <span className="text-xs font-mono font-black tracking-widest text-[#0C831F] bg-emerald-100/80 px-2.5 py-0.5 rounded-full uppercase border border-emerald-300">
+              <span className="text-xs font-mono font-black tracking-widest text-[#059669] bg-emerald-100/80 px-2.5 py-0.5 rounded-full uppercase border border-emerald-300">
                 Botanical Bar
               </span>
             </div>
@@ -82,7 +82,7 @@ export const CustomerHeroBanner: React.FC<CustomerHeroBannerProps> = ({
             >
               {copiedCode === 'WELCOME100' ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#0C831F]" />
+                  <Check className="w-3.5 h-3.5 text-[#059669]" />
                   <span>COPIED!</span>
                 </>
               ) : (

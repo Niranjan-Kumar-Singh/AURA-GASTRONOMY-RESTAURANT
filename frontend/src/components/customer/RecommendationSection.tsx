@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+﻿import React, { useRef } from 'react';
 import { MenuItem } from '../../types/menu.types';
 import { Sparkles, Check, ArrowRight, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCartStore } from '../../store/use-cart-store';
@@ -130,7 +130,7 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
                 className={`flex-none snap-start w-[calc(50vw-22px)] max-w-[172px] sm:max-w-none sm:w-56 bg-white border rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer shadow-[0_3px_12px_rgba(0,0,0,0.12)] sm:shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition-all duration-200 group relative flex flex-col justify-between hover:-translate-y-1 ${
                   isChef
                     ? 'border-amber-500/30 hover:border-amber-400 hover:shadow-[0_8px_24px_rgba(245,158,11,0.2)]'
-                    : 'border-emerald-500/30 hover:border-[#0C831F] hover:shadow-[0_8px_24px_rgba(12,131,31,0.2)]'
+                    : 'border-emerald-500/30 hover:border-[#059669] hover:shadow-[0_8px_24px_rgba(12,131,31,0.2)]'
                 }`}
                 onClick={() => onItemClick(item)}
               >
@@ -194,7 +194,7 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
                         </span>
                       </div>
                       {discountPercent > 0 && (
-                        <span className="text-[8px] sm:text-[9px] text-[#0C831F] font-bold uppercase tracking-tight leading-none mt-0.5">
+                        <span className="text-[8px] sm:text-[9px] text-[#059669] font-bold uppercase tracking-tight leading-none mt-0.5">
                           {discountPercent}% OFF
                         </span>
                       )}
@@ -203,7 +203,7 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
                     {qty > 0 ? (
                       <div
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center space-x-0.5 sm:space-x-1 bg-[#0C831F] text-white px-1 sm:px-1.5 py-0.5 rounded-lg sm:rounded-xl shadow-xs shrink-0"
+                        className="flex items-center space-x-0.5 sm:space-x-1 bg-[#059669] text-white px-1 sm:px-1.5 py-0.5 rounded-lg sm:rounded-xl shadow-xs shrink-0"
                       >
                         <button
                           type="button"
@@ -235,7 +235,7 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => onItemClick(item)}
-                        className="px-2 sm:px-2.5 py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-tight transition-all flex items-center space-x-0.5 sm:space-x-1 bg-[#0C831F] hover:bg-[#096918] text-white shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer shrink-0 group/btn"
+                        className="px-2 sm:px-2.5 py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-tight transition-all flex items-center space-x-0.5 sm:space-x-1 bg-[#059669] hover:bg-[#047857] text-white shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer shrink-0 group/btn"
                         title="View dish details & add to order"
                       >
                         <span className="hidden sm:inline">View &amp; </span>

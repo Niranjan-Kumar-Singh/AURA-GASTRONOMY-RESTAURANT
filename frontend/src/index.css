@@ -55,53 +55,53 @@ button:disabled,
   --theme-accent: #10B981;
 
   /* Universal Customer Semantic Color Tokens */
-  --c-primary: #0C831F;
-  --c-primary-dark: #096918;
-  --c-primary-light: #E8F7ED;
-  --c-primary-border: #16A34A;
-  --c-accent: #F7D046;
-  --c-accent-hover: #EAB308;
+  --c-primary: #059669;
+  --c-primary-dark: #047857;
+  --c-primary-light: #ECFDF5;
+  --c-primary-border: #10B981;
+  --c-accent: #D97706;
+  --c-accent-hover: #B45309;
   --c-danger: #DC2626;
   --c-surface: #FFFFFF;
-  --c-surface-hover: #F8FAFC;
-  --c-bg: #F4F6F8;
-  --c-text: #1E293B;
+  --c-surface-hover: #F1F5F9;
+  --c-bg: #F8FAFC;
+  --c-text: #0F172A;
   --c-text-muted: #64748B;
-  --c-border: #E5E7EB;
+  --c-border: #E2E8F0;
   --c-border-strong: #CBD5E1;
 }
 
-/* 1. Customer Dining Portal (Fresh Blinkit Luminous Theme) */
+/* 1. Customer Dining Portal (AURA Gastronomy Luxury Emerald & Platinum Theme) */
 .page-theme-customer {
-  background-color: #F4F6F8 !important;
-  color: #1E293B !important;
-  --theme-bg: #F4F6F8;
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  --theme-bg: #F8FAFC;
   --theme-surface: #FFFFFF;
-  --theme-surface-hover: #F8FAFC;
-  --theme-border: #E5E7EB;
+  --theme-surface-hover: #F1F5F9;
+  --theme-border: #E2E8F0;
   --theme-border-strong: #CBD5E1;
-  --theme-primary: #0C831F;
-  --theme-primary-hover: #096918;
-  --theme-primary-light: #E8F7ED;
-  --theme-secondary: #F7D046;
-  --theme-text: #1E293B;
+  --theme-primary: #059669;
+  --theme-primary-hover: #047857;
+  --theme-primary-light: #ECFDF5;
+  --theme-secondary: #D97706;
+  --theme-text: #0F172A;
   --theme-text-muted: #64748B;
-  --theme-accent: #0C831F;
+  --theme-accent: #059669;
 
   /* Customer Semantic Tokens */
-  --c-primary: #0C831F;
-  --c-primary-dark: #096918;
-  --c-primary-light: #E8F7ED;
-  --c-primary-border: #16A34A;
-  --c-accent: #F7D046;
-  --c-accent-hover: #EAB308;
+  --c-primary: #059669;
+  --c-primary-dark: #047857;
+  --c-primary-light: #ECFDF5;
+  --c-primary-border: #10B981;
+  --c-accent: #D97706;
+  --c-accent-hover: #B45309;
   --c-danger: #DC2626;
   --c-surface: #FFFFFF;
-  --c-surface-hover: #F8FAFC;
-  --c-bg: #F4F6F8;
-  --c-text: #1E293B;
+  --c-surface-hover: #F1F5F9;
+  --c-bg: #F8FAFC;
+  --c-text: #0F172A;
   --c-text-muted: #64748B;
-  --c-border: #E5E7EB;
+  --c-border: #E2E8F0;
   --c-border-strong: #CBD5E1;
 }
 
@@ -259,7 +259,7 @@ button:disabled,
   }
 
   ::selection {
-    background-color: #0C831F;
+    background-color: #059669;
     color: #FFFFFF;
   }
 
@@ -331,7 +331,7 @@ button:disabled,
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0C831F;
+  background: #059669;
 }
 
 * {
@@ -442,27 +442,32 @@ button:disabled,
   scrollbar-color: rgba(56, 189, 248, 0.4) rgba(18, 21, 32, 0.75);
 }
 
-/* Blinkit Fresh Category Scrollbar */
+/* AURA Luxury Dynamic Category Scrollbar */
+.aura-scrollbar-x::-webkit-scrollbar,
 .blinkit-scrollbar-x::-webkit-scrollbar {
   height: 4px;
 }
+.aura-scrollbar-x::-webkit-scrollbar-track,
 .blinkit-scrollbar-x::-webkit-scrollbar-track {
-  background: #E5E7EB;
+  background: #E2E8F0;
   border-radius: 9999px;
   margin-left: 8px;
   margin-right: 8px;
 }
+.aura-scrollbar-x::-webkit-scrollbar-thumb,
 .blinkit-scrollbar-x::-webkit-scrollbar-thumb {
-  background: #16A34A;
+  background: #10B981;
   border-radius: 9999px;
   transition: all 0.2s ease;
 }
+.aura-scrollbar-x::-webkit-scrollbar-thumb:hover,
 .blinkit-scrollbar-x::-webkit-scrollbar-thumb:hover {
-  background: #0C831F;
+  background: #059669;
 }
+.aura-scrollbar-x,
 .blinkit-scrollbar-x {
   scrollbar-width: thin;
-  scrollbar-color: #16A34A #E5E7EB;
+  scrollbar-color: #10B981 #E2E8F0;
 }
 
 /* Cart Recommendations Visible Horizontal Scrollbar */
@@ -481,22 +486,23 @@ button:disabled,
   transition: all 0.2s ease;
 }
 .cart-scrollbar-x::-webkit-scrollbar-thumb:hover {
-  background: #0C831F;
+  background: #059669;
 }
 .cart-scrollbar-x {
   scrollbar-width: thin;
   scrollbar-color: #CBD5E1 #F1F5F9;
 }
 
-/* Blinkit Fresh Add Button Pulse & Stepper Animation */
-@keyframes blinkit-pop {
+/* AURA Dynamic Add Button Pulse & Stepper Animation */
+@keyframes aura-pop {
   0% { transform: scale(0.92); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
 
+.aura-stepper-pop,
 .blinkit-stepper-pop {
-  animation: blinkit-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: aura-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Glassmorphism & Card Utilities */

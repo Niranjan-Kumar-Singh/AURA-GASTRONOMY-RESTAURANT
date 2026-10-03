@@ -29,7 +29,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       onClick={() => onClick(item)}
-      className="bg-white border border-slate-300 hover:border-[#0C831F] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_2px_8px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_20px_rgba(12,131,31,0.12)] group relative transition-all duration-200 hover:-translate-y-1"
+      className="bg-white border border-slate-300 hover:border-[#059669] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between shadow-[0_2px_8px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_20px_rgba(5,150,105,0.15)] group relative transition-all duration-200 hover:-translate-y-1"
     >
       {/* Top Image Box */}
       <div className="relative h-28 sm:h-48 w-full bg-slate-100 border-b border-slate-200 overflow-hidden">
@@ -103,7 +103,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           {/* Applied Add-ons Badge Preview */}
           {cartItem?.addonNames && cartItem.addonNames.length > 0 && (
             <div className="flex items-center space-x-1 text-[9px] sm:text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded border border-emerald-200">
-              <Sparkles className="w-2.5 h-2.5 text-[#0C831F] shrink-0" />
+              <Sparkles className="w-2.5 h-2.5 text-[#059669] shrink-0" />
               <span className="truncate">Add-ons: {cartItem.addonNames.join(', ')}</span>
             </div>
           )}
@@ -118,7 +118,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
           </div>
 
           <span className="inline-flex items-center space-x-0.5 text-slate-500 font-semibold">
-            <Zap className="w-2.5 h-2.5 text-[#0C831F]" />
+            <Zap className="w-2.5 h-2.5 text-[#059669]" />
             <span>{item.preparationTimeMinutes || 15}m</span>
           </span>
 
@@ -148,7 +148,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
                 ₹{originalPrice}
               </span>
             </div>
-            <span className="text-[8px] sm:text-[9px] text-[#0C831F] font-bold uppercase tracking-tight leading-none mt-0.5">
+            <span className="text-[8px] sm:text-[9px] text-[#059669] font-bold uppercase tracking-tight leading-none mt-0.5">
               {Math.round(((originalPrice - item.price) / originalPrice) * 100)}% OFF
             </span>
           </div>
@@ -162,7 +162,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
             ) : quantity > 0 ? (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-[#0C831F] to-[#096918] text-white pl-2 pr-2.5 sm:pl-3 sm:pr-3.5 py-1 sm:py-1.5 rounded-l-full sm:rounded-l-2xl shadow-sm border-y border-l border-emerald-500/40"
+                className="flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-[#059669] to-[#047857] text-white pl-2 pr-2.5 sm:pl-3 sm:pr-3.5 py-1 sm:py-1.5 rounded-l-full sm:rounded-l-2xl shadow-sm border-y border-l border-emerald-500/40"
               >
                 <button
                   type="button"
@@ -194,7 +194,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
               <button
                 type="button"
                 onClick={() => onClick(item)}
-                className="pl-2.5 sm:pl-3.5 pr-2 sm:pr-3 py-1 sm:py-1.5 rounded-l-full sm:rounded-l-2xl text-[10px] sm:text-xs font-black uppercase tracking-tight transition-all flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-[#0C831F] to-[#0A6D1A] hover:from-[#0A6D1A] hover:to-[#085514] text-white shadow-xs hover:shadow-md hover:shadow-emerald-700/20 active:scale-95 cursor-pointer shrink-0 group/btn border-y border-l border-emerald-400/40"
+                className="pl-2.5 sm:pl-3.5 pr-2 sm:pr-3 py-1 sm:py-1.5 rounded-l-full sm:rounded-l-2xl text-[10px] sm:text-xs font-black uppercase tracking-tight transition-all flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-[#059669] to-[#047857] hover:from-[#047857] hover:to-[#065F46] text-white shadow-xs hover:shadow-md hover:shadow-emerald-700/20 active:scale-95 cursor-pointer shrink-0 group/btn border-y border-l border-emerald-400/40"
                 title="View dish details, chef pairings & add to order"
               >
                 <span>View &amp; Add</span>

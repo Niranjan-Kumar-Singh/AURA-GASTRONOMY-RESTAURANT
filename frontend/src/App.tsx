@@ -22,8 +22,8 @@ const ProfilePage = React.lazy(() => import('./pages/user/ProfilePage').then((m:
 
 // Sleek fast loading fallback
 const PageLoader: React.FC = () => (
-  <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center space-y-3">
-    <div className="w-10 h-10 border-3 border-[#0C831F] border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center space-y-3">
+    <div className="w-10 h-10 border-3 border-[#059669] border-t-transparent rounded-full animate-spin" />
     <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
       Loading Experience...
     </span>

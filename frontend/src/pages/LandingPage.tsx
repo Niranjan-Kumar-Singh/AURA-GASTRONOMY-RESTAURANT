@@ -34,7 +34,7 @@ export const LandingPage: React.FC = () => {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => navigate('/menu')}
-            className="px-4 py-2 bg-[#0C831F] hover:bg-[#096918] text-white font-black text-xs rounded-xl shadow-lg shadow-emerald-950/40 transition-all flex items-center space-x-1.5 cursor-pointer"
+            className="px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white font-black text-xs rounded-xl shadow-lg shadow-emerald-950/40 transition-all flex items-center space-x-1.5 cursor-pointer"
           >
             <Utensils className="w-3.5 h-3.5" />
             <span>Digital Menu</span>
@@ -84,7 +84,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
               onClick={() => navigate('/menu')}
-              className="w-full sm:w-auto px-8 py-4 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-sm transition-transform hover:scale-105 shadow-xl flex items-center justify-center space-x-2 cursor-pointer shadow-emerald-950/40"
+              className="w-full sm:w-auto px-8 py-4 bg-[#059669] hover:bg-[#047857] text-white font-black rounded-2xl text-sm transition-transform hover:scale-105 shadow-xl flex items-center justify-center space-x-2 cursor-pointer shadow-emerald-950/40"
             >
               <Utensils className="w-5 h-5" />
               <span>Explore Menu &amp; Order</span>
@@ -217,7 +217,7 @@ export const LandingPage: React.FC = () => {
           <div className="text-center pt-4">
             <button
               onClick={() => navigate('/menu')}
-              className="inline-flex items-center space-x-2 px-8 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 hover:bg-[#0C831F] hover:text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg cursor-pointer"
+              className="inline-flex items-center space-x-2 px-8 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 hover:bg-[#059669] hover:text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg cursor-pointer"
             >
               <span>Explore Complete Digital Menu</span>
               <ChevronRight className="w-4 h-4" />

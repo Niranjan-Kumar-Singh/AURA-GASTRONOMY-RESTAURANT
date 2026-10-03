@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Utensils, CheckCircle2, Clock, ArrowLeft, Plus, ChefHat, Receipt,
@@ -118,7 +118,7 @@ export const OrderTrackingPage: React.FC = () => {
             </button>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-black uppercase tracking-wider text-[#0C831F] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="text-xs font-black uppercase tracking-wider text-[#059669] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   Table {tableId}
                 </span>
                 <h1 className="text-sm sm:text-base font-extrabold text-slate-900">
@@ -138,11 +138,11 @@ export const OrderTrackingPage: React.FC = () => {
               className="p-2 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
               title="Refresh Status"
             >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#0C831F]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#059669]' : ''}`} />
             </button>
             <button
               onClick={() => navigate('/menu')}
-              className="px-3.5 py-1.5 bg-[#0C831F] hover:bg-[#096918] text-white text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer flex items-center space-x-1"
+              className="px-3.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer flex items-center space-x-1"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Menu</span>
@@ -155,7 +155,7 @@ export const OrderTrackingPage: React.FC = () => {
       <main className="max-w-3xl mx-auto px-4 pt-5 space-y-4">
         {isLoading ? (
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm text-center space-y-3">
-            <div className="w-10 h-10 border-3 border-[#0C831F] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-10 h-10 border-3 border-[#059669] border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-sm font-bold text-slate-700">Connecting to Kitchen KDS...</p>
           </div>
         ) : !activeOrder ? (
@@ -167,7 +167,7 @@ export const OrderTrackingPage: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/menu')}
-              className="px-6 py-3 bg-[#0C831F] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer"
+              className="px-6 py-3 bg-[#059669] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer"
             >
               Browse Digital Menu
             </button>
@@ -178,7 +178,7 @@ export const OrderTrackingPage: React.FC = () => {
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#0C831F]">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#059669]">
                     <ChefHat className="w-5 h-5 animate-bounce" />
                   </div>
                   <div>
@@ -208,7 +208,7 @@ export const OrderTrackingPage: React.FC = () => {
                 {/* Connector line */}
                 <div className="absolute top-4 left-6 right-6 h-1 bg-slate-100 -z-0">
                   <div
-                    className="h-full bg-[#0C831F] transition-all duration-700"
+                    className="h-full bg-[#059669] transition-all duration-700"
                     style={{ width: `${(currentStageIdx / (stages.length - 1)) * 100}%` }}
                   />
                 </div>
@@ -224,9 +224,9 @@ export const OrderTrackingPage: React.FC = () => {
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
                             isCurrent
-                              ? 'bg-[#0C831F] text-white border-emerald-400 shadow-[0_0_12px_rgba(12,131,31,0.4)] scale-110'
+                              ? 'bg-[#059669] text-white border-emerald-400 shadow-[0_0_12px_rgba(5,150,105,0.4)] scale-110'
                               : isPassed
-                              ? 'bg-emerald-100 text-[#0C831F] border-[#0C831F]'
+                              ? 'bg-emerald-100 text-[#059669] border-[#059669]'
                               : 'bg-white text-slate-300 border-slate-200'
                           }`}
                         >
@@ -295,7 +295,7 @@ export const OrderTrackingPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
                   <span>Grand Total</span>
-                  <span className="font-mono font-black text-[#0C831F] text-base tabular-nums">
+                  <span className="font-mono font-black text-[#059669] text-base tabular-nums">
                     ₹{(activeOrder.total || 0).toFixed(2)}
                   </span>
                 </div>
@@ -305,7 +305,7 @@ export const OrderTrackingPage: React.FC = () => {
             {/* Quick Action Button to Add More Dishes */}
             <button
               onClick={() => navigate('/menu')}
-              className="w-full py-3.5 bg-[#0C831F] hover:bg-[#096918] text-white font-extrabold rounded-2xl text-xs sm:text-sm tracking-wide transition-all flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-98 cursor-pointer"
+              className="w-full py-3.5 bg-[#059669] hover:bg-[#047857] text-white font-extrabold rounded-2xl text-xs sm:text-sm tracking-wide transition-all flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-98 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add More Dishes to Table {tableId}</span>
@@ -319,10 +319,10 @@ export const OrderTrackingPage: React.FC = () => {
         <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-40">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full py-3.5 px-5 bg-[#0C831F] hover:bg-[#096918] text-white font-black rounded-2xl text-xs sm:text-sm transition-all shadow-[0_8px_30px_rgba(12,131,31,0.5)] flex items-center justify-between border-2 border-emerald-400 active:scale-95 cursor-pointer"
+            className="w-full py-3.5 px-5 bg-[#059669] hover:bg-[#047857] text-white font-black rounded-2xl text-xs sm:text-sm transition-all shadow-[0_8px_30px_rgba(5,150,105,0.45)] flex items-center justify-between border-2 border-emerald-400 active:scale-95 cursor-pointer"
           >
             <div className="flex items-center space-x-2">
-              <span className="w-6 h-6 bg-white text-[#0C831F] rounded-full text-xs flex items-center justify-center font-black">
+              <span className="w-6 h-6 bg-white text-[#059669] rounded-full text-xs flex items-center justify-center font-black">
                 {getItemCount()}
               </span>
               <span className="tracking-wide uppercase font-black text-white text-xs">View Cart</span>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Flame, Sparkles, Award, Tag, Wheat } from 'lucide-react';
 
 export type ActiveFilter = 'ALL' | 'VEG' | 'NON_VEG' | 'JAIN' | 'GF' | 'SPECIAL' | 'BESTSELLER' | 'UNDER300' | 'SPICY';
@@ -15,7 +15,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onTog
     {
       id: 'ALL',
       label: 'All Items',
-      activeClass: 'bg-[#0C831F] text-white border-[#0C831F] shadow-sm font-black',
+      activeClass: 'bg-[#059669] text-white border-[#059669] shadow-sm font-black',
     },
     {
       id: 'VEG',
@@ -75,7 +75,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ selectedFilters, onTog
   ];
 
   return (
-    <div className="flex items-center space-x-2 overflow-x-auto px-1 pt-1 pb-1.5 text-xs blinkit-scrollbar-x select-none scroll-smooth min-w-full">
+    <div className="flex items-center space-x-2 overflow-x-auto px-1 pt-1 pb-1.5 text-xs aura-scrollbar-x select-none scroll-smooth min-w-full">
       {chips.map((chip) => {
         const active = isSelected(chip.id);
 

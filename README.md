@@ -176,10 +176,28 @@ Here is how data, state, and audio move through the venue:
 
 We treat every client connection—whether from a diner's smartphone or an unknown tablet—as untrusted:
 
-1. **Authoritative Server Pricing:** The frontend never decides what an order costs. When an order payload arrives, the server ignores any provided prices, looks up the current item cost in MongoDB, and recalculates the line items, taxes, service charges, and grand totals from scratch.
-2. **Recursive NoSQL Scrubbing:** Custom middleware inspects all request bodies, query strings, and route parameters, stripping out dangerous MongoDB query operators (`$gt`, `$regex`, `$where`, etc.) to block injection attacks.
-3. **Manager Terminal Guard:** Fast station switching is protected behind an administrative PIN (`AURA2026`). On unverified devices, staff must authenticate with full email/password credentials.
-4. **Optimized Compound Indexes:** The database uses compound indexes on `(tableId, paymentStatus)`, `(status, paymentStatus)`, and `createdAt` so high-volume queries return in under 3 milliseconds even with tens of thousands of historic tickets.
+1. **Authoritative Server Pricing & Coupon Verification:** The frontend never decides what an order costs or what discount is applied. When an order payload arrives, the server ignores any provided prices, looks up current item costs in MongoDB, verifies coupons and minimum order thresholds directly from the `Coupon` collection, and recalculates line items, 5% GST taxes, and totals authoritatively.
+2. **Discount Stacking Protection:** Table orders sent in multiple batches (appetizers, then mains, then desserts) never duplicate or stack coupon discounts repeatedly.
+3. **Strict Origin-Allowlist CORS:** Restricts incoming requests to designated production and development origins with credentials protection, preventing arbitrary cross-origin token exploitation.
+4. **Hardened JWT Secret & Fail-Safe Startup:** All token issuance and verification enforce cryptographically strong 64-character secrets. Missing `JWT_SECRET` immediately halts startup with an explicit security alert.
+5. **PII and Financial Endpoint Protection:** Endpoints exposing dining history, wallet balances, and refund issuance (`/orders/phone/:phone`, `/loyalty/transactions/:phone`, `/orders/:orderId/refund`, `/api/loyalty/admin/adjust`) require authenticated sessions and role checks (`ADMIN`, `MANAGER`, `CASHIER`, `OWNER`).
+6. **Anti-Farming Feedback Verification:** `POST /api/loyalty/feedback-reward` requires a valid, completed, and settled order that strictly belongs to the claimant's phone number before granting loyalty points.
+7. **Recursive NoSQL Scrubbing:** Custom middleware inspects all request bodies, query strings, and route parameters, stripping out dangerous MongoDB query operators (`$gt`, `$regex`, `$where`, etc.) to block injection attacks.
+8. **Optimized Compound Indexes:** Compound indexes on `(tableId, paymentStatus)`, `(status, paymentStatus)`, `(paymentStatus, paidAt)`, and `createdAt` ensure live sync queries return in under 3 milliseconds under heavy floor load.
+
+---
+
+## ⚡ Operational Stability & Financial Sync
+
+1. **Cashier POS Manual Discounts:** Cashiers can apply custom percentage or flat monetary discounts on the POS terminal. `/api/orders/pay-table` distributes discounts proportionally across active table tickets, recalculates 5% GST, and archives bills at the exact negotiated settlement price.
+2. **Country-Code Agnostic Phone Normalization:** A unified query engine (`phoneUtils.js`) matches customer accounts whether entered as standard 10-digit mobile numbers or prefixed with international codes (`+91`), ensuring loyalty point accruals and wallet redemptions never fail.
+3. **Resilient Station Auth & 401 Interceptors:** The Axios network interceptor distinguishes between token expiry on authenticated staff dashboards and unauthenticated public checks, preventing staff terminals from abruptly logging out during network fluctuations.
+4. **Unified Dining Zone Taxonomy:** Dining areas are synchronized across customer QR menus, waiter terminals, and cashier POS feeds:
+   - **Main Hall:** Tables 1–12
+   - **VIP Lounge:** Tables 13–16
+   - **Outdoor Garden:** Tables 17–24
+   - **Family Section:** Tables 25–30
+5. **Full Admin Coupon Management:** Dedicated administration interface in `AdminDashboardPage` allowing managers to create promotional campaigns, adjust discount amounts, configure minimum order thresholds, and toggle active/inactive campaign status in real time.
 
 ---
 
@@ -189,12 +207,29 @@ We treat every client connection—whether from a diner's smartphone or an unkno
 |:---|:---|:---|:---|
 | 📱 **Guest Dining Menu** | `/menu` | *Open to all guests* | Dynamic menu, dietary filters, chef notes, cart & checkout |
 | ⏱️ **Live Order Tracker** | `/order/:orderId` | *Automatic on checkout* | Real-time prep stage tracker & live bill adjustment notices |
-| 🍳 **Kitchen Pass (KDS)** | `/kitchen` | `chef@aura.com` / `chef123` | High-contrast tickets, dish 86 controls, ticket timer badges |
-| 🤵 **Floor Command** | `/waiter` | `waiter@aura.com` / `waiter123` | 30-table layout, audio chimes, service calls, table turnover |
-| 💳 **Cashier Station** | `/cashier` | `cashier@aura.com` / `cashier123` | Settlement, item refunds, thermal & GST invoice printing |
-| 👑 **Executive Dashboard** | `/owner` | `owner@aura.com` / `owner123` | True net sales, hourly rush heatmaps, dish velocity stats |
-| ⚙️ **Platform Settings** | `/admin/settings` | `admin@aura.com` / `admin123` | Venue branding, dining host URL, guest Wi-Fi credentials |
+| 🍳 **Kitchen Pass (KDS)** | `/kitchen` | `chef@aura.com` / `Chef@Aura2026!` | High-contrast tickets, dish 86 controls, ticket timer badges |
+| 🤵 **Floor Command** | `/waiter` | `waiter@aura.com` / `Waiter@Aura2026!` | 30-table layout, audio chimes, service calls, table turnover |
+| 💳 **Cashier Station** | `/cashier` | `cashier@aura.com` / `Cashier@Aura2026!` | Settlement, item refunds, thermal & GST invoice printing |
+| 👑 **Executive Dashboard** | `/owner` | `owner@aura.com` / `Owner@Aura2026!` | True net sales, hourly rush heatmaps, dish velocity stats |
+| ⚙️ **Platform Settings** | `/admin/settings` | `admin@aura.com` / `Admin@Aura2026!` | Venue branding, dining host URL, guest Wi-Fi credentials |
+| 🏷️ **Coupon Management** | `/admin` (Coupons Tab) | `admin@aura.com` / `Admin@Aura2026!` | Promo codes, minimum spend thresholds, live activation |
 | 🔐 **Fast Staff Gate** | `/login` | Passcode: `AURA2026` | Quick 1-click station switcher for dedicated floor tablets |
+
+---
+
+## 🔄 Automated CI/CD Pipeline
+
+The project includes an enterprise-grade GitHub Actions CI/CD pipeline ([`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)) with parallel jobs:
+
+* **`frontend-build`:**
+  - Environment: Node.js 20 on `ubuntu-latest`
+  - Automated dependency caching via `frontend/package-lock.json`
+  - Strict TypeScript validation (`tsc -b`) and Vite production bundle optimization
+* **`backend-build`:**
+  - Environment: Node.js 20 on `ubuntu-latest`
+  - Automated dependency caching via `backend/package-lock.json`
+  - Clean automated dependency installation via `npm ci`
+  - Full recursive syntax and code quality verification across all routes, models, middleware, and core server files
 
 ---
 
@@ -215,10 +250,16 @@ npm install
 Create a `.env` file in the `backend/` directory:
 ```env
 PORT=5000
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/aura_db?retryWrites=true&w=majority
-JWT_SECRET=aura_super_secure_jwt_secret_2026
-GROQ_API_KEY=your_groq_api_key_optional
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/aura_restaurant?retryWrites=true&w=majority
+JWT_SECRET=your_super_secure_random_64_char_secret_key_here
+DEV_SECRET=aura_dev_ops_secret_2026
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 NODE_ENV=development
+```
+
+Seed initial culinary catalog and staff accounts:
+```bash
+node seed.js
 ```
 
 Start the API server:
@@ -226,6 +267,12 @@ Start the API server:
 npm start
 # ➜ Server running on port 5000
 # ➜ MongoDB Connected successfully
+```
+
+Run backend quality and syntax verification:
+```bash
+npm test
+# ➜ node --check server.js
 ```
 
 ### 3. Start Frontend Dev Server
@@ -243,7 +290,7 @@ To verify strict TypeScript compilation and build production assets:
 cd frontend
 npm run build
 # ➜ tsc -b && vite build
-# ➜ Built cleanly in ~6s with 0 errors
+# ➜ Built cleanly in ~5s with 0 errors
 ```
 
 ---

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, User, Phone, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
@@ -55,8 +55,8 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
         </button>
 
         <div className="text-center space-y-1">
-          <div className="w-12 h-12 bg-emerald-100 border border-emerald-300 rounded-2xl flex items-center justify-center mx-auto mb-2 text-[#0C831F] shadow-sm">
-            <User className="w-6 h-6 text-[#0C831F]" />
+          <div className="w-12 h-12 bg-emerald-100 border border-emerald-300 rounded-2xl flex items-center justify-center mx-auto mb-2 text-[#059669] shadow-sm">
+            <User className="w-6 h-6 text-[#059669]" />
           </div>
           <h3 className="text-slate-900 font-extrabold text-xl">Edit Profile</h3>
           <p className="text-xs text-slate-500">Update your personal dining details</p>
@@ -72,7 +72,7 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#059669] focus:bg-white transition-colors"
               />
             </div>
 
@@ -84,7 +84,7 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Mobile Number (+91)"
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#059669] focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -92,7 +92,7 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({ isOp
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3.5 bg-[#0C831F] hover:bg-[#096918] disabled:bg-[#0C831F]/50 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 active:scale-95 cursor-pointer"
+            className="w-full py-3.5 bg-[#059669] hover:bg-[#047857] disabled:bg-[#059669]/50 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 active:scale-95 cursor-pointer"
           >
             {isSubmitting ? (
               <span className="animate-pulse">Saving...</span>

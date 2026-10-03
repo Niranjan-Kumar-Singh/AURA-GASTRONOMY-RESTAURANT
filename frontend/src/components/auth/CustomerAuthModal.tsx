@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { X, User, Phone, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
@@ -100,7 +100,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 placeholder="98765 43210"
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white transition-all tracking-wider font-mono"
+                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#059669] focus:bg-white transition-all tracking-wider font-mono"
               />
             </div>
             {phone.length > 0 && !isValidPhone && (
@@ -119,7 +119,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Rahul Sharma"
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0C831F] focus:bg-white transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#059669] focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -127,7 +127,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
           <button
             type="submit"
             disabled={!isValidPhone || isSubmitting}
-            className="w-full py-3.5 bg-[#0C831F] hover:bg-[#096918] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-[#059669] hover:bg-[#047857] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2"
           >
             <span>{isSubmitting ? 'Verifying...' : 'PROCEED WITH NUMBER'}</span>
             <ArrowRight className="w-4 h-4" />
