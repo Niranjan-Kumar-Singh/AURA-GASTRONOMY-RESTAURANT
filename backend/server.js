@@ -1,4 +1,18 @@
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// Robustly load environment variables from backend/.env, root .env, or working directory
+[
+  path.join(__dirname, '.env'),
+  path.join(__dirname, '../.env'),
+  path.resolve(process.cwd(), 'backend/.env'),
+  path.resolve(process.cwd(), '.env'),
+].forEach((envFile) => {
+  if (fs.existsSync(envFile)) {
+    require('dotenv').config({ path: envFile });
+  }
+});
+
 const express = require('express');
 const compression = require('compression');
 const cors = require('cors');
@@ -63,6 +77,11 @@ app.use(
     origin: (origin, callback) => {
       // Allow server-to-server requests (no origin header)
       if (!origin) return callback(null, true);
+
+      // In dev mode allow any localhost or 127.0.0.1 port (5173, 5174, 3000, etc.)
+      if (isDevMode && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
 
       // In dev mode also allow any LAN IP (192.168.x.x / 10.x.x.x)
       if (isDevMode && /^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01]))/.test(origin)) {

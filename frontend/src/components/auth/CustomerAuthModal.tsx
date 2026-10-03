@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { X, User, Phone, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
 import { useAuthStore } from '../../store/use-auth-store';
@@ -43,7 +43,8 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
       }
       onClose();
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Quick login failed. Please try again.', 'error');
+      const msg = error.response?.data?.message || (error.request ? 'Unable to connect to restaurant server. Please verify backend is running on port 5000.' : 'Quick login failed. Please try again.');
+      showToast(msg, 'error');
     } finally {
       setIsSubmitting(false);
     }

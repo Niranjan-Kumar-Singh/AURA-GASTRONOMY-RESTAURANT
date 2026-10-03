@@ -84,7 +84,8 @@ export const LoginPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Login Error:', err);
-      setError(err.response?.data?.message || 'Invalid credentials. Please verify your staff email and password.');
+      const errorMsg = err.response?.data?.message || (err.request ? 'Unable to connect to restaurant server. Please verify backend is running on port 5000.' : 'Invalid credentials. Please verify your staff email and password.');
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }

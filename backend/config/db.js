@@ -1,29 +1,40 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
 
-// Force Node to use Google's DNS to bypass local ISP SRV blocking (only outside Vercel cloud sandbox)
-if (!process.env.VERCEL) {
-  try {
-    dns.setServers(['8.8.8.8', '8.8.4.4']);
-  } catch (e) {
-    // Ignore in environments where setServers is restricted
-  }
-}
+let cachedPromise = null;
 
+/**
+ * Connect to MongoDB with robust connection caching and Promise memoization.
+ * Supports both persistent Express servers and serverless environments.
+ */
 const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) {
-    return;
+  // 1. If already fully connected, return immediately
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
-  try {
-    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/aura_restaurant';
-    const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
+
+  // 2. If a connection attempt is already in flight, reuse the promise to prevent connection storms
+  if (cachedPromise && mongoose.connection.readyState === 2) {
+    return cachedPromise;
+  }
+
+  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/aura_restaurant';
+
+  cachedPromise = mongoose
+    .connect(mongoUri, {
+      serverSelectionTimeoutMS: 15000,
+      maxPoolSize: 10,
+    })
+    .then((conn) => {
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+      return conn;
+    })
+    .catch((error) => {
+      cachedPromise = null;
+      console.error(`MongoDB Connection Error: ${error.message}`);
+      throw error;
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    throw error;
-  }
+
+  return cachedPromise;
 };
 
 module.exports = connectDB;

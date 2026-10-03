@@ -235,48 +235,30 @@ The project includes an enterprise-grade GitHub Actions CI/CD pipeline ([`.githu
 
 ## 💻 Quick Start: Running Locally
 
-### 1. Clone & Enter the Project
+### Option A: 1-Click Concurrent Runner (Recommended)
+From the project root:
 ```bash
-git clone https://github.com/Niranjan-Kumar-Singh/AURA-GASTRONOMY-RESTAURANT.git
-cd AURA-GASTRONOMY-RESTAURANT
+# Install root dependencies
+npm install
+
+# Start both Express Backend (Port 5000) & Vite Frontend (Port 5173) together
+npm run dev
 ```
 
-### 2. Configure & Start Backend
+---
+
+### Option B: Running Services Individually
+
+#### 1. Backend Server (Port 5000)
 ```bash
 cd backend
 npm install
-```
-
-Create a `.env` file in the `backend/` directory:
-```env
-PORT=5000
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/aura_restaurant?retryWrites=true&w=majority
-JWT_SECRET=your_super_secure_random_64_char_secret_key_here
-DEV_SECRET=aura_dev_ops_secret_2026
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-NODE_ENV=development
-```
-
-Seed initial culinary catalog and staff accounts:
-```bash
-node seed.js
-```
-
-Start the API server:
-```bash
 npm start
 # ➜ Server running on port 5000
 # ➜ MongoDB Connected successfully
 ```
 
-Run backend quality and syntax verification:
-```bash
-npm test
-# ➜ node --check server.js
-```
-
-### 3. Start Frontend Dev Server
-Open a second terminal:
+#### 2. Frontend Application (Port 5173)
 ```bash
 cd frontend
 npm install
