@@ -76,8 +76,6 @@ export const LoginPage: React.FC = () => {
           break;
         case 'RESTAURANT_OWNER':
         case 'OWNER':
-          navigate('/owner');
-          break;
         case 'ADMIN':
         case 'MANAGER':
         default:
@@ -105,8 +103,7 @@ export const LoginPage: React.FC = () => {
     { role: 'CHEF', title: 'Head Chef KDS', email: 'chef@aura.com', pass: 'chef123', badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: <ChefHat className="w-4 h-4 text-amber-400" /> },
     { role: 'WAITER', title: 'Floor Waiter', email: 'waiter@aura.com', pass: 'waiter123', badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', icon: <UserCheck className="w-4 h-4 text-emerald-400" /> },
     { role: 'CASHIER', title: 'Cashier POS', email: 'cashier@aura.com', pass: 'cashier123', badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', icon: <CreditCard className="w-4 h-4 text-cyan-400" /> },
-    { role: 'OWNER', title: 'Executive CEO', email: 'owner@aura.com', pass: 'owner123', badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40', icon: <Award className="w-4 h-4 text-purple-400" /> },
-    { role: 'ADMIN', title: 'System Admin', email: 'admin@aura.com', pass: 'admin123', badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40', icon: <LayoutDashboard className="w-4 h-4 text-indigo-400" /> },
+    { role: 'ADMIN', title: 'Admin & Manager', email: 'admin@aura.com', pass: 'admin123', badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40', icon: <LayoutDashboard className="w-4 h-4 text-indigo-400" /> },
   ];
 
   return (

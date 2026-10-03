@@ -83,6 +83,7 @@ export const App: React.FC = () => {
               {/* Redirect /owner seamlessly to /admin */}
               <Route path="/owner" element={<Navigate to="/admin" replace />} />
               <Route path="/owner/dashboard" element={<Navigate to="/admin" replace />} />
+              <Route path="/admin/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
               <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
               <Route path="/profile" element={<AppLayout><ProfilePage /></AppLayout>} />
             </Route>

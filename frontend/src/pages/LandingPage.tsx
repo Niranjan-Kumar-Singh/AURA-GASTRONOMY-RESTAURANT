@@ -7,27 +7,7 @@ import {
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const [showSplash, setShowSplash] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 1800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (showSplash) {
-    return (
-      <div className="min-h-screen bg-[#090A0F] text-white flex flex-col items-center justify-center space-y-4 z-50">
-        <div className="w-16 h-16 bg-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-2xl flex items-center justify-center animate-bounce shadow-lg shadow-[#F59E0B]/10">
-          <Coffee className="w-8 h-8 text-[#F59E0B]" />
-        </div>
-        <h1 className="font-serif text-3xl font-bold tracking-[0.2em] text-[#F59E0B] animate-pulse">SILIGURI'S CHAI ADDAA</h1>
-        <p className="text-xs text-aura-slate tracking-[0.25em] uppercase font-mono">Good Food • Better Chai • Happier People</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#090A0F] text-white font-sans overflow-x-hidden selection:bg-[#F59E0B] selection:text-[#090A0F]">

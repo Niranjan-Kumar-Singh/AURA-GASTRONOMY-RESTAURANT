@@ -39,12 +39,12 @@ export const DineScanPage: React.FC = () => {
         setActiveSession(tableNum, sessId, qrTok, true);
         setStatus('success');
 
-        // Elegant brief delay to show verified animation before seamless menu entrance
+        // Instant verification feedback before seamless menu entrance
         setTimeout(() => {
           if (isMounted) {
             navigate('/menu', { replace: true });
           }
-        }, 1200);
+        }, 400);
       } catch (err: any) {
         if (!isMounted) return;
         setStatus('error');

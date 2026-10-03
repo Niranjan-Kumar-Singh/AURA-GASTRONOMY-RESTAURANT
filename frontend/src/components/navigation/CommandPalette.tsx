@@ -44,17 +44,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   const items: CommandItem[] = [
-    { id: 'nav-admin', title: 'Operational Admin Mission Control', category: 'Navigation', icon: ShieldCheck, action: () => { navigate('/admin/dashboard'); onClose(); } },
-    { id: 'nav-owner', title: 'Owner CEO Financial Analytics', category: 'Navigation', icon: Award, action: () => { navigate('/owner/dashboard'); onClose(); } },
+    { id: 'nav-admin', title: 'Admin Command Center & Menu Management', category: 'Navigation', icon: ShieldCheck, action: () => { navigate('/admin'); onClose(); } },
     { id: 'nav-qr', title: 'Table QR Stands & Print Studio (All Tables)', category: 'Navigation', icon: QrCode, action: () => { navigate('/admin/qr-generator'); onClose(); } },
-    { id: 'nav-kds', title: 'Kitchen Display System (KDS)', category: 'Navigation', icon: ChefHat, action: () => { navigate('/kitchen/kds'); onClose(); } },
-    { id: 'nav-waiter', title: 'Waiter Floor Mission Control', category: 'Navigation', icon: Layers, action: () => { navigate('/waiter/dashboard'); onClose(); } },
-    { id: 'nav-cashier', title: 'Cashier POS Terminal', category: 'Navigation', icon: Receipt, action: () => { navigate('/cashier/pos'); onClose(); } },
-    { id: 'nav-menu', title: 'Customer Gastronomy Menu', category: 'Navigation', icon: Sparkles, action: () => { navigate('/'); onClose(); } },
-    { id: 'nav-settings', title: 'SaaS Platform Settings', category: 'Navigation', icon: Settings, action: () => { navigate('/settings'); onClose(); } },
-    { id: 'nav-profile', title: 'Staff User Profile', category: 'Navigation', icon: User, action: () => { navigate('/profile'); onClose(); } },
-    { id: 'act-demo', title: 'Toggle Live Simulation Mode', category: 'Actions', icon: Sparkles, action: () => { alert('Demo simulation toggled'); onClose(); }, shortcut: 'Alt+D' },
-    { id: 'act-export', title: 'Export Audit Log Report (CSV)', category: 'Actions', icon: ArrowRight, action: () => { alert('Exporting Audit CSV...'); onClose(); } },
+    { id: 'nav-kds', title: 'Kitchen Display System (KDS)', category: 'Navigation', icon: ChefHat, action: () => { navigate('/kitchen'); onClose(); } },
+    { id: 'nav-waiter', title: 'Waiter Floor Map & Table Service', category: 'Navigation', icon: Layers, action: () => { navigate('/waiter'); onClose(); } },
+    { id: 'nav-cashier', title: 'Cashier POS Billing Terminal', category: 'Navigation', icon: Receipt, action: () => { navigate('/cashier'); onClose(); } },
+    { id: 'nav-menu', title: 'Customer Digital Dining Menu', category: 'Navigation', icon: Sparkles, action: () => { navigate('/menu'); onClose(); } },
+    { id: 'nav-settings', title: 'Restaurant & Tax Settings', category: 'Navigation', icon: Settings, action: () => { navigate('/admin/settings'); onClose(); } },
+    { id: 'nav-profile', title: 'Staff Profile & Security', category: 'Navigation', icon: User, action: () => { navigate('/profile'); onClose(); } },
   ];
 
   const filteredItems = items.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
