@@ -4,14 +4,19 @@ const Table = require('../models/Table');
 const TableSession = require('../models/TableSession');
 const Order = require('../models/Order');
 const WaiterAlert = require('../models/WaiterAlert');
+const { protect, requireRole } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Helper to generate unique session ID
 const generateSessionId = () => `SESS-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-// Seed a table for testing if it doesn't exist (strictly bounded to tables 1-30)
+// Seed a table for testing if it doesn't exist (Strictly Non-Production)
 router.post('/seed/:tableNumber', async (req, res) => {
   try {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ success: false, message: 'Seeding endpoints are disabled outside development mode.' });
+    }
+
     const num = parseInt(req.params.tableNumber, 10);
     if (isNaN(num) || num < 1 || num > 30) {
       return res.status(400).json({ success: false, message: 'Invalid table number. Must be between 1 and 30.' });
@@ -31,9 +36,13 @@ router.post('/seed/:tableNumber', async (req, res) => {
   }
 });
 
-// DEV MODE ONLY: Seed and return session without checking token (bounded to tables 1-30)
+// DEV MODE ONLY: Seed and return session without checking token (Strictly Non-Production)
 router.post('/dev-seed', async (req, res) => {
   try {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ success: false, message: 'Development session initialization is disabled outside development mode.' });
+    }
+
     const { tableNumber, userId } = req.body;
     const num = parseInt(tableNumber, 10);
     if (isNaN(num) || num < 1 || num > 30) {
@@ -111,17 +120,6 @@ router.get('/', async (req, res) => {
 
     // For each table, attach active session details
     const tablesWithSessions = await Promise.all(tables.map(async (table) => {
-      // Auto-transition table from 'cleaning' to 'available' after 2.5 minutes (150,000ms)
-      if (table.status === 'cleaning' && table.cleaningStartedAt) {
-        const elapsedMs = Date.now() - new Date(table.cleaningStartedAt).getTime();
-        if (elapsedMs >= 2.5 * 60 * 1000) {
-          table.status = 'available';
-          table.cleaningStartedAt = null;
-          table.guestCount = 0;
-          await table.save().catch(() => {});
-        }
-      }
-
       const activeSession = await TableSession.findOne({ tableId: table._id, status: 'active' }).populate('orders');
       
       let orderTotal = 0;
@@ -298,8 +296,8 @@ router.get('/qr-token/:tableNumber', async (req, res) => {
   }
 });
 
-// POST rotate/regenerate QR Code Token for a Table (Security enhancement for managers)
-router.post(['/:tableId/rotate-qr', '/rotate-qr/:tableId'], async (req, res) => {
+// POST rotate/regenerate QR Code Token for a Table (Protected: Admin / Manager)
+router.post(['/:tableId/rotate-qr', '/rotate-qr/:tableId'], protect, requireRole('ADMIN', 'MANAGER', 'OWNER'), async (req, res) => {
   try {
     const { tableId } = req.params;
     const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || '1';
@@ -414,8 +412,8 @@ router.post(['/checkout', '/session/:sessionId/checkout'], async (req, res) => {
   }
 });
 
-// Update Table Status (available, occupied, billing, cleaning)
-router.put(['/:tableId/status', '/status/:tableId'], async (req, res) => {
+// Update Table Status (Protected: Cashier / Waiter / Admin)
+router.put(['/:tableId/status', '/status/:tableId'], protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'WAITER'), async (req, res) => {
   try {
     const { tableId } = req.params;
     const { status, guestCount } = req.body;
@@ -506,7 +504,18 @@ let globalWaiterAlerts = [];
 router.post('/call-waiter', async (req, res) => {
   try {
     const { tableId, reason } = req.body;
-    const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || String(tableId || '1');
+    const isObjectId = String(tableId).match(/^[0-9a-fA-F]{24}$/);
+    let table = null;
+    let cleanTableNum = '1';
+
+    if (isObjectId) {
+      table = await Table.findById(tableId);
+      if (table) cleanTableNum = String(table.tableNumber);
+    } else {
+      cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || String(tableId || '1');
+      table = await Table.findOne({ tableNumber: cleanTableNum });
+    }
+
     const alertId = Date.now();
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -539,7 +548,6 @@ router.post('/call-waiter', async (req, res) => {
 
     // 3. Update Table document with active alert & billing status if bill request
     try {
-      let table = await Table.findOne({ tableNumber: cleanTableNum });
       if (table) {
         table.activeWaiterCall = {
           reason: newAlert.reason,
@@ -592,8 +600,8 @@ router.get('/waiter-calls', async (req, res) => {
   }
 });
 
-// PUT acknowledge/resolve waiter call
-router.put('/waiter-calls/:id/resolve', async (req, res) => {
+// PUT acknowledge/resolve waiter call (Protected: Waiter / Admin)
+router.put('/waiter-calls/:id/resolve', protect, requireRole('ADMIN', 'MANAGER', 'WAITER'), async (req, res) => {
   try {
     const alertId = Number(req.params.id);
     globalWaiterAlerts = globalWaiterAlerts.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a);

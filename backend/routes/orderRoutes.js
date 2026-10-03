@@ -7,7 +7,9 @@ const TableSession = require('../models/TableSession');
 const Table = require('../models/Table');
 const User = require('../models/User');
 const LoyaltyTransaction = require('../models/LoyaltyTransaction');
+const Coupon = require('../models/Coupon');
 const { calculateTier, getTierMultiplier } = require('./loyaltyRoutes');
+const { protect, requireRole } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Generate a random order ID like ORD-4829
@@ -61,16 +63,17 @@ const awardLoyaltyPointsForOrder = async (order) => {
   }
 };
 
-// DEV UTILITY: Purge all orders & reset table statuses for a fresh start (Protected with Secret Token)
+// DEV UTILITY: Purge all orders & reset table statuses for a fresh start (Strictly Non-Production)
 router.post('/dev/purge-all', async (req, res) => {
   try {
     const devSecret = req.headers['x-dev-secret'] || req.query.secret;
-    const expectedSecret = process.env.DEV_SECRET || 'aura-dev-secret-987';
+    const expectedSecret = process.env.DEV_SECRET;
+    const isDev = process.env.NODE_ENV === 'development';
 
-    if (process.env.NODE_ENV === 'production' || devSecret !== expectedSecret) {
+    if (!isDev || !expectedSecret || devSecret !== expectedSecret) {
       return res.status(403).json({
         success: false,
-        message: 'Security Alert: Purge utility is disabled in production or requires valid x-dev-secret header.'
+        message: 'Security Alert: Purge utility is strictly disabled. Requires NODE_ENV=development and valid x-dev-secret header.'
       });
     }
 
@@ -241,9 +244,32 @@ router.post('/', async (req, res) => {
       verifiedPtsDiscount = calculatedDiscount;
     }
 
-    // 4. Server-Side Tax & Total Calculation (5% GST)
+    // 4. Server-Side Coupon Validation (S1 fix: never trust client-supplied discount value)
+    let verifiedCouponDiscount = 0;
+    let verifiedAppliedCouponCode = null;
+
+    if (appliedCoupon && typeof appliedCoupon === 'string' && appliedCoupon.trim()) {
+      const couponCode = appliedCoupon.trim().toUpperCase();
+      const dbCoupon = await Coupon.findOne({ code: couponCode });
+
+      if (!dbCoupon) {
+        return res.status(400).json({ success: false, message: `Coupon "${couponCode}" is not valid or does not exist.` });
+      }
+      if (!dbCoupon.isActive) {
+        return res.status(400).json({ success: false, message: `Coupon "${couponCode}" is no longer active.` });
+      }
+      if (verifiedSubtotal < dbCoupon.minOrderAmount) {
+        return res.status(400).json({
+          success: false,
+          message: `Coupon "${couponCode}" requires a minimum order of ₹${dbCoupon.minOrderAmount}. Your subtotal is ₹${verifiedSubtotal.toFixed(2)}.`
+        });
+      }
+      verifiedCouponDiscount = Math.min(verifiedSubtotal, dbCoupon.discountAmount);
+      verifiedAppliedCouponCode = couponCode;
+    }
+
+    // 5. Server-Side Tax & Total Calculation (5% GST)
     const computedTax = Math.round(verifiedSubtotal * 0.05 * 100) / 100;
-    const verifiedCouponDiscount = Math.min(verifiedSubtotal, Math.max(0, parseFloat(discount) || 0));
     const calculatedTotal = Math.max(0, Math.round((verifiedSubtotal + computedTax - verifiedCouponDiscount - verifiedPtsDiscount) * 100) / 100);
 
     const clientQrToken = req.body.qrToken;
@@ -294,14 +320,22 @@ router.post('/', async (req, res) => {
       existingOrder.items.push(...verifiedNewItems);
       existingOrder.subtotal = (existingOrder.subtotal || 0) + verifiedSubtotal;
       existingOrder.tax = (existingOrder.tax || 0) + computedTax;
-      existingOrder.discount = (existingOrder.discount || 0) + verifiedCouponDiscount;
+      // S2 fix: Coupon discount is a one-time order-level discount.
+      // Do NOT add verifiedCouponDiscount again on subsequent batches to the same order.
+      // Only apply it the first time the coupon is attached to this order.
+      if (verifiedAppliedCouponCode && !existingOrder.appliedCoupon) {
+        existingOrder.discount = (existingOrder.discount || 0) + verifiedCouponDiscount;
+        existingOrder.appliedCoupon = verifiedAppliedCouponCode;
+      }
       existingOrder.pointsRedeemed = (existingOrder.pointsRedeemed || 0) + verifiedRedeemed;
       existingOrder.pointsDiscount = (existingOrder.pointsDiscount || 0) + verifiedPtsDiscount;
-      existingOrder.total = (existingOrder.total || 0) + calculatedTotal;
+      // Recalculate total from scratch to avoid compounding rounding errors
+      existingOrder.total = Math.max(0, Math.round((
+        existingOrder.subtotal + existingOrder.tax - (existingOrder.discount || 0) - (existingOrder.pointsDiscount || 0)
+      ) * 100) / 100);
       
       if (cleanCustomerPhone) existingOrder.customerPhone = cleanCustomerPhone;
       if (customerName) existingOrder.customerName = customerName;
-      if (appliedCoupon) existingOrder.appliedCoupon = appliedCoupon;
       
       // Reset order-level status to 'preparing' so kitchen gets notified of new items
       existingOrder.status = 'preparing';
@@ -321,7 +355,7 @@ router.post('/', async (req, res) => {
         pointsRedeemed: verifiedRedeemed,
         pointsDiscount: verifiedPtsDiscount,
         total: calculatedTotal,
-        appliedCoupon,
+        appliedCoupon: verifiedAppliedCouponCode,
         status: 'received'
       });
     }
@@ -375,7 +409,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/phone/:phone', async (req, res) => {
+// GET orders by phone — Protected: requires authenticated session
+// Customers can only see their own orders; staff can look up any phone.
+router.get('/phone/:phone', protect, async (req, res) => {
   try {
     const orders = await Order.find({ customerPhone: req.params.phone }).sort({ createdAt: -1 });
     res.json({ data: orders });
@@ -402,8 +438,8 @@ router.get('/table/:tableId', async (req, res) => {
   }
 });
 
-// GET active unpaid orders for Kitchen / Waiter / Cashier
-router.get(['/active', '/active/all'], async (req, res) => {
+// GET active unpaid orders for Kitchen / Waiter / Cashier (Protected: Staff)
+router.get(['/active', '/active/all'], protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'WAITER', 'CHEF'), async (req, res) => {
   try {
     const activeOrders = await Order.find({
       status: { $in: ['received', 'preparing', 'ready', 'served'] },
@@ -415,8 +451,8 @@ router.get(['/active', '/active/all'], async (req, res) => {
   }
 });
 
-// GET unified live POS sync feed (Real-time active table bills + today's settled records + shift stats)
-router.get('/pos/sync', async (req, res) => {
+// GET unified live POS sync feed (Protected: Staff)
+router.get('/pos/sync', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'WAITER', 'CHEF'), async (req, res) => {
   try {
     const [allTables, activeOrders, settledTodayOrders] = await Promise.all([
       Table.find({}).sort({ tableNumber: 1 }).lean(),
@@ -429,10 +465,25 @@ router.get('/pos/sync', async (req, res) => {
       }).sort({ paidAt: -1, updatedAt: -1 }).limit(100).lean()
     ]);
 
+    // Build mapping for accurate table number resolution (resolves ObjectIds, strings, and slugs)
+    const tableIdToNumberMap = new Map();
+    allTables.forEach(t => {
+      tableIdToNumberMap.set(String(t._id), String(t.tableNumber));
+      tableIdToNumberMap.set(String(t.tableNumber), String(t.tableNumber));
+    });
+
+    const getResolvedTableNumber = (rawId) => {
+      const clean = String(rawId || '').trim();
+      if (tableIdToNumberMap.has(clean)) return tableIdToNumberMap.get(clean);
+      const match = clean.match(/\d+/);
+      if (match && tableIdToNumberMap.has(match[0])) return match[0];
+      return match ? match[0] : clean;
+    };
+
     // Group active orders by table number
     const activeOrdersByTable = new Map();
     activeOrders.forEach(ord => {
-      let tNum = String(ord.tableId || '').match(/\d+/)?.[0] || String(ord.tableId || '');
+      let tNum = getResolvedTableNumber(ord.tableId);
       if (!activeOrdersByTable.has(tNum)) {
         activeOrdersByTable.set(tNum, []);
       }
@@ -489,7 +540,8 @@ router.get('/pos/sync', async (req, res) => {
 
     // Build settled bills array from settledTodayOrders
     const settledBills = settledTodayOrders.map(dbOrd => {
-      const tNum = parseInt(String(dbOrd.tableId || '').match(/\d+/)?.[0] || '1', 10);
+      const resolvedNumStr = getResolvedTableNumber(dbOrd.tableId);
+      const tNum = parseInt(resolvedNumStr, 10) || 1;
       let zone = 'Main Dining Hall';
       if (tNum > 12 && tNum <= 16) zone = 'VIP Lounge';
       else if (tNum > 16 && tNum <= 24) zone = 'Outdoor Garden Terrace';
@@ -563,8 +615,8 @@ router.get('/pos/sync', async (req, res) => {
   }
 });
 
-// GET all settled/paid orders for Cashier POS & History Archive
-router.get('/settled/all', async (req, res) => {
+// GET all settled/paid orders for Cashier POS & History Archive (Protected: Staff)
+router.get('/settled/all', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER'), async (req, res) => {
   try {
     const settledOrders = await Order.find({ paymentStatus: 'PAID' }).sort({ paidAt: -1, updatedAt: -1 });
     res.json({ data: settledOrders });
@@ -573,10 +625,10 @@ router.get('/settled/all', async (req, res) => {
   }
 });
 
-// POST refund an order (Supports Full, Partial, Item-Level, and Custom Amount)
-router.post('/:orderId/refund', async (req, res) => {
+// POST refund an order (Protected: ADMIN / MANAGER / CASHIER)
+router.post('/:orderId/refund', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER'), async (req, res) => {
   try {
-    const { amount, reason, refundedBy, refundType, refundedItems, refundMethod } = req.body;
+    const { amount, reason, refundType, refundedItems, refundMethod } = req.body;
     const targetOrderId = req.params.orderId;
     const isValidObjId = targetOrderId.match(/^[0-9a-fA-F]{24}$/);
 
@@ -610,11 +662,13 @@ router.post('/:orderId/refund', async (req, res) => {
     const isFullRefund = newTotalRefunded >= order.total;
     const effectiveType = isFullRefund ? 'FULL' : (refundType || 'PARTIAL');
 
+    const actor = req.user?.name || req.user?.email || 'Cashier / Manager';
+
     order.refundAmount = newTotalRefunded;
     order.refundType = effectiveType;
     order.refundReason = reason || (isFullRefund ? 'Full Bill Refund' : 'Partial / Item Refund');
     order.refundedAt = new Date();
-    order.refundedBy = refundedBy || 'Cashier / Manager';
+    order.refundedBy = actor;
     order.netAmount = Math.max(0, Math.round((order.total - newTotalRefunded) * 100) / 100);
 
     if (Array.isArray(refundedItems) && refundedItems.length > 0) {
@@ -704,8 +758,8 @@ router.post('/:orderId/refund', async (req, res) => {
   }
 });
 
-// GET all refunded and partially refunded orders
-router.get('/refunds/all', async (req, res) => {
+// GET all refunded and partially refunded orders (Protected: Cashier / Admin)
+router.get('/refunds/all', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER'), async (req, res) => {
   try {
     const refundedOrders = await Order.find({
       $or: [
@@ -720,8 +774,8 @@ router.get('/refunds/all', async (req, res) => {
   }
 });
 
-// PUT update order status
-router.put('/:orderId/status', async (req, res) => {
+// PUT update order status (Protected: Staff)
+router.put('/:orderId/status', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'WAITER', 'CHEF'), async (req, res) => {
   try {
     const { status } = req.body;
     const targetOrderId = req.params.orderId;
@@ -731,6 +785,18 @@ router.put('/:orderId/status', async (req, res) => {
       $or: [{ orderId: targetOrderId }, { _id: isValidObjId ? targetOrderId : null }]
     });
     if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Guard: Only Cashier and Management can mark bills as PAID
+    if (req.body.paymentStatus === 'PAID') {
+      let userRole = (req.user?.role || '').toUpperCase();
+      if (userRole === 'KITCHEN') userRole = 'CHEF';
+      if (!['ADMIN', 'MANAGER', 'CASHIER', 'OWNER'].includes(userRole)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: Only Cashiers and Managers can mark orders as PAID.'
+        });
+      }
+    }
 
     if (status) order.status = status;
     if (req.body.paymentStatus) order.paymentStatus = req.body.paymentStatus;
@@ -774,8 +840,8 @@ router.put('/:orderId/status', async (req, res) => {
   }
 });
 
-// PUT update individual item check state (Kitchen KDS Item Toggle)
-router.put('/:orderId/items/check', async (req, res) => {
+// PUT update individual item check state (Protected: Kitchen KDS / Waiter)
+router.put('/:orderId/items/check', protect, requireRole('ADMIN', 'MANAGER', 'CHEF', 'WAITER'), async (req, res) => {
   try {
     const { itemIndex, isPrepared } = req.body;
     const targetOrderId = req.params.orderId;
@@ -804,8 +870,8 @@ router.put('/:orderId/items/check', async (req, res) => {
   }
 });
 
-// PUT cancel an individual item/dish from an order (Chef / Kitchen Item-Level Cancellation)
-router.put('/:orderId/items/:itemIndex/cancel', async (req, res) => {
+// PUT cancel an individual item/dish from an order (Protected: Chef / Kitchen)
+router.put('/:orderId/items/:itemIndex/cancel', protect, requireRole('ADMIN', 'MANAGER', 'CHEF'), async (req, res) => {
   try {
     const { reason, cancelledBy } = req.body;
     const targetOrderId = req.params.orderId;
@@ -835,7 +901,7 @@ router.put('/:orderId/items/:itemIndex/cancel', async (req, res) => {
 
     const dishName = item.name;
     const defaultReason = reason || "86'd / Out of Ingredients";
-    const actor = cancelledBy || 'Chef';
+    const actor = req.user?.name || req.user?.email || cancelledBy || 'Chef';
 
     // Mark item as cancelled
     item.status = 'cancelled';
@@ -905,8 +971,8 @@ router.put('/:orderId/items/:itemIndex/cancel', async (req, res) => {
   }
 });
 
-// PUT cancel order (Authority / Staff / Chef cancellation with reason)
-router.put('/:orderId/cancel', async (req, res) => {
+// PUT cancel order (Protected: Authority / Staff / Chef cancellation with reason)
+router.put('/:orderId/cancel', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'CHEF', 'WAITER'), async (req, res) => {
   try {
     const { reason, cancelledBy } = req.body;
     const targetOrderId = req.params.orderId;
@@ -918,8 +984,8 @@ router.put('/:orderId/cancel', async (req, res) => {
 
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
-    const defaultReason = reason || 'Cancelled by Kitchen Staff / Chef';
-    const actor = cancelledBy || 'Kitchen Staff';
+    const defaultReason = reason || 'Cancelled by Restaurant Staff / Kitchen';
+    const actor = req.user?.name || req.user?.email || cancelledBy || 'Staff';
 
     order.status = 'cancelled';
     order.cancelReason = defaultReason;
@@ -1000,16 +1066,21 @@ router.get('/:orderId', async (req, res) => {
   }
 });
 
-// Pay & Settle Table Bill
-router.post('/pay-table', async (req, res) => {
+// Pay & Settle Table Bill (Protected: Cashier / Admin / Manager / Owner)
+router.post('/pay-table', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'OWNER'), async (req, res) => {
   try {
     const { tableId, paymentMethod } = req.body;
-    const cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || '1';
     const isObjId = String(tableId).match(/^[0-9a-fA-F]{24}$/);
+    let table = null;
+    let cleanTableNum = '1';
 
-    const table = await Table.findOne({
-      $or: [{ tableNumber: cleanTableNum }, { _id: isObjId ? tableId : null }]
-    });
+    if (isObjId) {
+      table = await Table.findById(tableId);
+      if (table) cleanTableNum = String(table.tableNumber);
+    } else {
+      cleanTableNum = String(tableId || '').match(/\d+/)?.[0] || '1';
+      table = await Table.findOne({ tableNumber: cleanTableNum });
+    }
 
     // Find active unpaid orders matching any tableId format (e.g. '7', 'table/7/menu', 'table-7')
     const activeOrders = await Order.find({
@@ -1063,28 +1134,5 @@ router.post('/pay-table', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-// Auto-cancel orders in 'received' status older than 15 minutes (Kitchen Timeout)
-const autoCancelStaleOrders = async () => {
-  try {
-    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
-    const staleOrders = await Order.find({
-      status: 'received',
-      createdAt: { $lt: fifteenMinsAgo }
-    });
-
-    for (const ord of staleOrders) {
-      ord.status = 'cancelled';
-      ord.cancelReason = 'Order Auto-Cancelled due to Kitchen Response Timeout (15m)';
-      ord.cancelledAt = new Date();
-      ord.cancelledBy = 'System Auto-Timeout';
-      await ord.save();
-    }
-  } catch (e) {
-    // Silence error
-  }
-};
-
-setInterval(autoCancelStaleOrders, 30000); // Check every 30s
 
 module.exports = router;

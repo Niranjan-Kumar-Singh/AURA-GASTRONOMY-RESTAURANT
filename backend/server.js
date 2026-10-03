@@ -43,12 +43,42 @@ app.use(
   })
 );
 
-// 2. CORS Configuration
+// 2. CORS Configuration — Allowlist-based; credentials only for known origins
+const DEV_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+];
+
+const isDevMode = (process.env.NODE_ENV || 'development') !== 'production';
+
+// In production set ALLOWED_ORIGINS as comma-separated list in .env
+const productionOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  : [];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, postman) or localhost/LAN
-      callback(null, true);
+      // Allow server-to-server requests (no origin header)
+      if (!origin) return callback(null, true);
+
+      // In dev mode also allow any LAN IP (192.168.x.x / 10.x.x.x)
+      if (isDevMode && /^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01]))/.test(origin)) {
+        return callback(null, true);
+      }
+
+      const allowedList = isDevMode
+        ? [...DEV_ALLOWED_ORIGINS, ...productionOrigins]
+        : productionOrigins;
+
+      if (allowedList.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error(`CORS: Origin "${origin}" is not in the allowed list.`));
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-dev-secret'],

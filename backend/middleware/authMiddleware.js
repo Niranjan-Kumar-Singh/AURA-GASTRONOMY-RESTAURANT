@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('[SECURITY] JWT_SECRET is not defined in environment variables. Set it in backend/.env before starting the server.');
+}
+
 /**
  * Protect routes: verifies valid JWT in Authorization header
  */
@@ -20,7 +25,7 @@ const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'aura-secret-key-12345');
+    const decoded = jwt.verify(token, JWT_SECRET);
     if (!decoded || !decoded.id) {
       return res.status(401).json({
         success: false,
@@ -47,7 +52,7 @@ const protect = async (req, res, next) => {
 };
 
 /**
- * Require specific user role(s) (e.g. ADMIN, MANAGER, CASHIER)
+ * Require specific user role(s) (e.g. ADMIN, MANAGER, CASHIER, CHEF, WAITER)
  */
 const requireRole = (...allowedRoles) => {
   return (req, res, next) => {
@@ -55,10 +60,19 @@ const requireRole = (...allowedRoles) => {
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    const userRole = (req.user.role || 'CUSTOMER').toUpperCase();
-    const normalizedAllowed = allowedRoles.map(r => r.toUpperCase());
+    let userRole = (req.user.role || 'CUSTOMER').toUpperCase();
+    if (userRole === 'KITCHEN') userRole = 'CHEF';
+    if (userRole === 'RESTAURANT_OWNER') userRole = 'OWNER';
 
-    if (!normalizedAllowed.includes(userRole) && userRole !== 'ADMIN') {
+    const normalizedAllowed = allowedRoles.map(r => {
+      let rUpper = r.toUpperCase();
+      if (rUpper === 'KITCHEN') return 'CHEF';
+      if (rUpper === 'RESTAURANT_OWNER') return 'OWNER';
+      return rUpper;
+    });
+
+    const isAuthorized = normalizedAllowed.includes(userRole) || userRole === 'ADMIN' || userRole === 'OWNER';
+    if (!isAuthorized) {
       return res.status(403).json({
         success: false,
         message: `Forbidden: Access restricted to [${allowedRoles.join(', ')}]. Your role is ${userRole}.`
@@ -77,7 +91,7 @@ const optionalAuth = async (req, res, next) => {
     const authHeader = req.headers.authorization || req.headers.Authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'aura-secret-key-12345');
+      const decoded = jwt.verify(token, JWT_SECRET);
       if (decoded && decoded.id) {
         req.user = await User.findById(decoded.id).select('-password');
       }

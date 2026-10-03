@@ -1,10 +1,10 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const Category = require('./models/Category');
 const MenuItem = require('./models/MenuItem');
 const Coupon = require('./models/Coupon');
-const Faq = require('./models/Faq');
-const Gallery = require('./models/Gallery');
+const User = require('./models/User');
 const connectDB = require('./config/db');
 
 const MOCK_CATEGORIES = [
@@ -2524,22 +2524,52 @@ const MOCK_GALLERY = [
   { title: 'Botanical Cocktails & Desserts', description: 'Handcrafted signature elixirs, single-origin matcha, and gourmet patisserie.', imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=80', category: 'Botanical' }
 ];
 
+// ==============================================================================
+// STAFF ACCOUNTS — Seeded with hashed passwords. Change these IMMEDIATELY.
+// ==============================================================================
+const STAFF_ACCOUNTS = [
+  { name: 'Restaurant Owner',    email: 'owner@aura.com',   phone: '+919999900001', role: 'owner',   password: 'Owner@Aura2026!' },
+  { name: 'System Administrator',email: 'admin@aura.com',   phone: '+919999900002', role: 'admin',   password: 'Admin@Aura2026!' },
+  { name: 'Executive Chef',      email: 'chef@aura.com',    phone: '+919999900003', role: 'kitchen', password: 'Chef@Aura2026!' },
+  { name: 'Head Waiter',         email: 'waiter@aura.com',  phone: '+919999900004', role: 'waiter',  password: 'Waiter@Aura2026!' },
+  { name: 'Senior Cashier',      email: 'cashier@aura.com', phone: '+919999900005', role: 'cashier', password: 'Cashier@Aura2026!' },
+];
+
 const seedDB = async () => {
   try {
     await connectDB();
     await Category.deleteMany();
     await MenuItem.deleteMany();
     await Coupon.deleteMany();
-    await Faq.deleteMany();
-    await Gallery.deleteMany();
 
     await Category.insertMany(MOCK_CATEGORIES);
     await MenuItem.insertMany(MOCK_MENU_ITEMS);
     await Coupon.insertMany(MOCK_COUPONS);
-    await Faq.insertMany(MOCK_FAQS);
-    await Gallery.insertMany(MOCK_GALLERY);
 
-    console.log(`Database Seeded Successfully! Added ${MOCK_CATEGORIES.length} Categories & ${MOCK_MENU_ITEMS.length} Culinary Items.`);
+    // Seed staff accounts — skip if email already exists to allow re-runs safely
+    for (const staff of STAFF_ACCOUNTS) {
+      const existing = await User.findOne({ email: staff.email });
+      if (!existing) {
+        await User.create({
+          name: staff.name,
+          email: staff.email,
+          phone: staff.phone,
+          role: staff.role,
+          password: staff.password, // User model pre-save hook hashes this automatically
+          status: 'VIP',
+          loyaltyPoints: 0,
+          lifetimePoints: 0,
+          loyaltyTier: 'STANDARD',
+        });
+        console.log(`  ✓ Seeded staff: ${staff.email} [${staff.role}]`);
+      } else {
+        console.log(`  ~ Staff already exists: ${staff.email} — skipped.`);
+      }
+    }
+
+    console.log(`\n✅ Database Seeded Successfully!`);
+    console.log(`   Added ${MOCK_CATEGORIES.length} Categories & ${MOCK_MENU_ITEMS.length} Menu Items.`);
+    console.log(`   Staff accounts ready. CHANGE PASSWORDS IMMEDIATELY after first login.`);
     process.exit();
   } catch (err) {
     console.error(err);

@@ -1,6 +1,8 @@
 const express = require('express');
 const User = require('../models/User');
 const LoyaltyTransaction = require('../models/LoyaltyTransaction');
+const Order = require('../models/Order');
+const { protect, requireRole, optionalAuth } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Helper: Calculate Tier based on Lifetime Points
@@ -68,7 +70,8 @@ const getTierMeta = (tier, lifetimePoints = 0) => {
 };
 
 // GET /api/loyalty/balance/:phone
-router.get('/balance/:phone', async (req, res) => {
+// Protected: authenticated customer (own data only) OR staff with CASHIER/ADMIN/MANAGER role
+router.get('/balance/:phone', protect, async (req, res) => {
   try {
     const rawPhone = String(req.params.phone || '').trim();
     if (!rawPhone) {
@@ -127,7 +130,8 @@ router.get('/balance/:phone', async (req, res) => {
 });
 
 // GET /api/loyalty/transactions/:phone
-router.get('/transactions/:phone', async (req, res) => {
+// Protected: same rules as /balance
+router.get('/transactions/:phone', protect, async (req, res) => {
   try {
     const rawPhone = String(req.params.phone || '').trim();
     const limit = parseInt(req.query.limit) || 50;
@@ -162,9 +166,35 @@ router.post('/feedback-reward', async (req, res) => {
 
     // Check if feedback points already awarded for this specific orderId
     if (orderId) {
+      const orderIdStr = String(orderId).trim();
+
+      // S3 fix: Validate orderId exists in DB and belongs to this phone number
+      const dbOrder = await Order.findOne({
+        $or: [{ orderId: orderIdStr }, { _id: orderIdStr.match(/^[0-9a-fA-F]{24}$/) ? orderIdStr : null }]
+      });
+
+      if (!dbOrder) {
+        return res.status(400).json({
+          success: false,
+          message: 'Order not found. Feedback reward can only be claimed for valid completed orders.'
+        });
+      }
+      if (dbOrder.customerPhone !== cleanPhone && dbOrder.customerPhone !== `+91${cleanPhone}` && `+91${dbOrder.customerPhone}` !== cleanPhone) {
+        return res.status(403).json({
+          success: false,
+          message: 'This order does not belong to your account.'
+        });
+      }
+      if (dbOrder.paymentStatus !== 'PAID') {
+        return res.status(400).json({
+          success: false,
+          message: 'Feedback reward can only be claimed after your bill has been fully paid.'
+        });
+      }
+
       const existingTx = await LoyaltyTransaction.findOne({
         customerPhone: cleanPhone,
-        orderId: String(orderId),
+        orderId: orderIdStr,
         type: 'EARNED_FEEDBACK'
       });
       if (existingTx) {
@@ -221,10 +251,10 @@ router.post('/feedback-reward', async (req, res) => {
   }
 });
 
-// POST /api/loyalty/admin/adjust (Staff / Cashier manual adjustment or goodwill grant)
-router.post('/admin/adjust', async (req, res) => {
+// POST /api/loyalty/admin/adjust (Protected: Staff / Cashier / Manager)
+router.post('/admin/adjust', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER'), async (req, res) => {
   try {
-    const { phone, points, reason, adjustedBy } = req.body;
+    const { phone, points, reason } = req.body;
     const cleanPhone = String(phone || '').trim();
     const ptsNum = parseInt(points);
 
@@ -236,6 +266,8 @@ router.post('/admin/adjust', async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'Customer with this phone number not found' });
     }
+
+    const actor = req.user?.name || req.user?.email || 'Authorized Staff';
 
     const newBalance = Math.max(0, (user.loyaltyPoints || 0) + ptsNum);
     user.loyaltyPoints = newBalance;
@@ -251,8 +283,8 @@ router.post('/admin/adjust', async (req, res) => {
       type: 'ADMIN_ADJUSTMENT',
       points: ptsNum,
       balanceAfter: newBalance,
-      description: reason || `Manual adjustment by ${adjustedBy || 'Staff'}`,
-      metadata: { adjustedBy: adjustedBy || 'Cashier / Admin', reason }
+      description: reason || `Manual adjustment by ${actor}`,
+      metadata: { adjustedBy: actor, reason }
     });
 
     res.json({
