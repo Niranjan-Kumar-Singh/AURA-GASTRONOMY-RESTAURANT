@@ -158,34 +158,37 @@ router.get('/executive-analytics', async (req, res) => {
 
     const itemToCategoryMap = {};
     allMenuItems.forEach(m => {
-      itemToCategoryMap[m.name.toLowerCase().trim()] = m.categoryId;
-      itemToCategoryMap[m.id] = m.categoryId;
-    });
-
-    const catIdToName = {};
-    categories.forEach(c => {
-      catIdToName[c.id] = c.name;
+      const catId = m.categoryId;
+      if (m.name) itemToCategoryMap[m.name.toLowerCase().trim()] = catId;
+      if (m.id !== undefined && m.id !== null) itemToCategoryMap[String(m.id)] = catId;
+      if (m._id) itemToCategoryMap[m._id.toString()] = catId;
     });
 
     const categoryMap = {};
     categories.forEach(c => {
-      categoryMap[c.id] = { name: c.name, revenue: 0 };
+      const cId = c.id !== undefined && c.id !== null ? c.id : c._id.toString();
+      categoryMap[cId] = { name: c.name, revenue: 0 };
     });
+
+    // Fallback category if an item is not explicitly categorized
+    const fallbackCatKey = categories.length > 0 ? (categories[0].id ?? categories[0]._id.toString()) : 'general';
+    if (!categoryMap[fallbackCatKey]) {
+      categoryMap[fallbackCatKey] = { name: categories[0]?.name || 'Specialties', revenue: 0 };
+    }
 
     settledOrders.forEach(o => {
       if (Array.isArray(o.items)) {
         o.items.forEach(it => {
           const cleanName = (it.name || '').toLowerCase().trim();
-          let catId = itemToCategoryMap[cleanName] || itemToCategoryMap[it.menuItemId];
-          if (!catId) {
-            if (cleanName.includes('pizza')) catId = 8;
-            else if (cleanName.includes('cake') || cleanName.includes('dessert')) catId = 16;
-            else if (cleanName.includes('naan') || cleanName.includes('roti')) catId = 6;
-            else catId = 1;
+          const itIdStr = it.menuItemId ? String(it.menuItemId) : null;
+          let catId = (itIdStr && itemToCategoryMap[itIdStr]) || itemToCategoryMap[cleanName];
+
+          if (!catId || !categoryMap[catId]) {
+            catId = fallbackCatKey;
           }
 
           if (categoryMap[catId]) {
-            categoryMap[catId].revenue += ((it.price || 0) * (it.quantity || 1));
+            categoryMap[catId].revenue += ((Number(it.price) || 0) * (Number(it.quantity) || 1));
           }
         });
       }
@@ -225,4 +228,56 @@ router.get('/executive-analytics', async (req, res) => {
   }
 });
 
+// Restaurant Platform Settings (Persistent MongoDB Sync)
+const RestaurantSetting = require('../models/RestaurantSetting');
+
+router.get('/settings', async (req, res) => {
+  try {
+    let settings = await RestaurantSetting.findOne();
+    if (!settings) {
+      settings = await RestaurantSetting.create({});
+    }
+    res.json({ success: true, data: settings });
+  } catch (error) {
+    console.error('Failed to get settings:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.put('/settings', async (req, res) => {
+  try {
+    const {
+      restaurantName,
+      baseUrl,
+      wifiSsid,
+      wifiPassword,
+      taxRate,
+      serviceCharge,
+      currencySymbol,
+      receiptFooter
+    } = req.body;
+
+    let settings = await RestaurantSetting.findOne();
+    if (!settings) {
+      settings = new RestaurantSetting();
+    }
+
+    if (restaurantName !== undefined) settings.restaurantName = restaurantName;
+    if (baseUrl !== undefined) settings.baseUrl = baseUrl;
+    if (wifiSsid !== undefined) settings.wifiSsid = wifiSsid;
+    if (wifiPassword !== undefined) settings.wifiPassword = wifiPassword;
+    if (taxRate !== undefined) settings.taxRate = Number(taxRate);
+    if (serviceCharge !== undefined) settings.serviceCharge = Number(serviceCharge);
+    if (currencySymbol !== undefined) settings.currencySymbol = currencySymbol;
+    if (receiptFooter !== undefined) settings.receiptFooter = receiptFooter;
+
+    await settings.save();
+    res.json({ success: true, data: settings, message: 'Settings successfully updated in database' });
+  } catch (error) {
+    console.error('Failed to update settings:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
+

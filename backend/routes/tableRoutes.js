@@ -481,9 +481,7 @@ router.put(['/:tableId/status', '/status/:tableId'], protect, requireRole('ADMIN
   }
 });
 
-// In-memory & DB synchronized Waiter Alerts queue for instant cross-device dispatch
-let globalWaiterAlerts = [];
-
+// Waiter Alerts queue synchronized via WaiterAlert MongoDB collection
 // POST create waiter call alert
 router.post('/call-waiter', async (req, res) => {
   try {
@@ -503,7 +501,7 @@ router.post('/call-waiter', async (req, res) => {
     const alertId = Date.now();
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const newAlert = {
+    const newAlertData = {
       id: alertId,
       tableId: cleanTableNum,
       tableNumber: cleanTableNum,
@@ -512,29 +510,19 @@ router.post('/call-waiter', async (req, res) => {
       status: 'PENDING',
     };
 
-    // 1. Keep in memory for instant millisecond response
-    globalWaiterAlerts.unshift(newAlert);
-    if (globalWaiterAlerts.length > 50) globalWaiterAlerts.pop();
-
-    // 2. Persist to MongoDB so alerts survive serverless restarts
+    // 1. Persist to MongoDB so alerts survive serverless restarts and cluster instances
+    let createdAlert = null;
     try {
-      await WaiterAlert.create({
-        id: alertId,
-        tableId: cleanTableNum,
-        tableNumber: cleanTableNum,
-        reason: reason || 'Call Waiter to Table',
-        timestamp: timeStr,
-        status: 'PENDING',
-      });
+      createdAlert = await WaiterAlert.create(newAlertData);
     } catch (dbErr) {
       console.warn('WaiterAlert MongoDB create warning:', dbErr.message);
     }
 
-    // 3. Update Table document with active alert & billing status if bill request
+    // 2. Update Table document with active alert & billing status if bill request
     try {
       if (table) {
         table.activeWaiterCall = {
-          reason: newAlert.reason,
+          reason: newAlertData.reason,
           timestamp: timeStr,
           status: 'PENDING',
         };
@@ -547,40 +535,30 @@ router.post('/call-waiter', async (req, res) => {
       console.warn('Table update for waiter call warning:', tblErr.message);
     }
 
-    res.json({ success: true, data: newAlert });
+    res.json({ success: true, data: createdAlert || newAlertData });
   } catch (error) {
     console.error('Error handling call waiter:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// GET all active waiter calls (DB prioritized, memory fallback)
+// GET all active waiter calls (Direct MongoDB query)
 router.get('/waiter-calls', async (req, res) => {
   try {
-    let dbAlerts = [];
-    try {
-      dbAlerts = await WaiterAlert.find().sort({ createdAt: -1 }).limit(50).lean();
-    } catch (e) {
-      // DB fallback
-    }
+    const dbAlerts = await WaiterAlert.find().sort({ createdAt: -1 }).limit(50).lean();
+    const formattedAlerts = (dbAlerts || []).map(a => ({
+      id: a.id,
+      tableId: a.tableId || a.tableNumber,
+      tableNumber: a.tableNumber || a.tableId,
+      reason: a.reason,
+      timestamp: a.timestamp,
+      status: a.status,
+    }));
 
-    if (dbAlerts && dbAlerts.length > 0) {
-      // Sync memory with DB
-      globalWaiterAlerts = dbAlerts.map(a => ({
-        id: a.id,
-        tableId: a.tableId || a.tableNumber,
-        tableNumber: a.tableNumber || a.tableId,
-        reason: a.reason,
-        timestamp: a.timestamp,
-        status: a.status,
-      }));
-      return res.json({ data: globalWaiterAlerts });
-    }
-
-    res.json({ data: globalWaiterAlerts });
+    res.json({ data: formattedAlerts });
   } catch (error) {
     console.error('Error fetching waiter calls:', error);
-    res.json({ data: globalWaiterAlerts });
+    res.status(500).json({ message: error.message, data: [] });
   }
 });
 
@@ -588,11 +566,7 @@ router.get('/waiter-calls', async (req, res) => {
 router.put('/waiter-calls/:id/resolve', protect, requireRole('ADMIN', 'MANAGER', 'WAITER'), async (req, res) => {
   try {
     const alertId = Number(req.params.id);
-    globalWaiterAlerts = globalWaiterAlerts.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a);
-
     let targetTableNum = null;
-    const foundInMemory = globalWaiterAlerts.find(a => a.id === alertId);
-    if (foundInMemory) targetTableNum = foundInMemory.tableNumber || foundInMemory.tableId;
 
     // Persist resolution in DB
     try {
@@ -622,7 +596,18 @@ router.put('/waiter-calls/:id/resolve', protect, requireRole('ADMIN', 'MANAGER',
       }
     }
 
-    res.json({ success: true, data: globalWaiterAlerts });
+    // Return the updated list of active and recent alerts from DB
+    const allDbAlerts = await WaiterAlert.find().sort({ createdAt: -1 }).limit(50).lean();
+    const formattedAlerts = (allDbAlerts || []).map(a => ({
+      id: a.id,
+      tableId: a.tableId || a.tableNumber,
+      tableNumber: a.tableNumber || a.tableId,
+      reason: a.reason,
+      timestamp: a.timestamp,
+      status: a.status,
+    }));
+
+    res.json({ success: true, data: formattedAlerts });
   } catch (error) {
     console.error('Error resolving waiter call:', error);
     res.status(500).json({ message: error.message });

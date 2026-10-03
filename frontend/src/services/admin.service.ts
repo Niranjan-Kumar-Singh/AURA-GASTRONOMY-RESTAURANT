@@ -202,4 +202,26 @@ export const adminService = {
       categoryBreakdown,
     };
   },
+
+  async getRestaurantSettings(): Promise<RestaurantSettingsData> {
+    const response = await apiClient.get('/admin/settings');
+    return response.data.data;
+  },
+
+  async updateRestaurantSettings(settings: RestaurantSettingsData): Promise<RestaurantSettingsData> {
+    const response = await apiClient.put('/admin/settings', settings);
+    return response.data.data;
+  },
 };
+
+export interface RestaurantSettingsData {
+  restaurantName?: string;
+  baseUrl?: string;
+  wifiSsid?: string;
+  wifiPassword?: string;
+  taxRate?: number;
+  serviceCharge?: number;
+  currencySymbol?: string;
+  receiptFooter?: string;
+}
+

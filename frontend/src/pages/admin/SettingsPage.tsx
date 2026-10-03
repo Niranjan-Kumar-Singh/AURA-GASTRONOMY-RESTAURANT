@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Building2, Sliders, ShieldCheck, Receipt, Bell, CheckCircle2, Save, Globe, Wifi, QrCode, ArrowRight } from 'lucide-react';
+import { Settings, Building2, Sliders, ShieldCheck, Receipt, Bell, CheckCircle2, Save, Globe, Wifi, QrCode, ArrowRight, Loader2 } from 'lucide-react';
 import { getVenueConfig, saveVenueConfig } from '../../utils/venueConfig';
+import { adminService } from '../../services/admin.service';
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'GENERAL' | 'OPERATIONS' | 'RECEIPTS' | 'SECURITY'>('GENERAL');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form State initialized with persisted venue configuration
   const venueCfg = getVenueConfig();
@@ -19,20 +22,91 @@ export const SettingsPage: React.FC = () => {
   const [currencySymbol, setCurrencySymbol] = useState(() => localStorage.getItem('aura_currency') || '₹');
   const [receiptFooter, setReceiptFooter] = useState(() => localStorage.getItem('aura_receipt_footer') || 'Thank you for dining at AURA. Atmospheric Perfection.');
 
-  const handleSave = () => {
-    saveVenueConfig({
-      brandName: restaurantName,
-      baseUrl: domainUrl,
-      wifiSsid,
-      wifiPassword,
-    });
-    localStorage.setItem('aura_tax_rate', taxRate);
-    localStorage.setItem('aura_service_charge', serviceCharge);
-    localStorage.setItem('aura_currency', currencySymbol);
-    localStorage.setItem('aura_receipt_footer', receiptFooter);
+  // Load persistent settings from database on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSettings() {
+      try {
+        setIsLoading(true);
+        const data = await adminService.getRestaurantSettings();
+        if (isMounted && data) {
+          if (data.restaurantName) setRestaurantName(data.restaurantName);
+          if (data.baseUrl) setDomainUrl(data.baseUrl);
+          if (data.wifiSsid) setWifiSsid(data.wifiSsid);
+          if (data.wifiPassword) setWifiPassword(data.wifiPassword);
+          if (data.taxRate !== undefined) setTaxRate(String(data.taxRate));
+          if (data.serviceCharge !== undefined) setServiceCharge(String(data.serviceCharge));
+          if (data.currencySymbol) setCurrencySymbol(data.currencySymbol);
+          if (data.receiptFooter) setReceiptFooter(data.receiptFooter);
 
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+          // Synchronize local venue config
+          saveVenueConfig({
+            brandName: data.restaurantName || restaurantName,
+            baseUrl: data.baseUrl || domainUrl,
+            wifiSsid: data.wifiSsid || wifiSsid,
+            wifiPassword: data.wifiPassword || wifiPassword,
+          });
+        }
+      } catch (err) {
+        console.warn('Could not load settings from server, using local defaults:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      // 1. Persist to MongoDB through backend API
+      await adminService.updateRestaurantSettings({
+        restaurantName,
+        baseUrl: domainUrl,
+        wifiSsid,
+        wifiPassword,
+        taxRate: parseFloat(taxRate) || 5.0,
+        serviceCharge: parseFloat(serviceCharge) || 0.0,
+        currencySymbol,
+        receiptFooter,
+      });
+
+      // 2. Persist locally to storage and venue config
+      saveVenueConfig({
+        brandName: restaurantName,
+        baseUrl: domainUrl,
+        wifiSsid,
+        wifiPassword,
+      });
+      localStorage.setItem('aura_tax_rate', taxRate);
+      localStorage.setItem('aura_service_charge', serviceCharge);
+      localStorage.setItem('aura_currency', currencySymbol);
+      localStorage.setItem('aura_receipt_footer', receiptFooter);
+
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      // Fallback: save to local storage anyway
+      saveVenueConfig({
+        brandName: restaurantName,
+        baseUrl: domainUrl,
+        wifiSsid,
+        wifiPassword,
+      });
+      localStorage.setItem('aura_tax_rate', taxRate);
+      localStorage.setItem('aura_service_charge', serviceCharge);
+      localStorage.setItem('aura_currency', currencySymbol);
+      localStorage.setItem('aura_receipt_footer', receiptFooter);
+
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -154,7 +228,7 @@ export const SettingsPage: React.FC = () => {
                 <label className="text-xs font-semibold text-aura-slate">Timezone</label>
                 <input
                   type="text"
-                  defaultValue="Europe/London (GMT)"
+                  defaultValue="Asia/Kolkata (IST)"
                   className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8]"
                 />
               </div>
