@@ -26,11 +26,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup JDK 21
-        uses: actions/setup-java@v4
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-      - name: Build Spring Boot Jar
-        run: cd backend && mvn clean package -DskipTests
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - name: Install Backend Dependencies
+        run: cd backend && npm ci
+      - name: Verify Backend Syntax & Quality
+        run: |
+          cd backend
+          node --check server.js
+          node --check seed.js
+          node -e "
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            ['routes', 'models', 'middleware'].forEach(dir => {
+              if (fs.existsSync(dir)) {
+                fs.readdirSync(dir).filter(f => f.endsWith('.js')).forEach(file => {
+                  execSync('node --check ' + dir + '/' + file, { stdio: 'inherit' });
+                });
+              }
+            });
+            console.log('All backend JavaScript files passed syntax verification!');
+          "

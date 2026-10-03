@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const LoyaltyTransaction = require('../models/LoyaltyTransaction');
+const { normalizePhoneQuery } = require('../utils/phoneUtils');
 const router = express.Router();
 
 const { protect } = require('../middleware/authMiddleware');
@@ -27,7 +28,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please enter a valid phone number.' });
     }
 
-    const userExists = await User.findOne({ phone: cleanPhone });
+    const userExists = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'An account with this phone number already exists.' });
     }
@@ -192,7 +193,7 @@ router.post('/login', async (req, res) => {
     const cleanId = String(loginId).trim().toLowerCase();
 
     let user = await User.findOne({
-      $or: [{ email: cleanId }, { phone: loginId }]
+      $or: [{ email: cleanId }, ...normalizePhoneQuery(loginId)]
     });
 
     // Staff accounts must be seeded into the DB manually via npm run seed or direct DB insertion.
@@ -247,7 +248,7 @@ router.put('/profile', protect, async (req, res) => {
 
     if (phone && phone !== user.phone) {
       const cleanPhone = String(phone).trim();
-      const phoneExists = await User.findOne({ phone: cleanPhone, _id: { $ne: user._id } });
+      const phoneExists = await User.findOne({ $or: normalizePhoneQuery(cleanPhone), _id: { $ne: user._id } });
       if (phoneExists) {
         return res.status(400).json({ success: false, message: 'Phone number already in use by another account.' });
       }

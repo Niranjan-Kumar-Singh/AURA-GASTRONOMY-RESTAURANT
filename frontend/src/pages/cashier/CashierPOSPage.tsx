@@ -145,27 +145,34 @@ export const CashierPOSPage: React.FC = () => {
   }, [filterTab, isArchiveOpen]);
 
   // Derived Filtered List for Cashier POS Queue
-  const filteredBillsList = bills.filter((b) => {
-    const isSettled = b.status === 'settled';
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const matchesSearch =
-        b.tableName.toLowerCase().includes(q) ||
-        String(b.tableNumber) === q ||
-        String(b.tableNumber).includes(q) ||
-        b.orderId.toLowerCase().includes(q) ||
-        (b.customerName && b.customerName.toLowerCase().includes(q)) ||
-        (b.customerMobile && b.customerMobile.toLowerCase().includes(q)) ||
-        (b.invoiceNumber && b.invoiceNumber.toLowerCase().includes(q)) ||
-        (b.items && b.items.some((i) => i.name.toLowerCase().includes(q)));
-      
-      // When searching, find matching bills across both pending & settled records
-      return matchesSearch;
-    }
-    if (filterTab === 'PENDING') return !isSettled;
-    if (filterTab === 'SETTLED_TODAY') return isSettled;
-    return true;
-  });
+  const filteredBillsList = bills
+    .filter((b) => {
+      const isSettled = b.status === 'settled';
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch =
+          b.tableName.toLowerCase().includes(q) ||
+          String(b.tableNumber) === q ||
+          String(b.tableNumber).includes(q) ||
+          b.orderId.toLowerCase().includes(q) ||
+          (b.customerName && b.customerName.toLowerCase().includes(q)) ||
+          (b.customerMobile && b.customerMobile.toLowerCase().includes(q)) ||
+          (b.invoiceNumber && b.invoiceNumber.toLowerCase().includes(q)) ||
+          (b.items && b.items.some((i) => i.name.toLowerCase().includes(q)));
+        
+        // When searching, find matching bills across both pending & settled records
+        return matchesSearch;
+      }
+      if (filterTab === 'PENDING') return !isSettled;
+      if (filterTab === 'SETTLED_TODAY') return isSettled;
+      return true;
+    })
+    .sort((a, b) => {
+      if (filterTab === 'SETTLED_TODAY') {
+        return (b.paidAt || b.paidDate || '').localeCompare(a.paidAt || a.paidDate || '');
+      }
+      return a.tableNumber - b.tableNumber;
+    });
 
   // Find bill from ALL master bills so selecting from Search or Archive modal works instantly
   const currentBill = selectedBillId
@@ -246,8 +253,11 @@ export const CashierPOSPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const res = await orderService.settleTableBill(currentBill.tableNumber, paymentMethod).catch(() => null);
-      const invNum = res?.data?.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
+      const res = await orderService.settleTableBill(currentBill.tableNumber, paymentMethod, {
+        discountPercent,
+        discountAmount
+      });
+      const invNum = res?.data?.invoiceNumber || res?.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
       const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const dateString = new Date().toLocaleDateString();
 
@@ -275,9 +285,10 @@ export const CashierPOSPage: React.FC = () => {
       showToast(`Bill ₹${finalGrandTotal.toLocaleString('en-IN')} for Table ${currentBill.tableNumber} SETTLED via ${paymentMethod}!`, 'success');
       setInvoiceBill(updatedBill);
       setIsInvoiceOpen(true);
-      fetchLivePOSData(false);
-    } catch (error) {
-      showToast('Failed to settle bill', 'error');
+      await fetchLivePOSData(false);
+    } catch (error: any) {
+      const errMsg = error?.response?.data?.message || error?.message || 'Failed to settle bill. Please verify table status.';
+      showToast(errMsg, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -862,7 +873,7 @@ export const CashierPOSPage: React.FC = () => {
                         )}
 
                         {pointsDiscount > 0 && (
-                          <div className="flex justify-between text-[#0C831F]">
+                          <div className="flex justify-between text-emerald-400">
                             <span>AURA Points Discount ({currentBill.pointsRedeemed || 0} PTS)</span>
                             <span>- ₹{pointsDiscount.toLocaleString('en-IN')}</span>
                           </div>
@@ -1262,7 +1273,7 @@ export const CashierPOSPage: React.FC = () => {
                 </div>
               )}
               {invoiceBill.pointsDiscount !== undefined && invoiceBill.pointsDiscount > 0 && (
-                <div className="flex justify-between text-[#0C831F] font-bold">
+                <div className="flex justify-between text-emerald-700 font-bold">
                   <span>AURA Points Discount ({invoiceBill.pointsRedeemed || 0} PTS)</span>
                   <span>- ₹{invoiceBill.pointsDiscount.toLocaleString('en-IN')}</span>
                 </div>

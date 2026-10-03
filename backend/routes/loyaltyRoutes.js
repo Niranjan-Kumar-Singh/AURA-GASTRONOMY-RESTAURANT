@@ -3,6 +3,7 @@ const User = require('../models/User');
 const LoyaltyTransaction = require('../models/LoyaltyTransaction');
 const Order = require('../models/Order');
 const { protect, requireRole, optionalAuth } = require('../middleware/authMiddleware');
+const { normalizePhoneQuery } = require('../utils/phoneUtils');
 const router = express.Router();
 
 // Helper: Calculate Tier based on Lifetime Points
@@ -78,7 +79,7 @@ router.get('/balance/:phone', protect, async (req, res) => {
       return res.status(400).json({ message: 'Phone number is required' });
     }
 
-    const user = await User.findOne({ phone: rawPhone });
+    const user = await User.findOne({ $or: normalizePhoneQuery(rawPhone) });
     if (!user) {
       // Guest or unregistered patron
       return res.json({
@@ -159,7 +160,7 @@ router.post('/feedback-reward', async (req, res) => {
       return res.status(400).json({ message: 'Customer phone number is required to credit loyalty points.' });
     }
 
-    const user = await User.findOne({ phone: cleanPhone });
+    const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
     if (!user) {
       return res.status(404).json({ message: 'Please register or log in to claim loyalty points for feedback.' });
     }
@@ -262,7 +263,7 @@ router.post('/admin/adjust', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER')
       return res.status(400).json({ message: 'Valid phone and non-zero points adjustment amount required' });
     }
 
-    const user = await User.findOne({ phone: cleanPhone });
+    const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
     if (!user) {
       return res.status(404).json({ message: 'Customer with this phone number not found' });
     }

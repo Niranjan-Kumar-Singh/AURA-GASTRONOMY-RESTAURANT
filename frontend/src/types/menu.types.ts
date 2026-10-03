@@ -74,10 +74,13 @@ export interface CartItem {
 }
 
 export interface Coupon {
+  _id?: string;
+  id?: string;
   code: string;
   title: string;
   discountAmount: number;
   discountPercentage?: number;
   minOrderAmount: number;
   description: string;
+  isActive?: boolean;
 }

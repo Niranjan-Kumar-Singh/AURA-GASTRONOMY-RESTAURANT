@@ -183,7 +183,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     try {
-      const coupon = await couponService.validateCoupon(couponCode);
+      const coupon = await couponService.validateCoupon(couponCode, subtotal);
       if (subtotal < coupon.minOrderAmount) {
         showToast(`Minimum order amount of ₹${coupon.minOrderAmount} required for ${coupon.code}`, 'error');
         return;
@@ -387,7 +387,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                                 }}
                                 className={`px-2 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center space-x-1 cursor-pointer ${
                                   isClaimed
-                                    ? 'bg-[#0C831F] text-white border-[#0C831F] shadow-sm'
+                                    ? 'bg-[#059669] text-white border-[#059669] shadow-sm'
                                     : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-300'
                                 }`}
                               >
@@ -424,7 +424,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       <div className="flex items-center space-x-2">
                         <h4
                           onClick={() => handleOpenPairingModal(item.menuItem)}
-                          className="font-bold text-slate-900 text-sm truncate cursor-pointer hover:text-[#0C831F] transition-colors"
+                          className="font-bold text-slate-900 text-sm truncate cursor-pointer hover:text-[#059669] transition-colors"
                           title="Click to view & customize"
                         >
                           {item.menuItem.name}
@@ -457,7 +457,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         {item.addonNames && item.addonNames.length > 0 && (
                           <div className="p-2 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-0.5">
                             <div className="flex items-center space-x-1 text-[11px] font-bold text-emerald-900">
-                              <Sparkles className="w-3 h-3 text-[#0C831F] shrink-0" />
+                              <Sparkles className="w-3 h-3 text-[#059669] shrink-0" />
                               <span className="truncate">Add-ons: {item.addonNames.join(', ')}</span>
                             </div>
                             <p className="text-[10px] text-emerald-800 font-medium">
@@ -479,7 +479,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                   {/* Quantity Stepper & Special Instructions */}
                   <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center space-x-1.5 bg-[#0C831F] text-white px-2 py-1 rounded-xl shadow-sm">
+                    <div className="flex items-center space-x-1.5 bg-[#059669] text-white px-2 py-1 rounded-xl shadow-sm">
                       <button
                         onClick={() => updateQuantity(item.menuItem.id, item.quantity - 1)}
                         className="w-7 h-7 sm:w-6 sm:h-6 hover:bg-black/20 rounded-lg flex items-center justify-center transition-colors cursor-pointer active:scale-90"
@@ -529,7 +529,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             updateSpecialNotes(item.menuItem.id, tempNote);
                             setEditingNoteId(null);
                           }}
-                          className="px-2 py-0.5 bg-[#0C831F] text-white text-[10px] font-bold rounded"
+                          className="px-2 py-0.5 bg-[#059669] text-white text-[10px] font-bold rounded"
                         >
                           Save
                         </button>
@@ -613,13 +613,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             {rec.badge && (
-                              <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 bg-[#0C831F] text-white rounded-full shadow-sm">
+                              <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 bg-[#059669] text-white rounded-full shadow-sm">
                                 {rec.badge}
                               </span>
                             )}
                           </div>
                           <div className="p-2 space-y-0.5">
-                            <p className="text-[10px] font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-[#0C831F] transition-colors">
+                            <p className="text-[10px] font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-[#059669] transition-colors">
                               {rec.name}
                             </p>
                             <p className="text-[10px] font-black text-slate-800 font-mono">₹{rec.price}</p>
@@ -631,7 +631,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           {inCart ? (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              className="w-full flex items-center justify-between bg-[#0C831F] text-white px-1.5 py-0.5 rounded-lg shadow-2xs"
+                              className="w-full flex items-center justify-between bg-[#059669] text-white px-1.5 py-0.5 rounded-lg shadow-2xs"
                             >
                               <button
                                 type="button"
@@ -663,7 +663,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             <button
                               type="button"
                               onClick={() => handleOpenPairingModal(rec)}
-                              className="w-full py-1 bg-[#0C831F] hover:bg-[#096918] text-white rounded-lg text-[10px] font-black flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 shadow-xs group/btn"
+                              className="w-full py-1 bg-[#059669] hover:bg-[#047857] text-white rounded-lg text-[10px] font-black flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 shadow-xs group/btn"
                             >
                               <span>View &amp; Add</span>
                               <ArrowRight className="w-2.5 h-2.5 group-hover/btn:translate-x-0.5 transition-transform" />
@@ -747,12 +747,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                                 setPointsToRedeem(maxRedeemablePoints);
                               }
                             }}
-                            className="rounded accent-[#0C831F] w-4 h-4 cursor-pointer"
+                            className="rounded accent-[#059669] w-4 h-4 cursor-pointer"
                           />
                           <span>Redeem Points for Bill Discount</span>
                         </label>
                         {isRedeemingPoints && (
-                          <span className="text-xs font-mono font-black text-[#0C831F]">
+                          <span className="text-xs font-mono font-black text-[#059669]">
                             -₹{pointsDiscount.toFixed(2)}
                           </span>
                         )}
@@ -771,7 +771,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             step={10}
                             value={effectivePointsToRedeem}
                             onChange={(e) => setPointsToRedeem(Number(e.target.value))}
-                            className="w-full accent-[#0C831F] cursor-pointer"
+                            className="w-full accent-[#059669] cursor-pointer"
                           />
                           <div className="flex justify-between text-[9px] text-slate-400 font-mono">
                             <span>Min 50 PTS</span>
@@ -813,7 +813,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 )}
 
                 {pointsDiscount > 0 && (
-                  <div className="flex justify-between text-[#0C831F] font-bold">
+                  <div className="flex justify-between text-[#059669] font-bold">
                     <span>Points Discount ({effectivePointsToRedeem} PTS)</span>
                     <span className="font-mono">-₹{pointsDiscount.toFixed(2)}</span>
                   </div>

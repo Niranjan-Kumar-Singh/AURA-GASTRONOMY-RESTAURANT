@@ -10,6 +10,7 @@ const LoyaltyTransaction = require('../models/LoyaltyTransaction');
 const Coupon = require('../models/Coupon');
 const { calculateTier, getTierMultiplier } = require('./loyaltyRoutes');
 const { protect, requireRole } = require('../middleware/authMiddleware');
+const { normalizePhoneQuery } = require('../utils/phoneUtils');
 const router = express.Router();
 
 // Generate a random order ID like ORD-4829
@@ -23,7 +24,7 @@ const awardLoyaltyPointsForOrder = async (order) => {
     const cleanPhone = String(order.customerPhone).trim();
     if (!cleanPhone) return;
 
-    const user = await User.findOne({ phone: cleanPhone });
+    const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
     if (!user) return; // Unregistered customer
 
     // Net paid dining base eligible for points: food subtotal minus coupons and point discounts
@@ -221,7 +222,7 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Customer phone number is required to redeem loyalty points.' });
       }
       const cleanPhone = String(customerPhone).trim();
-      const user = await User.findOne({ phone: cleanPhone });
+      const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
       if (!user) {
         return res.status(400).json({ success: false, message: 'Customer account not found for loyalty points redemption.' });
       }
@@ -363,7 +364,7 @@ router.post('/', async (req, res) => {
     // If points were redeemed at checkout, debit from customer wallet and log transaction
     if (verifiedRedeemed > 0 && customerPhone) {
       const cleanPhone = String(customerPhone).trim();
-      const user = await User.findOne({ phone: cleanPhone });
+      const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
       if (user) {
         user.loyaltyPoints = Math.max(0, (user.loyaltyPoints || 0) - verifiedRedeemed);
         await user.save();
@@ -511,11 +512,11 @@ router.get('/pos/sync', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'WAI
         const total = orders.reduce((sum, o) => sum + (o.total || 0), 0) || (subtotal + cgst + sgst);
         const latestOrder = orders[orders.length - 1];
 
-        let zone = 'Main Dining Hall';
+        let zone = 'Main Hall';
         const numVal = parseInt(tNum, 10);
         if (numVal > 12 && numVal <= 16) zone = 'VIP Lounge';
-        else if (numVal > 16 && numVal <= 24) zone = 'Outdoor Garden Terrace';
-        else if (numVal > 24) zone = 'Executive Suite';
+        else if (numVal > 16 && numVal <= 24) zone = 'Outdoor Garden';
+        else if (numVal > 24) zone = 'Family Section';
 
         activeBills.push({
           tableId: String(tbl._id),
@@ -542,10 +543,10 @@ router.get('/pos/sync', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'WAI
     const settledBills = settledTodayOrders.map(dbOrd => {
       const resolvedNumStr = getResolvedTableNumber(dbOrd.tableId);
       const tNum = parseInt(resolvedNumStr, 10) || 1;
-      let zone = 'Main Dining Hall';
+      let zone = 'Main Hall';
       if (tNum > 12 && tNum <= 16) zone = 'VIP Lounge';
-      else if (tNum > 16 && tNum <= 24) zone = 'Outdoor Garden Terrace';
-      else if (tNum > 24) zone = 'Executive Suite';
+      else if (tNum > 16 && tNum <= 24) zone = 'Outdoor Garden';
+      else if (tNum > 24) zone = 'Family Section';
 
       const items = (dbOrd.items || []).map(i => ({
         name: i.name,
@@ -705,7 +706,7 @@ router.post('/:orderId/refund', protect, requireRole('ADMIN', 'MANAGER', 'CASHIE
     if (order.customerPhone && (order.pointsEarned || 0) > 0) {
       try {
         const cleanPhone = String(order.customerPhone).trim();
-        const user = await User.findOne({ phone: cleanPhone });
+        const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
         if (user) {
           const refundRatio = Math.min(1, requestedAmount / (order.total || 1));
           const ptsDeduct = Math.round((order.pointsEarned || 0) * refundRatio);
@@ -935,7 +936,7 @@ router.put('/:orderId/items/:itemIndex/cancel', protect, requireRole('ADMIN', 'M
       if (order.customerPhone && (order.pointsRedeemed || 0) > 0) {
         try {
           const cleanPhone = String(order.customerPhone).trim();
-          const user = await User.findOne({ phone: cleanPhone });
+          const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
           if (user) {
             user.loyaltyPoints = (user.loyaltyPoints || 0) + order.pointsRedeemed;
             await user.save();
@@ -1008,7 +1009,7 @@ router.put('/:orderId/cancel', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER
     if (order.customerPhone && (order.pointsRedeemed || 0) > 0) {
       try {
         const cleanPhone = String(order.customerPhone).trim();
-        const user = await User.findOne({ phone: cleanPhone });
+        const user = await User.findOne({ $or: normalizePhoneQuery(cleanPhone) });
         if (user) {
           user.loyaltyPoints = (user.loyaltyPoints || 0) + order.pointsRedeemed;
           await user.save();
@@ -1069,7 +1070,7 @@ router.get('/:orderId', async (req, res) => {
 // Pay & Settle Table Bill (Protected: Cashier / Admin / Manager / Owner)
 router.post('/pay-table', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'OWNER'), async (req, res) => {
   try {
-    const { tableId, paymentMethod } = req.body;
+    const { tableId, paymentMethod, discountPercent, discountAmount } = req.body;
     const isObjId = String(tableId).match(/^[0-9a-fA-F]{24}$/);
     let table = null;
     let cleanTableNum = '1';
@@ -1103,7 +1104,34 @@ router.post('/pay-table', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'O
 
     const invoiceNumber = generateInvoiceNumber();
 
-    for (const ord of activeOrders) {
+    // Calculate POS Manual Discount if provided
+    const totalSubtotal = activeOrders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+    const appliedDiscountPercent = Math.max(0, Math.min(100, Number(discountPercent) || 0));
+    let appliedDiscountAmount = Math.max(0, Number(discountAmount) || 0);
+
+    if (appliedDiscountPercent > 0 && totalSubtotal > 0 && !appliedDiscountAmount) {
+      appliedDiscountAmount = Math.round((totalSubtotal * appliedDiscountPercent) / 100);
+    }
+
+    let allocatedDiscountSoFar = 0;
+
+    for (let i = 0; i < activeOrders.length; i++) {
+      const ord = activeOrders[i];
+
+      if (appliedDiscountAmount > 0 && totalSubtotal > 0) {
+        const orderShare = (ord.subtotal || 0) / totalSubtotal;
+        const ordDiscount = (i === activeOrders.length - 1)
+          ? (appliedDiscountAmount - allocatedDiscountSoFar)
+          : Math.round(appliedDiscountAmount * orderShare);
+
+        allocatedDiscountSoFar += ordDiscount;
+        ord.discount = (ord.discount || 0) + ordDiscount;
+
+        const netSub = Math.max(0, (ord.subtotal || 0) - ord.discount - (ord.pointsDiscount || 0));
+        ord.tax = Math.round(netSub * 0.05);
+        ord.total = netSub + ord.tax;
+      }
+
       ord.status = 'completed';
       ord.paymentStatus = 'PAID';
       ord.paymentMethod = paymentMethod || 'UPI_QR';

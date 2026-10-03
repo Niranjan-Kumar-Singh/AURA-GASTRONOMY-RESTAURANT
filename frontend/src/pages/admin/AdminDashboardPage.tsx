@@ -8,20 +8,21 @@ import { menuService } from '../../services/menu.service';
 import { orderService } from '../../services/order.service';
 import { tableService } from '../../services/table.service';
 import { TableQrStandsModal } from '../../components/tables/TableQrStandsModal';
-import { MenuItem, Category } from '../../types/menu.types';
+import { MenuItem, Category, Coupon } from '../../types/menu.types';
+import { couponService } from '../../services/coupon.service';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { OrderRefundModal } from '../../components/orders/OrderRefundModal';
 import {
   DollarSign, ShoppingBag, LayoutGrid, ChefHat, TrendingUp, RefreshCw, Layers, ShieldCheck,
   Calendar, Users, Play, Pause, AlertTriangle, Sparkles, Clock, Heart, Award, Utensils, Receipt, CheckCircle2,
-  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer, RotateCcw, QrCode, Download
+  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer, RotateCcw, QrCode, Download, Tag
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
   const { showToast } = useToast();
   
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'MENU_CATALOG' | 'CATEGORIES' | 'AUDIT_LOGS'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'MENU_CATALOG' | 'CATEGORIES' | 'COUPONS' | 'AUDIT_LOGS'>('OVERVIEW');
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
 
   // Search & Filter State
@@ -89,16 +90,29 @@ export const AdminDashboardPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load Categories & Menu Items
+  // Coupons State
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponTitle, setCouponTitle] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState<number>(100);
+  const [couponMinOrder, setCouponMinOrder] = useState<number>(500);
+  const [couponDescription, setCouponDescription] = useState('');
+  const [couponIsActive, setCouponIsActive] = useState<boolean>(true);
+
+  // Load Categories, Menu Items & Coupons
   const loadCatalogData = async () => {
     setIsLoadingCatalog(true);
     try {
-      const [cats, items] = await Promise.all([
+      const [cats, items, coups] = await Promise.all([
         menuService.getCategories().catch(() => []),
-        menuService.getMenuItems().catch(() => [])
+        menuService.getMenuItems().catch(() => []),
+        couponService.getAllCoupons().catch(() => [])
       ]);
       setCategories(cats);
       setMenuItems(items);
+      setCoupons(coups || []);
     } catch (err) {
       console.error('Failed to load menu catalog data:', err);
     } finally {
@@ -109,6 +123,83 @@ export const AdminDashboardPage: React.FC = () => {
   useEffect(() => {
     loadCatalogData();
   }, [activeTab]);
+
+  const handleOpenCouponModal = (coupon?: Coupon) => {
+    if (coupon) {
+      setEditingCoupon(coupon);
+      setCouponCode(coupon.code);
+      setCouponTitle(coupon.title);
+      setCouponDiscount(coupon.discountAmount);
+      setCouponMinOrder(coupon.minOrderAmount || 0);
+      setCouponDescription(coupon.description || '');
+      setCouponIsActive(coupon.isActive !== false);
+    } else {
+      setEditingCoupon(null);
+      setCouponCode('');
+      setCouponTitle('');
+      setCouponDiscount(100);
+      setCouponMinOrder(500);
+      setCouponDescription('');
+      setCouponIsActive(true);
+    }
+    setIsCouponModalOpen(true);
+  };
+
+  const handleSaveCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim() || !couponTitle.trim()) {
+      showToast('Coupon code and title are required', 'error');
+      return;
+    }
+    try {
+      if (editingCoupon) {
+        await couponService.updateCoupon(editingCoupon._id || (editingCoupon as any).id, {
+          code: couponCode.trim().toUpperCase(),
+          title: couponTitle.trim(),
+          discountAmount: Number(couponDiscount) || 0,
+          minOrderAmount: Number(couponMinOrder) || 0,
+          description: couponDescription.trim(),
+          isActive: couponIsActive,
+        });
+        showToast(`Coupon "${couponCode.toUpperCase()}" updated successfully`, 'success');
+      } else {
+        await couponService.createCoupon({
+          code: couponCode.trim().toUpperCase(),
+          title: couponTitle.trim(),
+          discountAmount: Number(couponDiscount) || 0,
+          minOrderAmount: Number(couponMinOrder) || 0,
+          description: couponDescription.trim(),
+          isActive: couponIsActive,
+        });
+        showToast(`Coupon "${couponCode.toUpperCase()}" created successfully`, 'success');
+      }
+      setIsCouponModalOpen(false);
+      loadCatalogData();
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to save coupon', 'error');
+    }
+  };
+
+  const handleToggleCouponStatus = async (c: Coupon) => {
+    try {
+      await couponService.updateCoupon(c._id || (c as any).id, { isActive: !c.isActive });
+      showToast(`Coupon "${c.code}" ${!c.isActive ? 'activated' : 'deactivated'}`, 'info');
+      loadCatalogData();
+    } catch (err: any) {
+      showToast('Failed to toggle coupon status', 'error');
+    }
+  };
+
+  const handleDeleteCoupon = async (c: Coupon) => {
+    if (!window.confirm(`Are you sure you want to permanently delete coupon "${c.code}"?`)) return;
+    try {
+      await couponService.deleteCoupon(c._id || (c as any).id);
+      showToast(`Coupon "${c.code}" deleted successfully`, 'info');
+      loadCatalogData();
+    } catch (err: any) {
+      showToast('Failed to delete coupon', 'error');
+    }
+  };
 
   // Open Modal to Add/Edit Dish
   const handleOpenDishModal = (dish?: MenuItem) => {
@@ -298,11 +389,11 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   // Detail Drill-Down Modal State
-  const [activeDetailModal, setActiveDetailModal] = useState<'REVENUE' | 'ONGOING' | 'COMPLETED' | 'RESERVATIONS' | 'REFUNDS' | null>(null);
+  const [activeDetailModal, setActiveDetailModal] = useState<'REVENUE' | 'ONGOING' | 'COMPLETED' | 'REFUNDS' | null>(null);
   const [viewBillOrder, setViewBillOrder] = useState<any | null>(null);
 
   // Lock background body scroll when any modal is open
-  useBodyScrollLock(isDishModalOpen || isCategoryModalOpen || activeDetailModal !== null || viewBillOrder !== null);
+  useBodyScrollLock(isDishModalOpen || isCategoryModalOpen || isCouponModalOpen || activeDetailModal !== null || viewBillOrder !== null);
 
   // Real MongoDB Orders State
   const [realActiveOrders, setRealActiveOrders] = useState<any[]>([]);
@@ -483,6 +574,17 @@ ${(executiveData?.categoryBreakdown || []).map((c: any) => `${c.name}: ₹${(c.r
           >
             <Layers className="w-4 h-4 text-cyan-400" />
             <span>Categories ({categories.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('COUPONS')}
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all border flex items-center space-x-2 cursor-pointer ${
+              activeTab === 'COUPONS'
+                ? 'bg-slate-800 text-white border-slate-600 shadow-md font-black'
+                : 'bg-[#0A0D15] text-slate-400 border-slate-800/80 hover:text-white hover:border-slate-700'
+            }`}
+          >
+            <Tag className="w-4 h-4 text-emerald-400" />
+            <span>Coupons & Promos ({coupons.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('AUDIT_LOGS')}
@@ -803,6 +905,99 @@ ${(executiveData?.categoryBreakdown || []).map((c: any) => `${c.name}: ₹${(c.r
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* TAB: COUPONS & PROMOS */}
+        {activeTab === 'COUPONS' && (
+          <div className="bg-aura-container border border-aura-border rounded-3xl p-6 space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-aura-border/60 pb-5">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-aura-ivory flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-emerald-400" /> Dining Coupons & Promotional Campaigns
+                </h3>
+                <p className="text-xs text-aura-slate mt-1">
+                  Create, configure and manage instant dining discount codes and threshold vouchers
+                </p>
+              </div>
+              <button
+                onClick={() => handleOpenCouponModal()}
+                className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs rounded-xl flex items-center space-x-2 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create New Coupon</span>
+              </button>
+            </div>
+
+            {coupons.length === 0 ? (
+              <div className="text-center py-12 border border-dashed border-aura-border rounded-2xl">
+                <Tag className="w-12 h-12 text-aura-slate/40 mx-auto mb-3" />
+                <p className="text-aura-slate text-sm font-semibold">No coupons created yet</p>
+                <p className="text-aura-slate/60 text-xs mt-1">Click "Create New Coupon" to set up your first promo discount</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {coupons.map((c) => (
+                  <div
+                    key={c._id || (c as any).id}
+                    className="p-5 bg-aura-obsidian border border-aura-border rounded-2xl flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-all shadow-md group"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg font-mono font-bold text-sm tracking-wider">
+                            {c.code}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleToggleCouponStatus(c)}
+                          className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full border cursor-pointer transition-all ${
+                            c.isActive
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          }`}
+                        >
+                          {c.isActive ? 'Active' : 'Inactive'}
+                        </button>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-white mt-3">{c.title}</h4>
+                      {c.description && (
+                        <p className="text-xs text-aura-slate mt-1 line-clamp-2">{c.description}</p>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-aura-border/40 font-mono text-xs">
+                        <div className="p-2.5 bg-black/40 rounded-xl">
+                          <span className="text-[10px] text-aura-slate block uppercase">Discount</span>
+                          <span className="font-bold text-emerald-400 text-sm">₹{c.discountAmount} OFF</span>
+                        </div>
+                        <div className="p-2.5 bg-black/40 rounded-xl">
+                          <span className="text-[10px] text-aura-slate block uppercase">Min Order</span>
+                          <span className="font-bold text-aura-ivory text-sm">₹{c.minOrderAmount || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-2 pt-2 border-t border-aura-border/40">
+                      <button
+                        onClick={() => handleOpenCouponModal(c)}
+                        className="p-2 bg-aura-container hover:bg-[#38BDF8]/15 border border-aura-border hover:border-[#38BDF8]/40 text-aura-slate hover:text-[#38BDF8] rounded-xl transition-all cursor-pointer"
+                        title="Edit Coupon"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCoupon(c)}
+                        className="p-2 bg-aura-container hover:bg-rose-500/15 border border-aura-border hover:border-rose-500/40 text-aura-slate hover:text-rose-400 rounded-xl transition-all cursor-pointer"
+                        title="Delete Coupon"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -1131,6 +1326,117 @@ ${(executiveData?.categoryBreakdown || []).map((c: any) => `${c.name}: ₹${(c.r
           </div>
         </div>
       )}
+
+      {/* COUPON ADD / EDIT MODAL */}
+      {isCouponModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-aura-container border border-aura-border rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-aura-border/60 pb-4">
+              <div className="flex items-center space-x-3">
+                <Tag className="w-6 h-6 text-emerald-400" />
+                <h3 className="font-serif text-xl font-bold text-white">
+                  {editingCoupon ? `Edit Coupon "${editingCoupon.code}"` : 'Create New Coupon'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCouponModalOpen(false)}
+                className="p-2 text-aura-slate hover:text-aura-ivory transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCoupon} className="space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-aura-slate uppercase tracking-wider block">Coupon Code</label>
+                <input
+                  type="text"
+                  required
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. AURA500, CHEF20"
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-emerald-500 font-mono tracking-wider font-bold"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-aura-slate uppercase tracking-wider block">Title / Campaign</label>
+                <input
+                  type="text"
+                  required
+                  value={couponTitle}
+                  onChange={(e) => setCouponTitle(e.target.value)}
+                  placeholder="e.g. Grand Gastronomy Welcome Promo"
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-emerald-500 font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-aura-slate uppercase tracking-wider block">Discount (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={couponDiscount}
+                    onChange={(e) => setCouponDiscount(Number(e.target.value))}
+                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-aura-slate uppercase tracking-wider block">Min Order (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={couponMinOrder}
+                    onChange={(e) => setCouponMinOrder(Number(e.target.value))}
+                    className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-aura-slate uppercase tracking-wider block">Description</label>
+                <textarea
+                  rows={2}
+                  value={couponDescription}
+                  onChange={(e) => setCouponDescription(e.target.value)}
+                  placeholder="Terms or dining details..."
+                  className="w-full px-4 py-3 bg-aura-obsidian border border-aura-border rounded-2xl text-aura-ivory focus:outline-none focus:border-emerald-500 font-sans resize-none"
+                />
+              </div>
+
+              <label className="p-3 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center space-x-2.5 cursor-pointer hover:border-emerald-500/40 transition-all">
+                <input
+                  type="checkbox"
+                  checked={couponIsActive}
+                  onChange={(e) => setCouponIsActive(e.target.checked)}
+                  className="accent-emerald-500 rounded"
+                />
+                <span className="font-bold text-white">Enable Coupon for Guests</span>
+              </label>
+
+              <div className="pt-4 flex items-center justify-end space-x-3 border-t border-aura-border/60">
+                <button
+                  type="button"
+                  onClick={() => setIsCouponModalOpen(false)}
+                  className="px-5 py-3 bg-aura-obsidian hover:bg-aura-border text-aura-slate hover:text-aura-ivory font-bold rounded-2xl uppercase tracking-wider cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-black font-black rounded-2xl uppercase tracking-wider shadow-lg shadow-emerald-500/20 cursor-pointer"
+                >
+                  Save Coupon
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* DRILL-DOWN DETAIL MODALS */}
       {activeDetailModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
@@ -1140,12 +1446,12 @@ ${(executiveData?.categoryBreakdown || []).map((c: any) => `${c.name}: ₹${(c.r
                 {activeDetailModal === 'REVENUE' && <DollarSign className="w-6 h-6 text-emerald-400" />}
                 {activeDetailModal === 'ONGOING' && <ShoppingBag className="w-6 h-6 text-[#38BDF8]" />}
                 {activeDetailModal === 'COMPLETED' && <CheckCircle2 className="w-6 h-6 text-blue-400" />}
-                {activeDetailModal === 'RESERVATIONS' && <Calendar className="w-6 h-6 text-purple-400" />}
+                {activeDetailModal === 'REFUNDS' && <RefreshCw className="w-6 h-6 text-rose-400" />}
                 <h3 className="font-serif text-xl font-bold text-white">
                   {activeDetailModal === 'REVENUE' && 'Daily Revenue & Profit Breakdown'}
                   {activeDetailModal === 'ONGOING' && 'Active Dining Tickets & KDS Status'}
                   {activeDetailModal === 'COMPLETED' && "Today's Settled Orders Log"}
-                  {activeDetailModal === 'RESERVATIONS' && "Today's Table Reservations Roster"}
+                  {activeDetailModal === 'REFUNDS' && 'Refunds & Adjustments Audit Log'}
                 </h3>
               </div>
               <button
@@ -1326,47 +1632,6 @@ ${(executiveData?.categoryBreakdown || []).map((c: any) => `${c.name}: ₹${(c.r
                     </table>
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* RESERVATIONS DRILL-DOWN */}
-            {activeDetailModal === 'RESERVATIONS' && (
-              <div className="space-y-4 text-xs">
-                <p className="text-aura-slate">Scheduled table reservations and VIP guest bookings today:</p>
-                <div className="space-y-3 font-mono">
-                  <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-[#38BDF8] text-sm">Baron Rothschild</h4>
-                      <span className="text-aura-slate text-[11px]">Party of 4 • VIP Terrace Table 1</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-purple-300 block">8:00 PM Today</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">CONFIRMED</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-[#38BDF8] text-sm">Dr. Ananya Sharma</h4>
-                      <span className="text-aura-slate text-[11px]">Party of 2 • Main Dining Table 8</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-purple-300 block">8:30 PM Today</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">SEATED</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-aura-obsidian border border-aura-border rounded-2xl flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-[#38BDF8] text-sm">Vikramaditya Singh</h4>
-                      <span className="text-aura-slate text-[11px]">Party of 6 • Private Dining Suite</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-purple-300 block">9:15 PM Today</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">CONFIRMED</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 

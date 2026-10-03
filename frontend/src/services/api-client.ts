@@ -46,8 +46,17 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      useAuthStore.getState().logout();
+    const originalRequest = error.config;
+    const url = originalRequest?.url || '';
+    const hasAuthHeader = Boolean(originalRequest?.headers?.Authorization);
+    const isAuthRoute = url.includes('/auth/login') || url.includes('/auth/register');
+
+    // Only force logout if an existing authenticated session was explicitly rejected by the server
+    if (error.response?.status === 401 && hasAuthHeader && !isAuthRoute) {
+      const activeToken = useAuthStore.getState().token;
+      if (activeToken) {
+        useAuthStore.getState().logout();
+      }
     }
     return Promise.reject(error);
   }

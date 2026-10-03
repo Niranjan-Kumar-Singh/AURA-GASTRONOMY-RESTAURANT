@@ -69,13 +69,23 @@ export const orderService = {
     return response.data;
   },
 
-  async payTableBill(tableId: string | number, paymentMethod: string = 'UPI_QR') {
-    const response = await apiClient.post('/orders/pay-table', { tableId: String(tableId), paymentMethod });
+  async payTableBill(tableId: string | number, paymentMethod: string = 'UPI_QR', discountData?: { discountPercent?: number; discountAmount?: number }) {
+    const response = await apiClient.post('/orders/pay-table', {
+      tableId: String(tableId),
+      paymentMethod,
+      discountPercent: discountData?.discountPercent || 0,
+      discountAmount: discountData?.discountAmount || 0,
+    });
     return response.data;
   },
 
-  async settleTableBill(tableId: string | number, paymentMethod: string = 'UPI_QR') {
-    const response = await apiClient.post('/orders/pay-table', { tableId: String(tableId), paymentMethod });
+  async settleTableBill(tableId: string | number, paymentMethod: string = 'UPI_QR', discountData?: { discountPercent?: number; discountAmount?: number }) {
+    const response = await apiClient.post('/orders/pay-table', {
+      tableId: String(tableId),
+      paymentMethod,
+      discountPercent: discountData?.discountPercent || 0,
+      discountAmount: discountData?.discountAmount || 0,
+    });
     return response.data;
   },
 

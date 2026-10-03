@@ -14,9 +14,9 @@ export const SettingsPage: React.FC = () => {
   const [domainUrl, setDomainUrl] = useState(venueCfg.baseUrl || (typeof window !== 'undefined' ? window.location.origin : ''));
   const [wifiSsid, setWifiSsid] = useState(venueCfg.wifiSsid || 'AURA-Guest-5G');
   const [wifiPassword, setWifiPassword] = useState(venueCfg.wifiPassword || 'AuraDining2026');
-  const [taxRate, setTaxRate] = useState(() => localStorage.getItem('aura_tax_rate') || '8.25');
-  const [serviceCharge, setServiceCharge] = useState(() => localStorage.getItem('aura_service_charge') || '10.0');
-  const [currencySymbol, setCurrencySymbol] = useState(() => localStorage.getItem('aura_currency') || '£');
+  const [taxRate, setTaxRate] = useState(() => localStorage.getItem('aura_tax_rate') || '5.0');
+  const [serviceCharge, setServiceCharge] = useState(() => localStorage.getItem('aura_service_charge') || '0.0');
+  const [currencySymbol, setCurrencySymbol] = useState(() => localStorage.getItem('aura_currency') || '₹');
   const [receiptFooter, setReceiptFooter] = useState(() => localStorage.getItem('aura_receipt_footer') || 'Thank you for dining at AURA. Atmospheric Perfection.');
 
   const handleSave = () => {
@@ -189,9 +189,18 @@ export const SettingsPage: React.FC = () => {
         {activeTab === 'OPERATIONS' && (
           <div className="space-y-4">
             <h3 className="font-serif text-base font-bold text-white">Taxes, Gratuity & Service Rules</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-aura-slate">Tax Rate (%)</label>
+                <label className="text-xs font-semibold text-aura-slate">Currency Symbol</label>
+                <input
+                  type="text"
+                  value={currencySymbol}
+                  onChange={(e) => setCurrencySymbol(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#090A0F] border border-aura-border rounded-xl text-xs text-aura-ivory focus:outline-none focus:border-[#38BDF8]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-aura-slate">Tax Rate (%) [GST]</label>
                 <input
                   type="text"
                   value={taxRate}
