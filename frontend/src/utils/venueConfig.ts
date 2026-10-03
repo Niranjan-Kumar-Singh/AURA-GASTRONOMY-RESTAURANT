@@ -17,18 +17,18 @@ export const STORAGE_KEY_VENUE_CONFIG = 'aura_venue_qr_settings';
 export const EVENT_VENUE_CONFIG_UPDATED = 'aura_venue_config_updated';
 
 export const DEFAULT_VENUE_CONFIG: VenueQrConfig = {
-  brandName: "Siliguri's Chai Addaa",
+  brandName: 'AURA Gastronomy',
   baseUrl: typeof window !== 'undefined' ? window.location.origin : 'https://aura-gastronomy.com',
-  tagline: 'Good Food • Better Chai • Happier People',
+  tagline: 'Artisanal Dining • Modern Flavours • Pure Luxury',
   urlFormat: '/dine/',
   showWifi: true,
-  wifiSsid: 'SiliguriChaiAddaa-5G',
-  wifiPassword: 'ChaiAddaa2021',
+  wifiSsid: 'AURA-Guest-5G',
+  wifiPassword: 'AuraGuest2026',
   themeStyle: 'EMERALD_GOLD',
-  badgeText: 'Chai • Food • People • Stories • Est. 2021',
+  badgeText: 'Fine Dining • Botanical Craft • Table QR System',
   centerIcon: 'CUTLERY',
   cardLayout: 'STAND_4X6',
-  customNote: 'Siliguri Chai Addaa Digital Ordering System',
+  customNote: 'AURA Gastronomy Digital Dining System',
 };
 
 /**

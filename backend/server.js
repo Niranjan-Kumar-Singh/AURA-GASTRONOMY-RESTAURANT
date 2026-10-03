@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
 const connectDB = require('./config/db');
@@ -30,6 +31,9 @@ connectDB().catch((err) => {
 });
 
 const app = express();
+
+// High-Performance HTTP Response Compression (Gzip / Deflate)
+app.use(compression());
 
 // 1. Helmet HTTP Security Headers (prevents clickjacking, MIME sniffing, XSS)
 app.use(

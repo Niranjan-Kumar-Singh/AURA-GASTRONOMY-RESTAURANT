@@ -2505,23 +2505,23 @@ const MOCK_MENU_ITEMS = [
 ];
 
 const MOCK_COUPONS = [
-  { code: 'CHAIADDAA50', title: 'Flat ₹50 Off', discountAmount: 50, minOrderAmount: 200, description: 'Get ₹50 off on your first Chai Addaa order above ₹200.' },
-  { code: 'ADDAA100', title: 'Chai & Bites ₹100 Off', discountAmount: 100, minOrderAmount: 400, description: 'Get ₹100 off on orders above ₹400.' },
-  { code: 'BOBAFEAST', title: 'Boba & Frappe Special', discountAmount: 75, minOrderAmount: 300, description: 'Exclusive ₹75 discount on Boba, Frappes and Coolers above ₹300.' },
-  { code: 'FAMILY200', title: 'Addaa Grand Feast', discountAmount: 200, minOrderAmount: 800, description: 'Get ₹200 off on large group dining orders above ₹800.' }
+  { code: 'AURA50', title: 'Flat ₹50 Welcome Dining Off', discountAmount: 50, minOrderAmount: 200, description: 'Get ₹50 off on your first AURA Gastronomy order above ₹200.' },
+  { code: 'AURA100', title: 'Culinary Mastercraft ₹100 Off', discountAmount: 100, minOrderAmount: 400, description: 'Get ₹100 off on dining orders above ₹400.' },
+  { code: 'BOTANICAL75', title: 'Botanical Craft Special', discountAmount: 75, minOrderAmount: 300, description: 'Exclusive ₹75 discount on craft mocktails and artisanal appetizers above ₹300.' },
+  { code: 'ROYAL200', title: 'AURA Grand Feast', discountAmount: 200, minOrderAmount: 800, description: 'Get ₹200 off on large group dining orders above ₹800.' }
 ];
 
 const MOCK_FAQS = [
-  { question: 'What are your café hours?', answer: 'We are open every day from 10:00 AM to 11:00 PM for dine-in, takeaway, and digital ordering.', category: 'Dining' },
-  { question: 'Do you offer pure vegetarian / Jain options?', answer: 'Yes! All our teas, boba, shakes, fries, veg pasta, and veg appetizers are 100% vegetarian. Check the green Veg indicator on the menu.', category: 'Food' },
-  { question: 'Is High-Speed Wi-Fi available for working?', answer: 'Yes, we provide complimentary high-speed 5G Wi-Fi for all our guests (SSID: SiliguriChaiAddaa-5G).', category: 'General' },
-  { question: 'How do I place an order from my table?', answer: 'Simply scan the QR code on your table, add your favorite items to cart, and hit Place Order — no app installation needed!', category: 'Ordering' }
+  { question: 'What are your dining hours?', answer: 'We are open every day from 12:00 PM to 11:30 PM for dine-in and contactless digital table ordering.', category: 'Dining' },
+  { question: 'Do you offer pure vegetarian / Jain options?', answer: 'Yes! We feature dedicated Vegetarian and Jain preparations crafted with separate culinary stations. Look for the green Veg badge on the menu.', category: 'Food' },
+  { question: 'Is High-Speed Wi-Fi available for diners?', answer: 'Yes, we provide complimentary high-speed 5G Wi-Fi for all guests (SSID: AURA-Guest-5G).', category: 'General' },
+  { question: 'How do I place an order from my dining table?', answer: 'Simply scan the QR code located on your table stand, add dishes to your cart, and tap Place Order — no app download required.', category: 'Ordering' }
 ];
 
 const MOCK_GALLERY = [
-  { title: 'The Chai Addaa Ambiance', description: 'Cozy boho decor, fairy lights, and warm wooden vibes.', imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80', category: 'Ambiance' },
-  { title: 'Signature Masala Chai', description: 'Freshly brewed kadak tea in traditional earthen style.', imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=80', category: 'Chai' },
-  { title: 'Boba & Matcha Specials', description: 'Handcrafted Japanese Uji matcha and popping boba teas.', imageUrl: 'https://images.unsplash.com/photo-1558857563-b37cfb4226f8?auto=format&fit=crop&w=800&q=80', category: 'Boba' }
+  { title: 'The AURA Gastronomy Ambiance', description: 'Contemporary botanical architecture, moody amber lighting, and curated fine dining tables.', imageUrl: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80', category: 'Ambiance' },
+  { title: 'Artisanal Culinary Craft', description: 'Fresh seasonal ingredients plated with Michelin-level culinary artistry.', imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80', category: 'Cuisine' },
+  { title: 'Botanical Cocktails & Desserts', description: 'Handcrafted signature elixirs, single-origin matcha, and gourmet patisserie.', imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=80', category: 'Botanical' }
 ];
 
 const seedDB = async () => {

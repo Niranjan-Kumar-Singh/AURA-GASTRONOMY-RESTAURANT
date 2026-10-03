@@ -415,6 +415,154 @@ router.get(['/active', '/active/all'], async (req, res) => {
   }
 });
 
+// GET unified live POS sync feed (Real-time active table bills + today's settled records + shift stats)
+router.get('/pos/sync', async (req, res) => {
+  try {
+    const [allTables, activeOrders, settledTodayOrders] = await Promise.all([
+      Table.find({}).sort({ tableNumber: 1 }).lean(),
+      Order.find({
+        status: { $in: ['received', 'preparing', 'ready', 'served'] },
+        paymentStatus: { $ne: 'PAID' }
+      }).sort({ createdAt: 1 }).lean(),
+      Order.find({
+        paymentStatus: 'PAID'
+      }).sort({ paidAt: -1, updatedAt: -1 }).limit(100).lean()
+    ]);
+
+    // Group active orders by table number
+    const activeOrdersByTable = new Map();
+    activeOrders.forEach(ord => {
+      let tNum = String(ord.tableId || '').match(/\d+/)?.[0] || String(ord.tableId || '');
+      if (!activeOrdersByTable.has(tNum)) {
+        activeOrdersByTable.set(tNum, []);
+      }
+      activeOrdersByTable.get(tNum).push(ord);
+    });
+
+    // Build active POS bills (strictly based on genuine orders & occupied/billing tables)
+    const activeBills = [];
+    allTables.forEach(tbl => {
+      const tNum = String(tbl.tableNumber);
+      const orders = activeOrdersByTable.get(tNum) || [];
+      const hasOrders = orders.length > 0;
+      const isBilling = tbl.status === 'billing';
+
+      if (hasOrders || isBilling) {
+        const items = orders.flatMap(ord => (ord.items || []).map(i => ({
+          name: i.name,
+          qty: i.quantity || 1,
+          price: i.price || 0
+        })));
+
+        const subtotal = orders.reduce((sum, o) => sum + (o.subtotal || 0), 0) || items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+        const cgst = Math.round(subtotal * 0.025);
+        const sgst = Math.round(subtotal * 0.025);
+        const total = orders.reduce((sum, o) => sum + (o.total || 0), 0) || (subtotal + cgst + sgst);
+        const latestOrder = orders[orders.length - 1];
+
+        let zone = 'Main Dining Hall';
+        const numVal = parseInt(tNum, 10);
+        if (numVal > 12 && numVal <= 16) zone = 'VIP Lounge';
+        else if (numVal > 16 && numVal <= 24) zone = 'Outdoor Garden Terrace';
+        else if (numVal > 24) zone = 'Executive Suite';
+
+        activeBills.push({
+          tableId: String(tbl._id),
+          tableNumber: numVal,
+          tableName: `Table ${tNum}`,
+          zone,
+          orderId: orders.map(o => o.orderId).filter(Boolean).join(', ') || `TABLE-${tNum}`,
+          customerName: latestOrder?.customerName || `Table ${tNum} Guests`,
+          customerMobile: latestOrder?.customerPhone || '',
+          items,
+          subtotal,
+          pointsRedeemed: orders.reduce((sum, o) => sum + (o.pointsRedeemed || 0), 0),
+          pointsDiscount: orders.reduce((sum, o) => sum + (o.pointsDiscount || 0), 0),
+          cgst,
+          sgst,
+          total,
+          status: isBilling ? 'billing' : 'occupied',
+          createdAt: orders[0]?.createdAt || tbl.updatedAt
+        });
+      }
+    });
+
+    // Build settled bills array from settledTodayOrders
+    const settledBills = settledTodayOrders.map(dbOrd => {
+      const tNum = parseInt(String(dbOrd.tableId || '').match(/\d+/)?.[0] || '1', 10);
+      let zone = 'Main Dining Hall';
+      if (tNum > 12 && tNum <= 16) zone = 'VIP Lounge';
+      else if (tNum > 16 && tNum <= 24) zone = 'Outdoor Garden Terrace';
+      else if (tNum > 24) zone = 'Executive Suite';
+
+      const items = (dbOrd.items || []).map(i => ({
+        name: i.name,
+        qty: i.quantity || 1,
+        price: i.price || 0
+      }));
+
+      const subtotal = dbOrd.subtotal || items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+      const cgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
+      const sgst = dbOrd.tax ? Math.round(dbOrd.tax / 2) : Math.round(subtotal * 0.025);
+      const total = dbOrd.total || (subtotal + cgst + sgst);
+
+      return {
+        tableId: `settled-${dbOrd._id}`,
+        tableNumber: tNum,
+        tableName: `Table ${tNum}`,
+        zone,
+        orderId: dbOrd.orderId || `ORD-${String(dbOrd._id).slice(-4).toUpperCase()}`,
+        customerName: dbOrd.customerName || `Guest (Table ${tNum})`,
+        customerMobile: dbOrd.customerPhone || '',
+        items,
+        subtotal,
+        discountAmount: dbOrd.discount || 0,
+        pointsDiscount: dbOrd.pointsDiscount || 0,
+        cgst,
+        sgst,
+        total,
+        status: 'settled',
+        paymentMethod: dbOrd.paymentMethod || 'UPI',
+        invoiceNumber: dbOrd.invoiceNumber || `INV-${String(dbOrd._id).slice(-6).toUpperCase()}`,
+        paidAt: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today',
+        paidDate: dbOrd.paidAt ? new Date(dbOrd.paidAt).toLocaleDateString() : 'Today',
+        refundAmount: dbOrd.refundAmount || 0,
+        refundType: dbOrd.refundType,
+        refundReason: dbOrd.refundReason,
+        refundedAt: dbOrd.refundedAt,
+        refundedBy: dbOrd.refundedBy,
+        refundItems: dbOrd.refundItems,
+        netAmount: dbOrd.netAmount || (total - (dbOrd.refundAmount || 0))
+      };
+    });
+
+    // Compute shift statistics
+    const shiftTotalRevenue = settledBills.reduce((sum, b) => sum + (b.total || 0), 0);
+    const shiftUpiTotal = settledBills.filter(b => (b.paymentMethod || '').includes('UPI')).reduce((sum, b) => sum + (b.total || 0), 0);
+    const shiftCardTotal = settledBills.filter(b => (b.paymentMethod || '').includes('CARD')).reduce((sum, b) => sum + (b.total || 0), 0);
+    const shiftCashTotal = settledBills.filter(b => (b.paymentMethod || '').includes('CASH')).reduce((sum, b) => sum + (b.total || 0), 0);
+
+    res.json({
+      success: true,
+      data: {
+        activeBills,
+        settledBills,
+        stats: {
+          shiftTotalRevenue,
+          shiftUpiTotal,
+          shiftCardTotal,
+          shiftCashTotal,
+          activeCount: activeBills.length,
+          settledCount: settledBills.length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('POS sync feed error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET all settled/paid orders for Cashier POS & History Archive
 router.get('/settled/all', async (req, res) => {
   try {

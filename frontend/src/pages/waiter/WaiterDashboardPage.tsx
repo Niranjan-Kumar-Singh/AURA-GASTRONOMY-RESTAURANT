@@ -120,11 +120,8 @@ export const WaiterDashboardPage: React.FC = () => {
         const tableOrders = tableOrdersMap.get(String(num)) || (existingTable ? tableOrdersMap.get(String(existingTable._id)) : []) || [];
         const hasActiveOrders = tableOrders.length > 0;
 
-        // If table has 0 active unpaid orders, but DB status is occupied/billing, automatically transition status to 'cleaning'!
         let computedStatus = statusVal;
-        if (!hasActiveOrders && (statusVal === 'billing' || statusVal === 'occupied')) {
-          computedStatus = 'cleaning';
-        } else if (hasActiveOrders && statusVal === 'available') {
+        if (hasActiveOrders && statusVal === 'available') {
           computedStatus = 'occupied';
         }
 

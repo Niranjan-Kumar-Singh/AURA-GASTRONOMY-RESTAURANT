@@ -79,6 +79,11 @@ export const orderService = {
     return response.data;
   },
 
+  async getPOSSyncFeed() {
+    const response = await apiClient.get('/orders/pos/sync');
+    return response.data.data;
+  },
+
   async getSettledOrders() {
     const response = await apiClient.get('/orders/settled/all');
     return response.data.data;
