@@ -1,8 +1,7 @@
 import React from 'react';
 import { MenuItem } from '../../types/menu.types';
-import { Heart, Star, Sparkles, Flame, Zap, Check, ArrowRight, Plus, Minus } from 'lucide-react';
+import { Star, Sparkles, Flame, Zap, Check, ArrowRight, Plus, Minus } from 'lucide-react';
 import { useCartStore } from '../../store/use-cart-store';
-import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useToast } from '../feedback/ToastContainer';
 import { motion } from 'framer-motion';
 
@@ -14,22 +13,12 @@ interface DishCardProps {
 
 export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
   const { showToast } = useToast();
-  const { toggleWishlist, isWishlisted } = useWishlistStore();
   const [imageLoaded, setImageLoaded] = React.useState(false);
-  const isLiked = isWishlisted(item.id);
   const { items, addItem, updateQuantity, removeItem } = useCartStore();
 
   const cartItem = items.find((it) => it.menuItem.id === item.id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
-  const handleToggleLike = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const added = toggleWishlist(item);
-    showToast(
-      added ? `Added "${item.name}" to Saved Wishlist` : `Removed "${item.name}" from Wishlist`,
-      added ? 'success' : 'info'
-    );
-  };
 
   // Original price calculation for strikethrough retail discount feel
   const originalPrice = Math.round(item.price * 1.22);
@@ -94,22 +83,8 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
             </span>
           )}
         </div>
-
-        {/* Top Right Controls (Wishlist) */}
-        <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 flex items-center space-x-1 z-10">
-          <button
-            onClick={handleToggleLike}
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-md shadow-xs border transition-all flex items-center justify-center cursor-pointer active:scale-75 ${
-              isLiked
-                ? 'bg-rose-500 text-white border-rose-400 shadow-rose-500/25 scale-105'
-                : 'bg-white/90 hover:bg-white text-slate-600 border-slate-200/80 hover:text-rose-500'
-            }`}
-            title={isLiked ? 'Remove from Wishlist' : 'Add to Wishlist'}
-          >
-            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-white' : ''}`} />
-          </button>
-        </div>
       </div>
+
 
       {/* Dish Content Body */}
       <div className="p-2 sm:p-4 space-y-1.5 sm:space-y-2 flex-1 flex flex-col justify-between bg-white">

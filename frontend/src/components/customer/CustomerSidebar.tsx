@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  X, User, Utensils, Clock, History, Heart, Tag, BookOpen, HelpCircle, LogIn, LogOut, Edit2, Star, FileText, ChevronRight, Sparkles, ShieldCheck, Bell, Zap, Award, Phone
+  X, User, Utensils, Clock, History, Tag, LogIn, LogOut, Edit2, Star, FileText, ChevronRight, Sparkles, ShieldCheck, Bell, Zap, Award, Phone
 } from 'lucide-react';
 import { useAuthStore } from '../../store/use-auth-store';
 import { useOrderStore } from '../../store/use-order-store';
@@ -9,7 +9,6 @@ import { useCartStore } from '../../store/use-cart-store';
 import { useTableStore } from '../../store/use-table-store';
 import { tableService } from '../../services/table.service';
 import { useToast } from '../feedback/ToastContainer';
-import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useBackHandler } from '../../hooks/useBackHandler';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,11 +20,7 @@ interface CustomerSidebarProps {
   onOpenAuth: () => void;
   onOpenCart: () => void;
   onOpenHistory: () => void;
-  onOpenWishlist: () => void;
-  onOpenReservations?: () => void;
   onOpenOffers: () => void;
-  onOpenGallery: () => void;
-  onOpenFaq: () => void;
   onOpenProfile: () => void;
   onOpenFeedback?: () => void;
   onOpenLoyalty?: () => void;
@@ -39,10 +34,7 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
   onOpenProfile,
   onOpenCart,
   onOpenHistory,
-  onOpenWishlist,
   onOpenOffers,
-  onOpenGallery,
-  onOpenFaq,
   onOpenFeedback,
   onOpenLoyalty,
 }) => {
@@ -53,8 +45,8 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
   const { activeOrderId } = useOrderStore();
   const { getItemCount } = useCartStore();
   const { activeSessionId } = useTableStore();
-  const { wishlist } = useWishlistStore();
   const { showToast } = useToast();
+
 
   const handleRequestBill = async () => {
     try {
@@ -134,16 +126,6 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
       },
     },
     {
-      label: 'Saved Wishlist',
-      badge: wishlist.length > 0 ? `${wishlist.length} SAVED` : undefined,
-      badgeColor: 'bg-rose-100 text-rose-700 border border-rose-200 font-mono font-bold',
-      icon: <Heart className={`w-4 h-4 text-rose-500 ${wishlist.length > 0 ? 'fill-rose-500' : ''}`} />,
-      action: () => {
-        onClose();
-        onOpenWishlist();
-      },
-    },
-    {
       label: 'Order History',
       icon: <History className="w-4 h-4 text-slate-600" />,
       action: () => {
@@ -159,22 +141,6 @@ export const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
       action: () => {
         onClose();
         onOpenOffers();
-      },
-    },
-    {
-      label: 'Restaurant Story & Gallery',
-      icon: <BookOpen className="w-4 h-4 text-slate-600" />,
-      action: () => {
-        onClose();
-        onOpenGallery();
-      },
-    },
-    {
-      label: 'FAQs & Dining Support',
-      icon: <HelpCircle className="w-4 h-4 text-slate-600" />,
-      action: () => {
-        onClose();
-        onOpenFaq();
       },
     },
   ];

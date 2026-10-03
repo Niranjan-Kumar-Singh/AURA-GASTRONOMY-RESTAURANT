@@ -60,3 +60,10 @@ temp/
 *.zip
 *.tar.gz
 *.rar
+
+# AI Agent & Workflow Workspaces
+.agent/
+.agents/
+.gsd/
+.gemini/
+

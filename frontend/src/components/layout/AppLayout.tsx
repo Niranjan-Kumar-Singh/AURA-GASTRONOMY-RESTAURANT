@@ -43,9 +43,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       sections.push({
         section: 'MANAGEMENT',
         items: [
-          { name: 'Admin Operations', shortName: 'Admin', path: '/admin', icon: ShieldCheck, accent: 'text-indigo-400', activeBg: 'bg-indigo-500/15 border-indigo-500/40 text-indigo-300' },
-          { name: 'Executive Cockpit', shortName: 'CEO', path: '/owner', icon: Award, accent: 'text-emerald-400', activeBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' },
-          { name: 'QR Table Stands & Print', shortName: 'QR Studio', path: '/admin/qr-generator', icon: QrCode, accent: 'text-emerald-400', activeBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' },
+          { name: 'Admin Command Center', shortName: 'Admin', path: '/admin', icon: ShieldCheck, accent: 'text-indigo-400', activeBg: 'bg-indigo-500/15 border-indigo-500/40 text-indigo-300' },
+          { name: 'Table QR Studio', shortName: 'QR Studio', path: '/admin/qr-generator', icon: QrCode, accent: 'text-emerald-400', activeBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' },
         ]
       });
     }

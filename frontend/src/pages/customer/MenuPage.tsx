@@ -4,31 +4,25 @@ import { menuService } from '../../services/menu.service';
 import { Category, MenuItem } from '../../types/menu.types';
 import { CategoryBar } from '../../components/menu/CategoryBar';
 import { DishCard } from '../../components/menu/DishCard';
-import { LazyDishCard } from '../../components/menu/LazyDishCard';
 import { DishDetailModal } from '../../components/menu/DishDetailModal';
 import { CartDrawer } from '../../components/cart/CartDrawer';
 import { CustomerHeroBanner } from '../../components/customer/CustomerHeroBanner';
 import { CustomerSearchBar } from '../../components/customer/CustomerSearchBar';
 import { FilterChips, ActiveFilter } from '../../components/customer/FilterChips';
 import { RecommendationSection } from '../../components/customer/RecommendationSection';
-import { CallWaiterButton } from '../../components/customer/CallWaiterButton';
-import { WaterRefillButton } from '../../components/customer/WaterRefillButton';
+import { TableServiceModal } from '../../components/customer/TableServiceModal';
 import { CustomerSidebar } from '../../components/customer/CustomerSidebar';
 import { CustomerAuthModal } from '../../components/auth/CustomerAuthModal';
 import { CustomerProfileModal } from '../../components/auth/CustomerProfileModal';
 import { OrderHistoryDrawer } from '../../components/customer/OrderHistoryDrawer';
-import { WishlistDrawer } from '../../components/customer/WishlistDrawer';
 import { OffersDrawer } from '../../components/customer/OffersDrawer';
-import { GalleryModal } from '../../components/customer/GalleryModal';
-import { FaqModal } from '../../components/customer/FaqModal';
 import { CustomerFeedbackModal } from '../../components/customer/CustomerFeedbackModal';
 import { LoyaltyPointsModal } from '../../components/customer/LoyaltyPointsModal';
 import { useCartStore } from '../../store/use-cart-store';
 import { useOrderStore } from '../../store/use-order-store';
 import { useAuthStore } from '../../store/use-auth-store';
-import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useTableStore } from '../../store/use-table-store';
-import { ShoppingBag, Utensils, Menu, Sparkles, Flame, ChefHat, RotateCcw, AlertCircle, Heart } from 'lucide-react';
+import { ShoppingBag, Utensils, Menu, Sparkles, Flame, ChefHat, RotateCcw, AlertCircle } from 'lucide-react';
 
 export const MenuPage: React.FC = () => {
   const { tableId: paramTableId } = useParams<{ tableId?: string }>();
@@ -54,12 +48,10 @@ export const MenuPage: React.FC = () => {
 
   // Modals State
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isOffersOpen, setIsOffersOpen] = useState(false);
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-  const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
+
 
   // Dynamic Scroll Direction Header Visibility (hides on scroll down, shows on scroll up)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -152,7 +144,6 @@ export const MenuPage: React.FC = () => {
   }, []);
 
   const { addItem, getItemCount, getGrandTotal, clearCart, setTableId: setCartTableId } = useCartStore();
-  const { wishlist } = useWishlistStore();
   const { activeOrderId, setActiveOrderId } = useOrderStore();
   const { isAuthenticated, tableId: sessionTableId, setTableId } = useAuthStore();
 
@@ -376,21 +367,7 @@ export const MenuPage: React.FC = () => {
                     </button>
                   )}
 
-                  {/* 6. Saved Wishlist Button */}
-                  <button
-                    onClick={() => setIsWishlistOpen(true)}
-                    className="relative p-2 sm:p-2.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-700 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
-                    title="Saved Wishlist"
-                  >
-                    <Heart className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${wishlist.length > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-700'}`} />
-                    {wishlist.length > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-150">
-                        {wishlist.length}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* 7. Table Cart Button */}
+                  {/* Table Cart Button */}
                   <button
                     onClick={() => setIsCartOpen(true)}
                     className="relative p-2 sm:p-2.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-[#0C831F] text-slate-800 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
@@ -526,7 +503,7 @@ export const MenuPage: React.FC = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
                 {filteredItems.slice(0, visibleCount).map((item) => (
-                  <LazyDishCard
+                  <DishCard
                     key={item.id}
                     item={item}
                     onAdd={(it) => handleAddToCart(it)}
@@ -552,11 +529,9 @@ export const MenuPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Floating 1-Tap Water Refill (Directly above Call Waiter) */}
-      <WaterRefillButton tableId={tableId} />
+      {/* Unified Floating Table Service Trigger */}
+      <TableServiceModal tableId={tableId} />
 
-      {/* Floating Call Waiter Button */}
-      <CallWaiterButton tableId={tableId} />
 
       {/* Floating Active Cart Bar (Desktop & Mobile - Blinkit Green Style) */}
       {getItemCount() > 0 && (
@@ -606,10 +581,7 @@ export const MenuPage: React.FC = () => {
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenHistory={() => setIsHistoryOpen(true)}
-        onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenOffers={() => setIsOffersOpen(true)}
-        onOpenGallery={() => setIsGalleryOpen(true)}
-        onOpenFaq={() => setIsFaqOpen(true)}
         onOpenFeedback={() => setIsFeedbackOpen(true)}
         onOpenLoyalty={() => setIsLoyaltyOpen(true)}
       />
@@ -632,19 +604,7 @@ export const MenuPage: React.FC = () => {
       />
 
       <OrderHistoryDrawer isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
-      <WishlistDrawer
-        isOpen={isWishlistOpen}
-        onClose={() => setIsWishlistOpen(false)}
-        tableId={tableId}
-        onOpenCart={() => setIsCartOpen(true)}
-        onSelectDish={(item) => {
-          setSelectedItem(item);
-          setIsDetailOpen(true);
-        }}
-      />
       <OffersDrawer isOpen={isOffersOpen} onClose={() => setIsOffersOpen(false)} />
-      <GalleryModal isOpen={isGalleryOpen} onClose={() => setIsGalleryOpen(false)} />
-      <FaqModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
       <CustomerFeedbackModal
         isOpen={isFeedbackOpen}
         onClose={() => setIsFeedbackOpen(false)}
@@ -653,3 +613,4 @@ export const MenuPage: React.FC = () => {
     </div>
   );
 };
+

@@ -15,7 +15,7 @@ import { OrderRefundModal } from '../../components/orders/OrderRefundModal';
 import {
   DollarSign, ShoppingBag, LayoutGrid, ChefHat, TrendingUp, RefreshCw, Layers, ShieldCheck,
   Calendar, Users, Play, Pause, AlertTriangle, Sparkles, Clock, Heart, Award, Utensils, Receipt, CheckCircle2,
-  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer, RotateCcw, QrCode
+  Plus, Edit, Trash2, Flame, Search, Filter, X, Check, Eye, EyeOff, CreditCard, Printer, RotateCcw, QrCode, Download
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -308,18 +308,21 @@ export const AdminDashboardPage: React.FC = () => {
   const [realActiveOrders, setRealActiveOrders] = useState<any[]>([]);
   const [realSettledOrders, setRealSettledOrders] = useState<any[]>([]);
   const [realRefundedOrders, setRealRefundedOrders] = useState<any[]>([]);
+  const [executiveData, setExecutiveData] = useState<any | null>(null);
   const [isLoadingRealOrders, setIsLoadingRealOrders] = useState(false);
 
   const fetchMetricsAndOrders = async (showLoading = false) => {
     if (showLoading) setIsLoadingRealOrders(true);
     try {
-      const [m, active, settled, refunded] = await Promise.all([
+      const [m, active, settled, refunded, exec] = await Promise.all([
         adminService.getMetrics().catch(() => null),
         orderService.getActiveOrders().catch(() => []),
         orderService.getSettledOrders().catch(() => []),
-        orderService.getRefundedOrders().catch(() => [])
+        orderService.getRefundedOrders().catch(() => []),
+        adminService.getExecutiveAnalytics().catch(() => null)
       ]);
       if (m) setMetrics(m);
+      if (exec) setExecutiveData(exec);
       setRealActiveOrders(active || []);
       setRealSettledOrders(settled || []);
       setRealRefundedOrders(refunded || []);
@@ -329,6 +332,33 @@ export const AdminDashboardPage: React.FC = () => {
       if (showLoading) setIsLoadingRealOrders(false);
     }
   };
+
+  const handleExportFinancialReport = () => {
+    const reportSummary = `AURA GASTRONOMY - EXECUTIVE FINANCIAL AUDIT
+Generated: ${new Date().toLocaleString()}
+Today's Settled Sales: ₹${(displayRevenue || 0).toLocaleString('en-IN')}
+Total Orders in System: ${realSettledOrders.length + realActiveOrders.length}
+Completed Orders: ${realSettledOrders.length}
+Ongoing Dining Orders: ${realActiveOrders.length}
+Average Order Value (AOV): ₹${(executiveData?.aov || Math.round(displayRevenue / Math.max(1, realSettledOrders.length))).toLocaleString('en-IN')}
+Floor Occupancy: ${allTables.filter((t) => t.status === 'occupied').length} / ${allTables.length || 30} Tables
+Average Table Turnover: ${executiveData?.tableTurnoverMins || 42} minutes
+
+TOP PERFORMING DISHES:
+${(executiveData?.topDishes || []).map((d: any) => `${d.rank}. ${d.name} — ${d.orders} orders (₹${(d.revenue || 0).toLocaleString('en-IN')})`).join('\n')}
+
+CATEGORY REVENUE BREAKDOWN:
+${(executiveData?.categoryBreakdown || []).map((c: any) => `${c.name}: ₹${(c.revenue || 0).toLocaleString('en-IN')} (${c.pct}%)`).join('\n')}
+`;
+    const blob = new Blob([reportSummary], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AURA_Financial_Audit_${Date.now()}.txt`;
+    a.click();
+    showToast('Executive Financial Audit report downloaded', 'success');
+  };
+
 
   useEffect(() => {
     fetchMetricsAndOrders(true);
@@ -409,13 +439,14 @@ export const AdminDashboardPage: React.FC = () => {
               <span>Table QR Stands</span>
             </button>
 
-            <a
-              href="/owner"
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-900/30 transition-all flex items-center space-x-2 cursor-pointer border border-indigo-400/40"
+            <button
+              onClick={handleExportFinancialReport}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center space-x-2 cursor-pointer border border-emerald-400/40 active:scale-95"
+              title="Download executive financial report"
             >
-              <Award className="w-3.5 h-3.5" />
-              <span>Executive Cockpit →</span>
-            </a>
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Audit</span>
+            </button>
           </div>
         </div>
 
@@ -510,17 +541,17 @@ export const AdminDashboardPage: React.FC = () => {
               />
 
               <StatCard
-                title="Active Reservations"
-                value="31 Bookings"
-                subtitle="4 VIP party bookings"
-                icon={Calendar}
+                title="Average Basket (AOV)"
+                value={`₹${(executiveData?.aov || (realSettledOrders.length > 0 ? Math.round(displayRevenue / realSettledOrders.length) : 450)).toLocaleString('en-IN')}`}
+                subtitle="Net yield per dining ticket"
+                icon={TrendingUp}
                 iconColor="text-purple-400"
-                onClick={() => setActiveDetailModal('RESERVATIONS')}
-                clickHint="View Bookings"
+                onClick={() => setActiveDetailModal('REVENUE')}
+                clickHint="View Revenue"
               />
               <StatCard
                 title="Est. Gross Profit"
-                value={`₹${metrics?.profit.toLocaleString('en-IN') || '0'}`}
+                value={`₹${metrics?.profit.toLocaleString('en-IN') || Math.round(displayRevenue * 0.35).toLocaleString('en-IN')}`}
                 subtitle="Based on 35% margin"
                 icon={TrendingUp}
                 iconColor="text-rose-400"
@@ -528,13 +559,13 @@ export const AdminDashboardPage: React.FC = () => {
                 clickHint="View Margins"
               />
               <StatCard
-                title="Kitchen Efficiency"
-                value="98.2%"
-                subtitle="Recipe waste score"
-                icon={Utensils}
+                title="Avg Table Turnover"
+                value={`${executiveData?.tableTurnoverMins || 42} mins`}
+                subtitle="Seated to bill settled"
+                icon={Clock}
                 iconColor="text-emerald-400"
                 onClick={() => setActiveDetailModal('ONGOING')}
-                clickHint="View KDS Status"
+                clickHint="View Tables"
               />
               <StatCard
                 title="Refund Rate"

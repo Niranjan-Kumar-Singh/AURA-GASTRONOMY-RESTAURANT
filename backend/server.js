@@ -21,8 +21,8 @@ const couponRoutes = require('./routes/couponRoutes');
 const contentRoutes = require('./routes/contentRoutes');
 const tableRoutes = require('./routes/tableRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const chatbotRoutes = require('./routes/chatbotRoutes');
 const { router: loyaltyRoutes } = require('./routes/loyaltyRoutes');
+
 
 // Connect to MongoDB (non-blocking initialization)
 connectDB().catch((err) => {
@@ -100,7 +100,6 @@ app.use('/api/content', contentRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
-app.use('/api', chatbotRoutes);
 
 // Health check endpoint
 app.get(['/', '/api/health'], (req, res) => {

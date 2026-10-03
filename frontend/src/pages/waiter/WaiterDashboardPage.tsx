@@ -5,8 +5,6 @@ import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
-import { TableQrStandsModal } from '../../components/tables/TableQrStandsModal';
-
 interface TableState {
   _id: string;
   tableNumber: number;
@@ -46,15 +44,15 @@ export const WaiterDashboardPage: React.FC = () => {
   const [tables, setTables] = useState<TableState[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableState | null>(null);
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+
 
   // Lock background body scroll when table modal is open
   useBodyScrollLock(selectedTable !== null);
 
-  // Payment state
+  // Seating & action state
   const [seatGuestCount, setSeatGuestCount] = useState<number>(2);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'UPI_QR' | 'CARD_SWIPE' | 'CASH'>('UPI_QR');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
 
   const prevReadyCountRef = useRef<number>(0);
   const tableOrdersMapRef = useRef<Map<string, any[]>>(new Map());
@@ -391,10 +389,10 @@ export const WaiterDashboardPage: React.FC = () => {
   const handleSettlePayment = async (tableNum: number) => {
     setIsProcessingPayment(true);
     try {
-      const res = await orderService.settleTableBill(tableNum, selectedPaymentMethod);
+      const res = await orderService.settleTableBill(tableNum, 'CASH');
       const invNum = res?.data?.invoiceNumber || 'INV-SETTLED';
 
-      showToast(`Bill settled via ${selectedPaymentMethod}! Invoice #${invNum} generated. Table ${tableNum} set to Cleaning.`, 'success');
+      showToast(`Cash collected! Invoice #${invNum} generated. Table ${tableNum} set to Cleaning.`, 'success');
       playAudioChime();
       setSelectedTable(null);
       await fetchFloorState();
@@ -606,17 +604,8 @@ export const WaiterDashboardPage: React.FC = () => {
             )}
           </button>
 
-          {/* Table QR Stand Generator & Print Manager */}
-          <button
-            onClick={() => setIsQrModalOpen(true)}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 cursor-pointer shadow-sm"
-            title="View & Print Table QR Code Stands"
-          >
-            <QrCode className="w-3.5 h-3.5" />
-            <span>QR Stands</span>
-          </button>
-
           <div className="h-4 w-px bg-theme-border flex-shrink-0 mx-1" />
+
 
           {/* Inline Status Filter Pills (when on TABLE_STATUS) */}
           {activeTab === 'TABLE_STATUS' && (
@@ -1303,86 +1292,30 @@ export const WaiterDashboardPage: React.FC = () => {
 
               {/* Payment Settlement Terminal — only when status is billing */}
               {selectedTable.status === 'billing' && selectedTable.orderTotal !== undefined && selectedTable.orderTotal > 0 && (
-                <div className="p-4 bg-purple-500/10 border border-purple-500/40 rounded-2xl space-y-4">
+                <div className="p-4 bg-purple-500/10 border border-purple-500/40 rounded-2xl space-y-3">
                   <div className="flex items-center justify-between border-b border-purple-500/30 pb-2">
                     <span className="text-xs font-bold text-purple-300 flex items-center space-x-1.5 font-mono">
                       <Receipt className="w-4 h-4 text-purple-400" />
-                      <span>SETTLE BILL &amp; COLLECT PAYMENT</span>
+                      <span>BILL AWAITING SETTLEMENT</span>
                     </span>
                     <span className="text-xs font-mono font-black text-purple-300">
                       ₹{Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
-
-                  {/* Payment Method Selector */}
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-mono text-theme-muted uppercase tracking-wider block font-bold">
-                      Select Payment Collection Method:
-                    </span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={() => setSelectedPaymentMethod('UPI_QR')}
-                        className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
-                          selectedPaymentMethod === 'UPI_QR'
-                            ? 'bg-purple-500 text-white border-purple-400 font-black shadow-md'
-                            : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
-                        }`}
-                      >
-                        <QrCode className="w-4 h-4" />
-                        <span>UPI QR</span>
-                      </button>
-
-                      <button
-                        onClick={() => setSelectedPaymentMethod('CARD_SWIPE')}
-                        className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
-                          selectedPaymentMethod === 'CARD_SWIPE'
-                            ? 'bg-purple-500 text-white border-purple-400 font-black shadow-md'
-                            : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
-                        }`}
-                      >
-                        <Receipt className="w-4 h-4" />
-                        <span>Card POS</span>
-                      </button>
-
-                      <button
-                        onClick={() => setSelectedPaymentMethod('CASH')}
-                        className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex flex-col items-center space-y-1 ${
-                          selectedPaymentMethod === 'CASH'
-                            ? 'bg-purple-500 text-white border-purple-400 font-black shadow-md'
-                            : 'bg-theme-bg text-purple-400 border-purple-500/30 hover:bg-purple-500/10'
-                        }`}
-                      >
-                        <DollarSign className="w-4 h-4" />
-                        <span>Cash</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Display Live UPI QR Code Image if UPI selected */}
-                  {selectedPaymentMethod === 'UPI_QR' && (
-                    <div className="p-3 bg-white rounded-2xl text-center space-y-2 text-slate-900 border border-purple-400/50 shadow-inner">
-                      <span className="text-[10px] font-mono font-bold text-gray-700 uppercase block tracking-wider">
-                        Scan UPI QR to Pay ₹{Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')}
-                      </span>
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=aura.restaurant@upi%26pn=AURA%20Gastronomy%26am=${Math.round(selectedTable.orderTotal || 0)}%26cu=INR`}
-                        alt="UPI Payment QR"
-                        className="w-32 h-32 mx-auto rounded-xl shadow-md border border-gray-200"
-                      />
-                      <p className="text-[10px] text-gray-600 font-mono">Accepts GPay, PhonePe, Paytm, BHIM</p>
-                    </div>
-                  )}
-
+                  <p className="text-[11px] text-theme-muted">
+                    Guests requested bill. Payment can be settled at the Cashier POS, or confirm cash collection below.
+                  </p>
                   <button
                     onClick={() => handleSettlePayment(selectedTable.tableNumber)}
                     disabled={isProcessingPayment}
-                    className="w-full py-3.5 bg-purple-500 hover:bg-purple-600 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-purple-500/20 cursor-pointer flex items-center justify-center space-x-2"
+                    className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center space-x-2"
                   >
                     <Check className="w-4 h-4 font-bold" />
-                    <span>{isProcessingPayment ? 'Processing Settlement...' : `Confirm Payment & Settle Bill (₹${Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')})`}</span>
+                    <span>{isProcessingPayment ? 'Settling...' : `Confirm Cash Collected at Table (₹${Math.round(selectedTable.orderTotal || 0).toLocaleString('en-IN')})`}</span>
                   </button>
                 </div>
               )}
+
 
               {/* Cleaning / Settled Status Banner */}
               {selectedTable.status === 'cleaning' && (
@@ -1477,15 +1410,8 @@ export const WaiterDashboardPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Table QR Stand Cards Modal */}
-      <TableQrStandsModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        tables={tables as any}
-        onRefreshTables={fetchFloorState}
-      />
     </div>
   );
 };
+
 

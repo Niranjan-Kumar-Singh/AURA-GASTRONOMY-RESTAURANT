@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
 import { MenuItem } from '../../types/menu.types';
-import { Sparkles, Heart, Check, ArrowRight, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Check, ArrowRight, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCartStore } from '../../store/use-cart-store';
-import { useWishlistStore } from '../../store/use-wishlist-store';
 import { useToast } from '../feedback/ToastContainer';
 
 interface RecommendationSectionProps {
@@ -21,8 +20,8 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
   variant = 'chef',
 }) => {
   const { items: cartItems, addItem, updateQuantity, removeItem } = useCartStore();
-  const { toggleWishlist, isWishlisted } = useWishlistStore();
   const { showToast } = useToast();
+
   const scrollRailRef = useRef<HTMLDivElement>(null);
 
   const scrollRail = (dir: 'left' | 'right') => {
@@ -169,29 +168,8 @@ export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
                       </span>
                     ) : null}
                   </div>
-
-                  {/* Top Right Wishlist Button */}
-                  <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 flex items-center z-10">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const added = toggleWishlist(item);
-                        showToast(
-                          added ? `Added "${item.name}" to Saved Wishlist` : `Removed "${item.name}" from Wishlist`,
-                          added ? 'success' : 'info'
-                        );
-                      }}
-                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full backdrop-blur-md shadow-xs border transition-all flex items-center justify-center cursor-pointer active:scale-75 ${
-                        isWishlisted(item.id)
-                          ? 'bg-rose-500 text-white border-rose-400 shadow-rose-500/25 scale-105'
-                          : 'bg-white/90 hover:bg-white text-slate-600 border-slate-200/80 hover:text-rose-500'
-                      }`}
-                      title={isWishlisted(item.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                    >
-                      <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isWishlisted(item.id) ? 'fill-white' : ''}`} />
-                    </button>
-                  </div>
                 </div>
+
 
                 {/* 2. Lower Content Div — Streamlined Hierarchy */}
                 <div className="p-2 sm:p-3.5 space-y-1 sm:space-y-1.5 flex-1 flex flex-col justify-between bg-white">
