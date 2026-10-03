@@ -88,15 +88,26 @@ app.use(
         return callback(null, true);
       }
 
-      const allowedList = isDevMode
-        ? [...DEV_ALLOWED_ORIGINS, ...productionOrigins]
-        : productionOrigins;
+      // Automatically allow all Vercel deployment domains (*.vercel.app)
+      try {
+        const url = new URL(origin);
+        if (url.hostname.endsWith('.vercel.app')) {
+          return callback(null, true);
+        }
+      } catch (e) {}
 
-      if (allowedList.includes(origin)) {
+      // Allow origins explicitly listed in ALLOWED_ORIGINS
+      if (productionOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      callback(new Error(`CORS: Origin "${origin}" is not in the allowed list.`));
+      // Allow VERCEL_URL if set in environment
+      if (process.env.VERCEL_URL && origin.includes(process.env.VERCEL_URL)) {
+        return callback(null, true);
+      }
+
+      // Reject cleanly without crashing Express with an unhandled 500 error
+      callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-dev-secret'],

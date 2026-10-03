@@ -1,10 +1,13 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('[SECURITY] JWT_SECRET is not defined in environment variables. Set it in backend/.env before starting the server.');
-}
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('[SECURITY] JWT_SECRET is not defined in environment variables. Please add JWT_SECRET to your Vercel Project Settings.');
+  }
+  return secret;
+};
 
 /**
  * Protect routes: verifies valid JWT in Authorization header
@@ -25,7 +28,8 @@ const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const secret = getJwtSecret();
+    const decoded = jwt.verify(token, secret);
     if (!decoded || !decoded.id) {
       return res.status(401).json({
         success: false,
@@ -89,9 +93,10 @@ const requireRole = (...allowedRoles) => {
 const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization || req.headers.Authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    const secret = process.env.JWT_SECRET;
+    if (secret && authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, secret);
       if (decoded && decoded.id) {
         req.user = await User.findById(decoded.id).select('-password');
       }
