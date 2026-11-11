@@ -40,6 +40,14 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
   const [name, setName] = useState(user?.name || '');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
 
+  React.useEffect(() => {
+    if (user?.phone) {
+      setPhone(user.phone);
+      setName(user.name || '');
+      setIsEditingPhone(false);
+    }
+  }, [user]);
+
   useBodyScrollLock(isOpen);
   useBackHandler(isOpen, onCancel);
 

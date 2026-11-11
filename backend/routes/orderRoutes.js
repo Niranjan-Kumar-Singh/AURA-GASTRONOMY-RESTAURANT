@@ -1159,7 +1159,11 @@ router.put('/:orderId/cancel', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER
 
 router.get('/:orderId', async (req, res) => {
   try {
-    const order = await Order.findOne({ orderId: req.params.orderId });
+    const isObjectId = String(req.params.orderId).match(/^[0-9a-fA-F]{24}$/);
+    const query = isObjectId
+      ? { $or: [{ orderId: req.params.orderId }, { _id: req.params.orderId }] }
+      : { orderId: req.params.orderId };
+    const order = await Order.findOne(query);
     if (!order) return res.status(404).json({ message: 'Order not found' });
     res.json({ data: order });
   } catch (error) {

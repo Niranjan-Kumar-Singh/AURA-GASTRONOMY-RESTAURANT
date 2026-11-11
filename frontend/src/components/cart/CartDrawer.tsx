@@ -4,6 +4,7 @@ import { couponService } from '../../services/coupon.service';
 import { orderService } from '../../services/order.service';
 import { Coupon, MenuItem } from '../../types/menu.types';
 import { OrderConfirmationModal } from './OrderConfirmationModal';
+import { CustomerAuthModal } from '../auth/CustomerAuthModal';
 import { DishDetailModal } from '../menu/DishDetailModal';
 import { ShoppingBag, X, Plus, Minus, Trash2, Tag, Utensils, Edit2, Sparkles, Gift, Zap, Flame, Leaf, Star, ChefHat, ChevronLeft, ChevronRight, Check, ArrowRight, Award, Phone, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../feedback/ToastContainer';
@@ -47,6 +48,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [couponCode, setCouponCode] = useState('');
   const [includeServiceCharge, setIncludeServiceCharge] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  const handleCheckoutClick = () => {
+    if (!user?.phone) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    setIsConfirmOpen(true);
+  };
 
   // Loyalty Points Redemption States
   const [userPoints, setUserPoints] = useState<number>(user?.loyaltyPoints ?? 0);
@@ -856,26 +866,37 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <div className="flex items-center justify-between text-[11px] bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-xl text-slate-800">
                     <div className="flex items-center gap-1.5 font-bold">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Diner: +91 {user.phone}</span>
+                      <span>Diner: +91 {user.phone} ({user.name || 'Valued Guest'})</span>
                     </div>
                     <span className="font-mono text-emerald-700 font-extrabold">{user.loyaltyPoints || 0} Coins</span>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-xl text-amber-900">
-                    <span className="flex items-center gap-1.5 font-bold">
-                      <Phone className="w-3.5 h-3.5 text-amber-600" />
-                      <span>Mobile number required to order</span>
-                    </span>
-                    <span className="text-[10px] bg-amber-200/90 text-amber-900 px-2 py-0.5 rounded-md font-extrabold">+100 Welcome</span>
+                  <div className="p-3 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-emerald-500/10 border border-amber-300/80 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-amber-900 truncate">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Quick Diner Sign-In</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-tight">
+                        Claim <strong className="text-emerald-700 font-bold">+100 Welcome Coins</strong> & live order tracking.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="px-3 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-all shadow-xs shrink-0 cursor-pointer"
+                    >
+                      Sign In
+                    </button>
                   </div>
                 )}
               </div>
 
               <button
-                onClick={() => setIsConfirmOpen(true)}
+                onClick={handleCheckoutClick}
                 className="w-full py-3.5 bg-c-primary hover:bg-c-primary-dark text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-between px-5"
               >
-                <span>SEND ORDER TO KITCHEN</span>
+                <span>{user?.phone ? 'SEND ORDER TO KITCHEN' : 'SIGN IN & SEND ORDER'}</span>
                 <span className="font-mono text-sm font-black">₹{grandTotal.toFixed(2)}</span>
               </button>
             </div>
@@ -884,6 +905,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <CustomerAuthModal
+        tableId={tableId}
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          setIsConfirmOpen(true);
+        }}
+      />
 
       <OrderConfirmationModal
         tableId={tableId}

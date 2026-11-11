@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Utensils, CheckCircle2, Clock, ArrowLeft, Plus, ChefHat, Receipt,
-  Sparkles, Star, Coffee, AlertCircle, RefreshCw, ChevronRight, Check
+  Sparkles, Star, Coffee, AlertCircle, RefreshCw, ChevronRight, Check, Phone
 } from 'lucide-react';
 import { TableServiceModal } from '../../components/customer/TableServiceModal';
 import { CartDrawer } from '../../components/cart/CartDrawer';
+import { CustomerAuthModal } from '../../components/auth/CustomerAuthModal';
 import { useCartStore } from '../../store/use-cart-store';
 import { useTableStore } from '../../store/use-table-store';
+import { useAuthStore } from '../../store/use-auth-store';
+import { useOrderStore } from '../../store/use-order-store';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 import { tableService } from '../../services/table.service';
@@ -45,31 +48,60 @@ export const OrderTrackingPage: React.FC = () => {
   const navigate = useNavigate();
   const { items, clearCart, getItemCount } = useCartStore();
   const { showToast } = useToast();
+  const user = useAuthStore((state) => state.user);
+  const { activeOrderId, setActiveOrderId, clearActiveOrder } = useOrderStore();
 
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [activeOrder, setActiveOrder] = useState<OrderData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const fetchOrders = async (manual = false) => {
     if (manual) setIsRefreshing(true);
     try {
-      if (orderId) {
-        const singleOrder = await orderService.getOrder(orderId);
-        if (singleOrder) {
-          setActiveOrder(singleOrder);
-          setOrders([singleOrder]);
-        }
-      } else {
-        const tableOrders = await orderService.getOrdersByTable(tableId);
+      let foundOrder: OrderData | null = null;
+      const targetOrderId = orderId || activeOrderId;
+
+      // 1. Try target orderId if provided
+      if (targetOrderId) {
+        foundOrder = await orderService.getOrder(targetOrderId).catch(() => null);
+      }
+
+      // 2. If not found or settled, try getting active orders for this table
+      if (!foundOrder && tableId) {
+        const tableOrders = await orderService.getOrdersByTable(tableId).catch(() => []);
         if (tableOrders && tableOrders.length > 0) {
+          foundOrder = tableOrders[0];
           setOrders(tableOrders);
-          setActiveOrder(tableOrders[0]);
         }
+      }
+
+      // 3. If logged in with phone and still not found, check customer phone active orders
+      if (!foundOrder && user?.phone) {
+        const phoneOrders = await orderService.getOrdersByPhone(user.phone).catch(() => []);
+        const activePhoneOrders = (phoneOrders || []).filter((o: any) =>
+          ['received', 'preparing', 'ready', 'served'].includes(o.status) && o.paymentStatus !== 'PAID'
+        );
+        if (activePhoneOrders && activePhoneOrders.length > 0) {
+          foundOrder = activePhoneOrders[0];
+          setOrders(activePhoneOrders);
+        }
+      }
+
+      if (foundOrder) {
+        setActiveOrder(foundOrder);
+        setActiveOrderId(foundOrder.orderId);
+        if (!orders.length) setOrders([foundOrder]);
+      } else {
+        setActiveOrder(null);
+        clearActiveOrder();
       }
     } catch (err) {
       console.error('Failed to fetch order status:', err);
+      setActiveOrder(null);
+      clearActiveOrder();
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -149,7 +181,7 @@ export const OrderTrackingPage: React.FC = () => {
                 </h1>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">
-                {activeOrder?.orderId || orderId ? `Order #${activeOrder?.orderId || orderId}` : 'Live Order Tracking'}
+                {activeOrder?.orderId ? `Order #${activeOrder.orderId}` : 'Live Order Tracking'}
               </p>
             </div>
           </div>
@@ -181,10 +213,37 @@ export const OrderTrackingPage: React.FC = () => {
             <div className="w-10 h-10 border-3 border-[#059669] border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-sm font-bold text-slate-700">Connecting to Kitchen KDS...</p>
           </div>
+        ) : !user?.phone ? (
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm text-center space-y-4">
+            <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto text-[#059669] shadow-xs">
+              <Phone className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-base font-extrabold text-slate-900">Sign In to Track Your Table's Orders</h2>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Sign in with your mobile number to view active kitchen orders, live preparation milestones, and your digital receipt.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="w-full sm:w-auto px-6 py-3 bg-[#059669] hover:bg-[#047857] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Sign In with Mobile Number</span>
+              </button>
+              <button
+                onClick={() => navigate('/menu')}
+                className="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Browse Menu
+              </button>
+            </div>
+          </div>
         ) : !activeOrder ? (
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm text-center space-y-4">
             <Utensils className="w-12 h-12 text-slate-300 mx-auto" />
-            <h2 className="text-base font-extrabold text-slate-800">No active order found for this table</h2>
+            <h2 className="text-base font-extrabold text-slate-800">No active kitchen orders for Table {tableId}</h2>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
               Ready to dine? Browse the menu and place your order directly from your phone.
             </p>
@@ -369,6 +428,17 @@ export const OrderTrackingPage: React.FC = () => {
 
       {/* Single Unified Floating Table Service Trigger */}
       <TableServiceModal tableId={tableId} />
+
+      {/* Customer Quick Phone Auth Modal */}
+      <CustomerAuthModal
+        tableId={tableId}
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          fetchOrders();
+        }}
+      />
     </div>
   );
 };

@@ -9,9 +9,10 @@ interface CustomerAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   tableId: string;
+  onSuccess?: (user: any) => void;
 }
 
-export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, onClose, tableId }) => {
+export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, onClose, tableId, onSuccess }) => {
   useBodyScrollLock(isOpen);
   const { showToast } = useToast();
   const [phone, setPhone] = useState('');
@@ -40,6 +41,9 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({ isOpen, on
         showToast(`Welcome to AURA Club, ${data.user.name}! 🎁 +100 Loyalty Coins added to your account.`, 'success');
       } else {
         showToast(`Welcome back, ${data.user.name}! (${data.user.loyaltyPoints || 0} Coins Available)`, 'success');
+      }
+      if (onSuccess) {
+        onSuccess(data.user);
       }
       onClose();
     } catch (error: any) {
