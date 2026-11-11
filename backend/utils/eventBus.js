@@ -128,3 +128,4 @@ class RealtimeEventBus extends EventEmitter {
 // Export singleton instance
 const eventBus = new RealtimeEventBus();
 module.exports = eventBus;
+
