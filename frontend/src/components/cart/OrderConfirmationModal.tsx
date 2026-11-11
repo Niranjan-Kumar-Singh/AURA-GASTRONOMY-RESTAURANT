@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { CartItem, Coupon } from '../../types/menu.types';
 import { Utensils, ShieldCheck, X, Clock, Loader2, Phone, User as UserIcon, Sparkles, CheckCircle2, Edit2 } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
