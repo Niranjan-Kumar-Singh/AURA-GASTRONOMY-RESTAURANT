@@ -191,9 +191,25 @@ router.post('/', async (req, res) => {
       dbMenuMap.set(String(item._id), item);
     });
 
+    // Calculate preliminary subtotal of non-complimentary items to verify tier reward eligibility
+    let preliminaryPaidSubtotal = 0;
+    for (const it of items) {
+      const targetId = String(it.menuItemId || it.id || '');
+      const dbItem = dbMenuMap.get(targetId);
+      if (!dbItem) continue;
+      const isComplimentary = (it.price === 0 || it.isComplimentary || (typeof it.name === 'string' && it.name.includes('(Complimentary Tier')));
+      if (!isComplimentary) {
+        const qty = Math.max(1, parseInt(it.quantity || it.qty || 1));
+        const itemCustomizations = Array.isArray(it.customizations) ? it.customizations : [];
+        const customCost = itemCustomizations.reduce((sum, c) => sum + (parseFloat(c.price) || 0), 0);
+        preliminaryPaidSubtotal += (dbItem.price + customCost) * qty;
+      }
+    }
+
     let verifiedSubtotal = 0;
     const missingItems = [];
     const verifiedNewItems = [];
+    let complimentaryRewardClaimed = false;
 
     for (const it of items) {
       const targetId = String(it.menuItemId || it.id || '');
@@ -203,16 +219,31 @@ router.post('/', async (req, res) => {
         continue;
       }
       const quantity = Math.max(1, parseInt(it.quantity || it.qty || 1));
-      const price = dbItem.price;
-      verifiedSubtotal += price * quantity;
+      const itemCustomizations = Array.isArray(it.customizations) ? it.customizations : [];
+      const customCost = itemCustomizations.reduce((sum, c) => sum + (parseFloat(c.price) || 0), 0);
+
+      // Verify complimentary reward (max 1 freebie per order, requires >= ₹500 qualifying subtotal)
+      const isClaimingFreebie = (it.price === 0 || it.isComplimentary || (typeof it.name === 'string' && it.name.includes('(Complimentary Tier')));
+      const isEligibleComplimentary = isClaimingFreebie && !complimentaryRewardClaimed && preliminaryPaidSubtotal >= 500;
+
+      let effectiveUnitPrice = dbItem.price + customCost;
+      let displayName = dbItem.name;
+
+      if (isEligibleComplimentary) {
+        effectiveUnitPrice = 0;
+        complimentaryRewardClaimed = true;
+        displayName = `${dbItem.name} (Complimentary Reward)`;
+      }
+
+      verifiedSubtotal += effectiveUnitPrice * quantity;
 
       verifiedNewItems.push({
         menuItemId: dbItem.id,
-        name: dbItem.name,
+        name: displayName,
         quantity,
-        price,
+        price: effectiveUnitPrice,
         notes: String(it.notes || '').slice(0, 200),
-        customizations: Array.isArray(it.customizations) ? it.customizations : [],
+        customizations: itemCustomizations,
         status: 'received',
         isPrepared: false
       });

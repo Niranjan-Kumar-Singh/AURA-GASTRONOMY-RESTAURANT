@@ -18,9 +18,9 @@ import { loyaltyService } from '../../services/loyalty.service';
 const CART_TIPS = [
   { icon: '🔥', text: 'Add a dessert before you place your order — served at the perfect moment!' },
   { icon: '🥂', text: 'Pair your mains with a chilled mocktail or fresh-squeezed juice.' },
-  { icon: '🌿', text: 'Add a Smoked Burani Raita — the cooling contrast makes curries taste incredible.' },
-  { icon: '🍞', text: 'Our Wood-Fired Garlic Naan sells out by 9 PM — get yours now!' },
-  { icon: '⭐', text: 'Orders above ₹2,000 unlock a complimentary dessert of your choice.' },
+  { icon: '🌿', text: 'Add a cooling Fresh Lime Soda or Virgin Mojito to pair with spicy dishes.' },
+  { icon: '🍞', text: 'Our Artisanal Garlic Bread pairs amazingly with pasta and appetisers!' },
+  { icon: '⭐', text: 'Orders above ₹500 unlock complimentary freebies and tier rewards.' },
 ];
 
 interface CartDrawerProps {
@@ -798,7 +798,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Pricing Summary & Checkout Button */}
           {items.length > 0 && (
-            <div className="p-4 pb-6 sm:pb-4 bg-slate-50 border-t border-slate-200 space-y-3">
+            <div className="p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-slate-50 border-t border-slate-200 space-y-3">
               <div className="space-y-1.5 text-xs text-slate-600">
                 <div className="flex justify-between">
                   <span>Item Subtotal</span>

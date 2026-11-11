@@ -164,12 +164,8 @@ export const MenuPage: React.FC = () => {
     }
   }, [tableId]);
 
-  // Prompt login dialog if not authenticated on first load
-  useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      setIsAuthOpen(true);
-    }
-  }, [isAuthenticated, isLoading]);
+  // Guests can freely browse the menu immediately upon scanning.
+  // Phone authentication is smoothly prompted on checkout or via header/sidebar.
 
   useEffect(() => {
     fetchMenuData();
@@ -535,7 +531,7 @@ export const MenuPage: React.FC = () => {
 
       {/* Floating Active Cart Bar (Desktop & Mobile - AURA Luxury Emerald Style) */}
       {getItemCount() > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-40">
+        <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-40">
           <button
             onClick={() => setIsCartOpen(true)}
             className="w-full py-3.5 px-5 sm:px-6 bg-[#059669] hover:bg-[#047857] text-white font-black rounded-2xl text-xs sm:text-sm transition-all duration-150 shadow-[0_8px_30px_rgba(5,150,105,0.45)] flex items-center justify-between border-2 border-emerald-400 active:scale-95 cursor-pointer"

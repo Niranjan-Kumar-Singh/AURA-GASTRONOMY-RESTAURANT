@@ -1,9 +1,21 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from './components/feedback/ToastContainer';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { TableSessionRoute } from './routes/TableSessionRoute';
+
+// Shared TanStack Query Client for client-side caching & request deduplication
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 2, // 2 minutes
+      retry: 1,
+    },
+  },
+});
 
 // Dynamic route-based code splitting for ultra-fast initial page loads
 const LandingPage = React.lazy(() => import('./pages/LandingPage').then((m: any) => ({ default: m.LandingPage || m.default })));
@@ -32,68 +44,70 @@ const PageLoader: React.FC = () => (
 
 export const App: React.FC = () => {
   return (
-    <ToastProvider>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public Customer Menu & Landing Routes */}
-            <Route path="/" element={<LandingPage />} />
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public Customer Menu & Landing Routes */}
+              <Route path="/" element={<LandingPage />} />
 
-            {/* Opaque QR Scan Routes for Physical Dining Tables */}
-            <Route path="/dine/:token" element={<DineScanPage />} />
-            <Route path="/t/:token" element={<DineScanPage />} />
+              {/* Opaque QR Scan Routes for Physical Dining Tables */}
+              <Route path="/dine/:token" element={<DineScanPage />} />
+              <Route path="/t/:token" element={<DineScanPage />} />
 
-            {/* Masked Customer Digital Menu & Order Tracking */}
-            <Route element={<TableSessionRoute />}>
-              <Route path="/menu" element={<MenuPage />} />
-              <Route path="/order/:orderId" element={<OrderTrackingPage />} />
-              <Route path="/table/:tableId/menu" element={<MenuPage />} />
-              <Route path="/table/:tableId/order/:orderId" element={<OrderTrackingPage />} />
-            </Route>
+              {/* Masked Customer Digital Menu & Order Tracking */}
+              <Route element={<TableSessionRoute />}>
+                <Route path="/menu" element={<MenuPage />} />
+                <Route path="/order/:orderId" element={<OrderTrackingPage />} />
+                <Route path="/table/:tableId/menu" element={<MenuPage />} />
+                <Route path="/table/:tableId/order/:orderId" element={<OrderTrackingPage />} />
+              </Route>
 
-            {/* Staff Authentication */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/staff" element={<Navigate to="/login" replace />} />
+              {/* Staff Authentication */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/staff" element={<Navigate to="/login" replace />} />
 
-            {/* Kitchen KDS Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['CHEF', 'ADMIN', 'RESTAURANT_OWNER']} />}>
-              <Route path="/kitchen" element={<AppLayout><KitchenDisplayPage /></AppLayout>} />
-              <Route path="/kitchen/kds" element={<AppLayout><KitchenDisplayPage /></AppLayout>} />
-            </Route>
+              {/* Kitchen KDS Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['CHEF', 'ADMIN', 'RESTAURANT_OWNER']} />}>
+                <Route path="/kitchen" element={<AppLayout><KitchenDisplayPage /></AppLayout>} />
+                <Route path="/kitchen/kds" element={<AppLayout><KitchenDisplayPage /></AppLayout>} />
+              </Route>
 
-            {/* Waiter Dispatch Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['WAITER', 'ADMIN', 'RESTAURANT_OWNER']} />}>
-              <Route path="/waiter" element={<AppLayout><WaiterDashboardPage /></AppLayout>} />
-              <Route path="/waiter/dashboard" element={<AppLayout><WaiterDashboardPage /></AppLayout>} />
-            </Route>
+              {/* Waiter Dispatch Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['WAITER', 'ADMIN', 'RESTAURANT_OWNER']} />}>
+                <Route path="/waiter" element={<AppLayout><WaiterDashboardPage /></AppLayout>} />
+                <Route path="/waiter/dashboard" element={<AppLayout><WaiterDashboardPage /></AppLayout>} />
+              </Route>
 
-            {/* Cashier POS Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['CASHIER', 'ADMIN', 'RESTAURANT_OWNER']} />}>
-              <Route path="/cashier" element={<AppLayout><CashierPOSPage /></AppLayout>} />
-              <Route path="/cashier/pos" element={<AppLayout><CashierPOSPage /></AppLayout>} />
-            </Route>
+              {/* Cashier POS Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['CASHIER', 'ADMIN', 'RESTAURANT_OWNER']} />}>
+                <Route path="/cashier" element={<AppLayout><CashierPOSPage /></AppLayout>} />
+                <Route path="/cashier/pos" element={<AppLayout><CashierPOSPage /></AppLayout>} />
+              </Route>
 
-            {/* Admin Command Center & Management */}
-            <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'RESTAURANT_OWNER', 'MANAGER']} />}>
-              <Route path="/admin" element={<AppLayout><AdminDashboardPage /></AppLayout>} />
-              <Route path="/admin/dashboard" element={<AppLayout><AdminDashboardPage /></AppLayout>} />
-              <Route path="/admin/qr-generator" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
-              <Route path="/admin/qr-stands" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
-              <Route path="/qr-generator" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
-              {/* Redirect /owner seamlessly to /admin */}
-              <Route path="/owner" element={<Navigate to="/admin" replace />} />
-              <Route path="/owner/dashboard" element={<Navigate to="/admin" replace />} />
-              <Route path="/admin/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
-              <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
-              <Route path="/profile" element={<AppLayout><ProfilePage /></AppLayout>} />
-            </Route>
+              {/* Admin Command Center & Management */}
+              <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'RESTAURANT_OWNER', 'MANAGER']} />}>
+                <Route path="/admin" element={<AppLayout><AdminDashboardPage /></AppLayout>} />
+                <Route path="/admin/dashboard" element={<AppLayout><AdminDashboardPage /></AppLayout>} />
+                <Route path="/admin/qr-generator" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
+                <Route path="/admin/qr-stands" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
+                <Route path="/qr-generator" element={<AppLayout><QrGeneratorPage /></AppLayout>} />
+                {/* Redirect /owner seamlessly to /admin */}
+                <Route path="/owner" element={<Navigate to="/admin" replace />} />
+                <Route path="/owner/dashboard" element={<Navigate to="/admin" replace />} />
+                <Route path="/admin/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
+                <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
+                <Route path="/profile" element={<AppLayout><ProfilePage /></AppLayout>} />
+              </Route>
 
-            {/* Fallback wildcard redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </ToastProvider>
+              {/* Fallback wildcard redirect */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </ToastProvider>
+    </QueryClientProvider>
   );
 };
 

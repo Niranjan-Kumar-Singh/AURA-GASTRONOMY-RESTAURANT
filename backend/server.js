@@ -187,7 +187,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 let server;
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test' && require.main === module) {
   server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT} (accessible on LAN) with Enterprise Security`);
   });

@@ -101,8 +101,8 @@ export const TableServiceModal: React.FC<TableServiceModalProps> = ({ tableId = 
             : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 shadow-slate-900/10'
         } ${
           hasCart
-            ? 'bottom-[76px] right-4 sm:bottom-6 sm:right-6'
-            : 'bottom-4 right-4 sm:bottom-6 sm:right-6'
+            ? 'bottom-[calc(max(1rem,env(safe-area-inset-bottom))+62px)] right-4 sm:bottom-6 sm:right-6'
+            : 'bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 sm:bottom-6 sm:right-6'
         }`}
         title="Request Table Assistance"
       >
