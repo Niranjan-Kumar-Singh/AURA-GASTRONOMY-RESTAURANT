@@ -28,6 +28,11 @@ export const tableService = {
     return response.data.data;
   },
 
+  async getTableByNumber(tableNumber: string | number) {
+    const response = await apiClient.get(`/tables/table-number/${tableNumber}`);
+    return response.data.data;
+  },
+
   async rotateQrToken(tableId: string | number) {
     const response = await apiClient.post(`/tables/${tableId}/rotate-qr`);
     return response.data.data;

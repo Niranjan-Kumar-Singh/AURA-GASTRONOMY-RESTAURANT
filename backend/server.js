@@ -14,6 +14,7 @@ const fs = require('fs');
 });
 
 const express = require('express');
+const mongoose = require('mongoose');
 const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
