@@ -30,7 +30,7 @@ export const initAudioUnlocker = () => {
       if (ctx.state === 'suspended') {
         ctx.resume().then(() => {
           isUnlocked = true;
-        }).catch(() => {});
+        }).catch(() => { });
       } else if (ctx.state === 'running') {
         isUnlocked = true;
       }
@@ -56,7 +56,7 @@ export const playNotificationChime = (volume = 0.25) => {
     if (!ctx) return;
 
     if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+      ctx.resume().catch(() => { });
     }
 
     const osc = ctx.createOscillator();
