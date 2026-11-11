@@ -37,6 +37,7 @@ const couponRoutes = require('./routes/couponRoutes');
 const tableRoutes = require('./routes/tableRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { router: loyaltyRoutes } = require('./routes/loyaltyRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 
 
 // Connect to MongoDB (non-blocking initialization)
@@ -163,6 +164,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
+app.use('/api/events', eventRoutes);
 
 // Health check endpoint
 app.get(['/', '/api/health'], (req, res) => {

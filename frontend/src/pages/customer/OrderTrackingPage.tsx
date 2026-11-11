@@ -11,6 +11,7 @@ import { useTableStore } from '../../store/use-table-store';
 import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 import { tableService } from '../../services/table.service';
+import { useRealtimeEvent, useRealtimeStatus } from '../../services/realtime.service';
 
 interface OrderItem {
   name: string;
@@ -75,13 +76,35 @@ export const OrderTrackingPage: React.FC = () => {
     }
   };
 
+  const isSseConnected = useRealtimeStatus();
+
+  // Instant Real-Time Order Stage Advance Push (< 50ms)
+  useRealtimeEvent('order:status_updated', (data: any) => {
+    if (!data?.orderId || data.orderId === orderId || String(data.tableId) === String(tableId)) {
+      fetchOrders();
+    }
+  });
+
+  useRealtimeEvent('order:item_updated', (data: any) => {
+    if (!data?.orderId || data.orderId === orderId) {
+      fetchOrders();
+    }
+  });
+
+  useRealtimeEvent('order:item_cancelled', (data: any) => {
+    if (!data?.orderId || data.orderId === orderId) {
+      fetchOrders();
+    }
+  });
+
   useEffect(() => {
     fetchOrders();
+    // Adaptive fallback polling (slowed down from 5s to 30s when SSE is streaming)
     const interval = setInterval(() => {
       fetchOrders();
-    }, 5000);
+    }, isSseConnected ? 30000 : 5000);
     return () => clearInterval(interval);
-  }, [orderId, tableId]);
+  }, [orderId, tableId, isSseConnected]);
 
   const stages = [
     { key: 'received', label: 'Order Confirmed', icon: CheckCircle2, desc: 'Kitchen acknowledged order' },

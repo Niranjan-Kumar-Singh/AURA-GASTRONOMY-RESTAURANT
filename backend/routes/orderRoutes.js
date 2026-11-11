@@ -11,6 +11,7 @@ const Coupon = require('../models/Coupon');
 const { calculateTier, getTierMultiplier } = require('./loyaltyRoutes');
 const { protect, requireRole } = require('../middleware/authMiddleware');
 const { normalizePhoneQuery } = require('../utils/phoneUtils');
+const eventBus = require('../utils/eventBus');
 const router = express.Router();
 
 // Generate a random order ID like ORD-4829
@@ -449,6 +450,23 @@ router.post('/', async (req, res) => {
       await physicalTable.save();
     }
 
+    // Broadcast Realtime Event to Kitchen KDS, Waiter Terminal & Cashier POS (< 50ms)
+    eventBus.broadcast('order:new', {
+      orderId: order.orderId,
+      tableId: order.tableId,
+      status: order.status,
+      items: order.items,
+      subtotal: order.subtotal,
+      total: order.total,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      createdAt: order.createdAt || new Date(),
+    });
+    eventBus.broadcast('table:status_updated', {
+      tableId: order.tableId,
+      status: 'occupied',
+    });
+
     res.status(201).json({ data: order });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -880,6 +898,15 @@ router.put('/:orderId/status', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER
       await awardLoyaltyPointsForOrder(order);
     }
 
+    // Broadcast Realtime Order Status Update (< 50ms)
+    eventBus.broadcast('order:status_updated', {
+      orderId: order.orderId,
+      status: order.status,
+      tableId: order.tableId,
+      items: order.items,
+      paymentStatus: order.paymentStatus
+    });
+
     res.json({ data: order });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -908,6 +935,15 @@ router.put('/:orderId/items/check', protect, requireRole('ADMIN', 'MANAGER', 'CH
         order.items[itemIndex].status = 'ready';
       }
       await order.save();
+
+      // Broadcast Realtime Dish Check Update (< 50ms)
+      eventBus.broadcast('order:item_updated', {
+        orderId: order.orderId,
+        itemIndex,
+        isPrepared: !!isPrepared,
+        status: order.items[itemIndex].status,
+        tableId: order.tableId
+      });
     }
 
     res.json({ success: true, data: order });
@@ -1004,6 +1040,17 @@ router.put('/:orderId/items/:itemIndex/cancel', protect, requireRole('ADMIN', 'M
 
     await order.save();
 
+    // Broadcast Realtime Item Cancellation (< 50ms)
+    eventBus.broadcast('order:item_cancelled', {
+      orderId: order.orderId,
+      itemIndex,
+      dishName,
+      status: order.status,
+      allCancelled,
+      tableId: order.tableId,
+      items: order.items
+    });
+
     res.json({
       success: true,
       message: allCancelled 
@@ -1091,6 +1138,14 @@ router.put('/:orderId/cancel', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER
         }
       }
     }
+
+    // Broadcast Realtime Order Cancellation (< 50ms)
+    eventBus.broadcast('order:cancelled', {
+      orderId: order.orderId,
+      tableId: order.tableId,
+      status: 'cancelled',
+      cancelReason: order.cancelReason
+    });
 
     res.json({
       success: true,
@@ -1197,6 +1252,18 @@ router.post('/pay-table', protect, requireRole('ADMIN', 'MANAGER', 'CASHIER', 'O
         { $set: { status: 'completed', endTime: new Date() } }
       ).catch(() => {});
     }
+
+    // Broadcast Realtime Table Settled Event (< 50ms)
+    eventBus.broadcast('table:paid', {
+      tableId: cleanTableNum,
+      invoiceNumber,
+      paymentMethod: paymentMethod || 'UPI_QR',
+      status: 'cleaning'
+    });
+    eventBus.broadcast('table:status_updated', {
+      tableId: cleanTableNum,
+      status: 'cleaning'
+    });
 
     res.json({
       success: true,

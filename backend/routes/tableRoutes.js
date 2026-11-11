@@ -4,6 +4,7 @@ const Table = require('../models/Table');
 const TableSession = require('../models/TableSession');
 const Order = require('../models/Order');
 const WaiterAlert = require('../models/WaiterAlert');
+const eventBus = require('../utils/eventBus');
 const { protect, requireRole, optionalAuth } = require('../middleware/authMiddleware');
 const router = express.Router();
 
@@ -470,6 +471,14 @@ router.put(['/:tableId/status', '/status/:tableId'], protect, requireRole('ADMIN
       await table.save();
     }
 
+    // Broadcast Realtime Table Status Change via SSE (< 50ms)
+    eventBus.broadcast('table:status_updated', {
+      tableId: table.tableNumber,
+      status: table.status,
+      guestCount: table.guestCount,
+      timestamp: Date.now(),
+    });
+
     res.json({
       success: true,
       message: `Table ${table.tableNumber} status updated to ${table.status}`,
@@ -534,6 +543,16 @@ router.post('/call-waiter', async (req, res) => {
     } catch (tblErr) {
       console.warn('Table update for waiter call warning:', tblErr.message);
     }
+
+    // Broadcast Realtime Waiter Call to all Waiter Terminals (< 50ms)
+    eventBus.broadcast('table:waiter_call', {
+      id: alertId,
+      tableId: cleanTableNum,
+      tableNumber: cleanTableNum,
+      reason: newAlertData.reason,
+      timestamp: timeStr,
+      status: 'PENDING',
+    });
 
     res.json({ success: true, data: createdAlert || newAlertData });
   } catch (error) {
@@ -606,6 +625,13 @@ router.put('/waiter-calls/:id/resolve', protect, requireRole('ADMIN', 'MANAGER',
       timestamp: a.timestamp,
       status: a.status,
     }));
+
+    // Broadcast Realtime Waiter Call Resolution (< 50ms)
+    eventBus.broadcast('table:waiter_call_resolved', {
+      id: alertId,
+      tableId: targetTableNum,
+      status: 'RESOLVED',
+    });
 
     res.json({ success: true, data: formattedAlerts });
   } catch (error) {

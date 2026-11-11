@@ -6,6 +6,7 @@ import { orderService } from '../../services/order.service';
 import { loyaltyService } from '../../services/loyalty.service';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { OrderRefundModal } from '../../components/orders/OrderRefundModal';
+import { useRealtimeEvent, useRealtimeStatus } from '../../services/realtime.service';
 
 interface POSItem {
   name: string;
@@ -132,11 +133,31 @@ export const CashierPOSPage: React.FC = () => {
     }
   };
 
+  const isSseConnected = useRealtimeStatus();
+
+  // Instant POS Push Feed (< 50ms)
+  useRealtimeEvent('order:new', () => {
+    fetchLivePOSData(false);
+  });
+
+  useRealtimeEvent('table:paid', () => {
+    fetchLivePOSData(false);
+  });
+
+  useRealtimeEvent('order:status_updated', () => {
+    fetchLivePOSData(false);
+  });
+
+  useRealtimeEvent('table:status_updated', () => {
+    fetchLivePOSData(false);
+  });
+
   useEffect(() => {
     fetchLivePOSData();
-    const interval = setInterval(() => fetchLivePOSData(false), 3500); // Fast, lightweight 3.5s feed
+    // Adaptive fallback polling (slowed down from 3.5s to 25s when SSE is active)
+    const interval = setInterval(() => fetchLivePOSData(false), isSseConnected ? 25000 : 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isSseConnected]);
 
   useEffect(() => {
     if (filterTab === 'SETTLED_TODAY' || isArchiveOpen) {

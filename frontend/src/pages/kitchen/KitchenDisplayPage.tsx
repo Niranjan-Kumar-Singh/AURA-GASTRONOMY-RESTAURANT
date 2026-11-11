@@ -8,6 +8,7 @@ import { useToast } from '../../components/feedback/ToastContainer';
 import { orderService } from '../../services/order.service';
 import { OrderCancelModal } from '../../components/orders/OrderCancelModal';
 import { OrderItemCancelModal } from '../../components/orders/OrderItemCancelModal';
+import { useRealtimeEvent, useRealtimeStatus } from '../../services/realtime.service';
 
 interface KDSItem {
   name: string;
@@ -120,15 +121,42 @@ export const KitchenDisplayPage: React.FC = () => {
     }
   };
 
+  const isSseConnected = useRealtimeStatus();
+
+  // Instant Real-Time Push Stream (< 50ms)
+  useRealtimeEvent('order:new', (data: any) => {
+    playAudioChime();
+    showToast(`🔔 New Order #${data?.orderId || ''} received from Table ${data?.tableId || ''}!`, 'info', 'Instant KDS Dispatch');
+    fetchActiveOrders(false);
+  });
+
+  useRealtimeEvent('order:status_updated', () => {
+    fetchActiveOrders(false);
+  });
+
+  useRealtimeEvent('order:item_updated', () => {
+    fetchActiveOrders(false);
+  });
+
+  useRealtimeEvent('order:item_cancelled', (data: any) => {
+    showToast(`⚠️ Dish "${data?.dishName || ''}" cancelled on Table ${data?.tableId || ''}`, 'error', 'Kitchen Alert');
+    fetchActiveOrders(false);
+  });
+
+  useRealtimeEvent('order:cancelled', () => {
+    fetchActiveOrders(false);
+  });
+
   useEffect(() => {
     fetchActiveOrders();
-    const pollInterval = setInterval(() => fetchActiveOrders(false), 3000);
+    // Adaptive fallback polling (slow background interval since SSE pushes updates in < 50ms)
+    const pollInterval = setInterval(() => fetchActiveOrders(false), isSseConnected ? 25000 : 5000);
     const clockInterval = setInterval(() => setNowTimestamp(Date.now()), 1000);
     return () => {
       clearInterval(pollInterval);
       clearInterval(clockInterval);
     };
-  }, []);
+  }, [isSseConnected]);
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
@@ -231,7 +259,9 @@ export const KitchenDisplayPage: React.FC = () => {
                 </h1>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
               </div>
-              <p className="text-[10px] text-emerald-400 font-mono font-bold hidden sm:block">LIVE • 3s Stream • MAIN PASS</p>
+              <p className="text-[10px] text-emerald-400 font-mono font-bold hidden sm:block">
+                {isSseConnected ? '⚡ LIVE SSE STREAM (< 50ms) • MAIN PASS' : 'LIVE FEED • MAIN PASS'}
+              </p>
             </div>
           </div>
 

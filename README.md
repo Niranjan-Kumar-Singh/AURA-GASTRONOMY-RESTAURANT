@@ -66,6 +66,7 @@ AURA Gastronomy is a commercial-grade, full-stack digital dining platform and po
                             │ • Authoritative Server-Side Pricing & GST    │
                             │ • Deep Recursive NoSQL Injection Scrubbing   │
                             │ • Compound MongoDB Performance Indexes       │
+                            │ • Realtime SSE EventBus (/api/events/stream) │
                             │ • Dual-Mode Serverless (Vercel) + Node.js    │
                             └──────────────────────────────────────────────┘
 ```

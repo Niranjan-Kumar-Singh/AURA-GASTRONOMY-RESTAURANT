@@ -5,6 +5,7 @@ import { tableService } from '../../services/table.service';
 import { useCartStore } from '../../store/use-cart-store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { triggerHaptic } from '../../utils/haptics';
+import { useRealtimeEvent } from '../../services/realtime.service';
 
 interface TableServiceModalProps {
   tableId?: string;
@@ -17,6 +18,15 @@ export const TableServiceModal: React.FC<TableServiceModalProps> = ({ tableId = 
   const { showToast } = useToast();
   const itemCount = useCartStore((state) => state.getItemCount());
   const hasCart = itemCount > 0;
+
+  // Real-Time notification when Waiter acknowledges customer's call (< 50ms)
+  useRealtimeEvent('table:waiter_call_resolved', (data: any) => {
+    if (!data?.tableId || String(data.tableId) === String(tableId)) {
+      setActiveAlert(null);
+      showToast('Staff acknowledged your table request and is on the way!', 'success');
+      triggerHaptic('success');
+    }
+  });
 
   const serviceOptions = [
     {

@@ -4,6 +4,7 @@ import { useToast } from '../../components/feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { orderService } from '../../services/order.service';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useRealtimeEvent, useRealtimeStatus } from '../../services/realtime.service';
 
 interface TableState {
   _id: string;
@@ -258,20 +259,62 @@ export const WaiterDashboardPage: React.FC = () => {
     }
   };
 
+  const isSseConnected = useRealtimeStatus();
+
+  // Instant Real-Time Waiter Call Alert Push (< 50ms)
+  useRealtimeEvent('table:waiter_call', (alertData: any) => {
+    playAudioChime();
+    showToast(`🔔 Table ${alertData?.tableId || ''} requested: "${alertData?.reason || 'Service'}"`, 'info', 'Customer Table Call');
+    syncWaiterCalls();
+    fetchFloorState(false);
+  });
+
+  // Instant Waiter Call Resolution Push (< 50ms)
+  useRealtimeEvent('table:waiter_call_resolved', () => {
+    syncWaiterCalls();
+    fetchFloorState(false);
+  });
+
+  // Instant Table Status / Billing / Cleaning Push (< 50ms)
+  useRealtimeEvent('table:status_updated', () => {
+    fetchFloorState(false);
+  });
+
+  // Instant Order Received Alert (< 50ms)
+  useRealtimeEvent('order:new', (data: any) => {
+    showToast(`🍽️ Table ${data?.tableId || ''} placed a new order!`, 'info', 'Floor Dispatch');
+    fetchFloorState(false);
+  });
+
+  // Instant Kitchen Food Ready Alert (< 50ms)
+  useRealtimeEvent('order:status_updated', (data: any) => {
+    if (data?.status === 'ready') {
+      playAudioChime();
+      showToast(`🍳 Order ready for Table ${data?.tableId || ''}! Ready for pickup.`, 'success', 'Pass Dispatch');
+    }
+    fetchFloorState(false);
+  });
+
+  // Instant Bill Settle Alert (< 50ms)
+  useRealtimeEvent('table:paid', () => {
+    fetchFloorState(false);
+  });
+
   useEffect(() => {
     fetchFloorState();
     syncWaiterCalls();
 
-    const tableInterval = setInterval(() => fetchFloorState(false), 3000); // 3s auto sync
-    const alertInterval = setInterval(() => syncWaiterCalls(), 1500); // 1.5s live alert sync
-    const timerTickInterval = setInterval(() => setNowTimestamp(Date.now()), 1000); // 1s cleanup countdown tick
+    // Adaptive fallback polling (slow background sync since SSE streams events in < 50ms)
+    const tableInterval = setInterval(() => fetchFloorState(false), isSseConnected ? 25000 : 4000);
+    const alertInterval = setInterval(() => syncWaiterCalls(), isSseConnected ? 20000 : 2000);
+    const timerTickInterval = setInterval(() => setNowTimestamp(Date.now()), 1000);
 
     return () => {
       clearInterval(tableInterval);
       clearInterval(alertInterval);
       clearInterval(timerTickInterval);
     };
-  }, []);
+  }, [isSseConnected]);
 
   const handleAcknowledgeAlert = async (alertId: number) => {
     const updated = alerts.map((a) => (a.id === alertId ? { ...a, status: 'RESOLVED' as const } : a));
