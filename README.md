@@ -1,10 +1,10 @@
 <div align="center">
 
 # 🌿 AURA GASTRONOMY™
-### Next-Generation Digital Dining, Real-Time KDS & Commercial POS Operating System
+### Commercial Digital Dining, Real-Time KDS & Multi-Station POS Operating System
 
 <p align="center">
-  <b>A commercial-grade hospitality platform engineered for luxury dining, boutique bistros, and high-volume restaurants.</b><br />
+  <b>An enterprise hospitality suite engineered for luxury fine dining, boutique bistros, and high-volume restaurants.</b><br />
   Featuring sub-50ms Server-Sent Events (SSE), zero-client-trust financial security, tactile mobile ergonomics, and automated dual-QR table stand generation.
 </p>
 
@@ -18,11 +18,11 @@
 
 <br />
 
-[⚡ Quickstart](#-quickstart--development-guide) •
-[🏢 Station Directory](#-live-station-directory--default-credentials) •
-[📡 Real-Time SSE Mesh](#-real-time-sse-event-mesh--50ms) •
-[🛡️ Security Architecture](#-zero-client-trust-security-architecture) •
-[🔌 API Reference](#-rest-api--event-stream-reference) •
+[⚡ Quickstart](#-quickstart--development-guide) &nbsp;•&nbsp;
+[🏢 Station Directory](#-live-station-directory--default-credentials) &nbsp;•&nbsp;
+[📡 Real-Time SSE Mesh](#-real-time-sse-event-mesh--50ms) &nbsp;•&nbsp;
+[🛡️ Security Architecture](#-zero-client-trust-security-architecture) &nbsp;•&nbsp;
+[🔌 API Reference](#-rest-api--event-stream-reference) &nbsp;•&nbsp;
 [📲 PWA Setup](#-mobile-ergonomics--pwa-installation)
 
 <br />
@@ -46,29 +46,23 @@
 
 ## 🌟 Highlights & Capabilities at a Glance
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   🌿 AURA GASTRONOMY PLATFORM                                   │
-├─────────────────────────┬─────────────────────────┬─────────────────────────┬────────────────────┤
-│   📱 DINER PORTAL       │   🍳 KITCHEN PASS (KDS) │   🤵 FLOOR COMMAND      │   💳 CASHIER POS   │
-│   • Instant QR Seating  │   • Dark High-Contrast  │   • 30-Table Visual Map │   • Item Returns   │
-│   • Zero Login Barrier  │   • Live Prep Stages    │   • Sub-50ms Chimes     │   • Net Accounting │
-│   • AI Dish Pairings    │   • Line-Item Dish 86   │   • Zone Overview       │   • 80mm Thermal   │
-│   • Mobile Haptics      │   • Web Audio Alarms    │   • Turnover Timers     │   • A4 GST Invoice │
-└─────────────────────────┴─────────────────────────┴─────────────────────────┴────────────────────┘
-```
+| 📱 Guest Diner Portal (PWA) | 🍳 Kitchen Pass (KDS) | 🤵 Floor Command & Waiter | 💳 Cashier Billing POS |
+|:---|:---|:---|:---|
+| • **Instant QR Table Seating**<br>• **Zero Login Wall Barrier**<br>• **AI Pairing & Upsell Engine**<br>• **Tactile Mobile Haptics**<br>• **One-Tap Table Service** | • **Dark High-Contrast Pass**<br>• **Live Prep Milestones**<br>• **Line-Item Dish 86 Mode**<br>• **Dual-Tone Audio Chimes**<br>• **Active Elapsed Timers** | • **30-Table Visual Floor Map**<br>• **Sub-50ms Floor Chimes**<br>• **4 Live Dining Zones**<br>• **Auto Turnover Timers**<br>• **1-Tap Quick Reset** | • **Line-Item Partial Returns**<br>• **Audit-Grade Net Ledger**<br>• **80mm Thermal Slip Print**<br>• **Formal A4 GST Invoice**<br>• **Split Bill Calculations** |
 
-* **⚡ Ultra-Low Latency (&lt; 50ms):** Persistent **Server-Sent Events (SSE)** broadcast dining events instantly between Diners, Chefs, Floor Waiters, and Cashiers without polling overhead.
-* **🛡️ Zero-Client-Trust Security:** Client prices and totals are completely stripped. The server computes all sums, validates coupons in MongoDB, checks loyalty caps, and levies 5% GST authoritatively.
-* **📱 Frictionless Diner Experience:** Zero registration wall. Diners scan and immediately browse high-res photography. Phone number is captured at checkout for order tracking and loyalty rewards.
-* **🖨️ Dual-QR Acrylic Stand Studio:** Built-in generator formats print-ready luxury acrylic table tents with integrated **WPA Guest Wi-Fi QR** and **Cryptographic Table Order QR**.
-* **🚀 Universal Multi-Device Support:** Fully installable as a standalone Progressive Web App (PWA) with native mobile safe-area padding and tactile haptic vibration feedback.
+<br />
+
+> [!NOTE]
+> **Key Architecture Guarantees:**
+> * **⚡ Sub-50ms Push Latency:** Persistent **Server-Sent Events (SSE)** broadcast dining state changes instantly between Diners, Chefs, Waiters, and Cashiers without polling latency.
+> * **🛡️ Zero-Client-Trust Financial Integrity:** Client price and discount payloads are discarded. The server computes item totals, verifies coupons, applies loyalty caps, and levies 5% GST authoritatively.
+> * **📱 Native Mobile Ergonomics:** Features safe-area inset protection for bezel-less screens (`env(safe-area-inset-bottom)`), Web Audio synthesizers, and installable PWA offline caching.
 
 ---
 
-## 📡 Real-Time SSE Event Mesh (&lt; 50ms)
+## 📡 Real-Time SSE Event Mesh (< 50ms)
 
-AURA eliminates traditional polling by leveraging a high-throughput **Server-Sent Events (SSE)** event bus. When any action occurs on the floor, updates reach all connected terminals in under 50 milliseconds:
+AURA eliminates traditional polling loops by leveraging a high-throughput **Server-Sent Events (SSE)** event bus. When any action occurs on the floor, updates reach all connected terminals in under 50 milliseconds:
 
 ```mermaid
 sequenceDiagram
@@ -106,7 +100,7 @@ sequenceDiagram
 
 | Event Name | Dispatched When | Primary Recipients | Action Triggered |
 |:---|:---|:---|:---|
-| `order:new` | Diner submits cart | Kitchen KDS, Waiter, Cashier | Sound alert, ticket render, table set to `occupied` |
+| `order:new` | Diner submits table cart | Kitchen KDS, Waiter, Cashier | Sound alert, ticket render, table set to `occupied` |
 | `order:status_updated` | Kitchen advances prep stage | Diner Tracker, Waiter, Cashier | Stage animation advances, pass pickup chime |
 | `order:item_updated` | Individual dish checked done | Kitchen KDS, Diner Tracker | Line item checkbox synchronizes |
 | `order:item_cancelled` | Dish 86'd or ingredient depleted | Kitchen KDS, Diner, Waiter | Item strikethrough, total recalculated |
