@@ -9,7 +9,8 @@
     "dev:backend": "node backend/server.js",
     "dev:frontend": "npm --prefix frontend run dev",
     "build": "cd frontend && npm install && npm run build",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "seed": "node backend/seed.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
