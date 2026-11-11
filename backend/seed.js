@@ -2528,11 +2528,11 @@ const MOCK_GALLERY = [
 // STAFF ACCOUNTS — Seeded with hashed passwords. Change these IMMEDIATELY.
 // ==============================================================================
 const STAFF_ACCOUNTS = [
-  { name: 'Restaurant Owner',    email: 'owner@aura.com',   phone: '+919999900001', role: 'owner',   password: 'Owner@Aura2026!' },
-  { name: 'System Administrator',email: 'admin@aura.com',   phone: '+919999900002', role: 'admin',   password: 'Admin@Aura2026!' },
-  { name: 'Executive Chef',      email: 'chef@aura.com',    phone: '+919999900003', role: 'kitchen', password: 'Chef@Aura2026!' },
-  { name: 'Head Waiter',         email: 'waiter@aura.com',  phone: '+919999900004', role: 'waiter',  password: 'Waiter@Aura2026!' },
-  { name: 'Senior Cashier',      email: 'cashier@aura.com', phone: '+919999900005', role: 'cashier', password: 'Cashier@Aura2026!' },
+  { name: 'Restaurant Owner',    email: 'owner@aura.com',   phone: '+919999900001', role: 'owner',   password: 'owner123' },
+  { name: 'System Administrator',email: 'admin@aura.com',   phone: '+919999900002', role: 'admin',   password: 'admin123' },
+  { name: 'Executive Chef',      email: 'chef@aura.com',    phone: '+919999900003', role: 'kitchen', password: 'chef123' },
+  { name: 'Head Waiter',         email: 'waiter@aura.com',  phone: '+919999900004', role: 'waiter',  password: 'waiter123' },
+  { name: 'Senior Cashier',      email: 'cashier@aura.com', phone: '+919999900005', role: 'cashier', password: 'cashier123' },
 ];
 
 const seedDB = async () => {

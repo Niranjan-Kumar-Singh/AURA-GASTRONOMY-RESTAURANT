@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { initAudioUnlocker } from './utils/audio';
+
+// Automatically unlock Web Audio API context on first user touch/click for mobile tablets
+initAudioUnlocker();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

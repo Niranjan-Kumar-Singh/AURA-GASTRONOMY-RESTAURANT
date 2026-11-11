@@ -255,10 +255,39 @@ Launch both the **Express Backend (Port 5000)** and **Vite Frontend (Port 5173)*
 npm run dev
 ```
 
-* 📱 **Frontend Client:** [http://localhost:5173](http://localhost:5173)
-* 🛡️ **Backend API:** [http://localhost:5000/api](http://localhost:5000/api)
-* 📡 **Real-Time SSE Stream:** [http://localhost:5000/api/events/stream](http://localhost:5000/api/events/stream)
-* 🩺 **Health Check:** [http://localhost:5000/api/health](http://localhost:5000/api/health)
+> [!NOTE]
+> **Local Endpoints**: The addresses below run locally on your host machine. They become active once you start the development server with `npm run dev`. On cloud deployments (e.g. Vercel), the endpoints run under your live production domain.
+
+| Service | Local Address | Protocol | Description |
+|:---|:---|:---|:---|
+| 📱 **Frontend Client** | `http://localhost:5173` | HTTP (Vite SPA) | Interactive diner menu, staff dashboards & KDS |
+| 🛡️ **API Root Gateway** | `http://localhost:5000/api` | HTTP (Express) | REST API gateway & system operational status |
+| 🩺 **System Health Check** | `http://localhost:5000/api/health` | HTTP (JSON) | Live status, version, and MongoDB connection state |
+| 📡 **Real-Time SSE Stream** | `http://localhost:5000/api/events/stream` | HTTP (EventStream) | Sub-50ms push mesh for orders & waiter dispatch |
+| 📊 **SSE Hub Status** | `http://localhost:5000/api/events/status` | HTTP (JSON) | Active subscriber metrics and broadcaster health |
+
+#### 🔍 Instant Terminal Health Verification
+
+To verify that the Express backend and MongoDB Atlas cluster are active and healthy, execute in your terminal:
+
+```bash
+# Verify backend API and database connection status
+curl -i http://localhost:5000/api/health
+```
+
+Expected JSON response:
+```json
+{
+  "status": "online",
+  "system": "AURA Gastronomy Commercial Operating System",
+  "version": "1.0.0",
+  "database": "connected",
+  "timestamp": "2026-11-11T18:09:26.606Z"
+}
+```
+
+> [!TIP]
+> Vite also automatically proxies `/api` requests to the backend server. You can also query `http://localhost:5173/api/health` through the Vite development proxy.
 
 ---
 

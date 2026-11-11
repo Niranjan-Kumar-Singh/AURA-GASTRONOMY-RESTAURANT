@@ -166,11 +166,13 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/events', eventRoutes);
 
-// Health check endpoint
-app.get(['/', '/api/health'], (req, res) => {
+// Health check and root API status endpoint
+app.get(['/', '/health', '/api', '/api/health'], (req, res) => {
   res.json({
     status: 'online',
     system: 'AURA Gastronomy Commercial Operating System',
+    version: '1.0.0',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'connecting',
     timestamp: new Date().toISOString()
   });
 });

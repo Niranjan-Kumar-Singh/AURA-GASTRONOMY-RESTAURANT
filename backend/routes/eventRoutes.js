@@ -8,14 +8,23 @@ const router = express.Router();
  * Automatically broadcasts updates to all listening terminals.
  */
 router.get('/stream', (req, res) => {
-  // Set SSE streaming headers
-  res.writeHead(200, {
+  const origin = req.headers.origin;
+  const sseHeaders = {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
     'Connection': 'keep-alive',
     'X-Accel-Buffering': 'no', // Disable proxy buffering for instant delivery
-    'Access-Control-Allow-Origin': '*',
-  });
+  };
+
+  // If request has origin, reflect origin and allow credentials for browser EventSource
+  if (origin) {
+    sseHeaders['Access-Control-Allow-Origin'] = origin;
+    sseHeaders['Access-Control-Allow-Credentials'] = 'true';
+  } else {
+    sseHeaders['Access-Control-Allow-Origin'] = '*';
+  }
+
+  res.writeHead(200, sseHeaders);
 
   if (res.flushHeaders) {
     res.flushHeaders();

@@ -1,4 +1,22 @@
+const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
+
+// Ensure environment variables are loaded from backend/.env or root .env
+if (!process.env.MONGO_URI && !process.env.MONGODB_URI) {
+  [
+    path.join(__dirname, '../.env'),
+    path.join(__dirname, '../../.env'),
+    path.resolve(process.cwd(), 'backend/.env'),
+    path.resolve(process.cwd(), '.env'),
+  ].forEach((envFile) => {
+    if (fs.existsSync(envFile)) {
+      try {
+        require('dotenv').config({ path: envFile });
+      } catch (e) {}
+    }
+  });
+}
 
 let cachedPromise = null;
 
