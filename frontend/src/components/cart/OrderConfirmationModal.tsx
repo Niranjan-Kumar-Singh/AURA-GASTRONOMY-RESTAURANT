@@ -6,6 +6,7 @@ import { useBackHandler } from '../../hooks/useBackHandler';
 import { useAuthStore } from '../../store/use-auth-store';
 import { authService } from '../../services/auth.service';
 import { useToast } from '../feedback/ToastContainer';
+import { triggerHaptic } from '../../utils/haptics';
 
 interface OrderConfirmationModalProps {
   tableId: string;
@@ -75,6 +76,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
       }
 
       await onConfirm(finalPhone, finalName);
+      triggerHaptic('success');
     } catch (err: any) {
       showToast(err.response?.data?.message || err.message || 'Failed to place order. Please try again.', 'error');
     } finally {

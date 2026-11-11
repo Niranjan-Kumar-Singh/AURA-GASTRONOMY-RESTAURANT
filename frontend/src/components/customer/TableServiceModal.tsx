@@ -4,6 +4,7 @@ import { useToast } from '../feedback/ToastContainer';
 import { tableService } from '../../services/table.service';
 import { useCartStore } from '../../store/use-cart-store';
 import { motion, AnimatePresence } from 'framer-motion';
+import { triggerHaptic } from '../../utils/haptics';
 
 interface TableServiceModalProps {
   tableId?: string;
@@ -70,6 +71,7 @@ export const TableServiceModal: React.FC<TableServiceModalProps> = ({ tableId = 
       localStorage.setItem('aura_waiter_alerts', JSON.stringify([newAlert, ...existingAlerts]));
 
       setActiveAlert(label);
+      triggerHaptic('success');
       showToast(`${label} requested for Table ${tableId}! Staff notified.`, 'success');
       setIsOpen(false);
 

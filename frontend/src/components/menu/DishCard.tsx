@@ -4,6 +4,7 @@ import { Star, Sparkles, Flame, Zap, Check, ArrowRight, Plus, Minus } from 'luci
 import { useCartStore } from '../../store/use-cart-store';
 import { useToast } from '../feedback/ToastContainer';
 import { motion } from 'framer-motion';
+import { triggerHaptic } from '../../utils/haptics';
 
 interface DishCardProps {
   item: MenuItem;
@@ -168,6 +169,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic('tap');
                     updateQuantity(item.id, quantity - 1);
                   }}
                   className="w-5 h-5 sm:w-6 sm:h-6 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors cursor-pointer active:scale-90"
@@ -182,6 +184,7 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic('tap');
                     updateQuantity(item.id, quantity + 1);
                   }}
                   className="w-5 h-5 sm:w-6 sm:h-6 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors cursor-pointer active:scale-90"
@@ -193,7 +196,10 @@ export const DishCard: React.FC<DishCardProps> = ({ item, onAdd, onClick }) => {
             ) : (
               <button
                 type="button"
-                onClick={() => onClick(item)}
+                onClick={() => {
+                  triggerHaptic('tap');
+                  onClick(item);
+                }}
                 className="pl-2.5 sm:pl-3.5 pr-2 sm:pr-3 py-1 sm:py-1.5 rounded-l-full sm:rounded-l-2xl text-[10px] sm:text-xs font-black uppercase tracking-tight transition-all flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-[#059669] to-[#047857] hover:from-[#047857] hover:to-[#065F46] text-white shadow-xs hover:shadow-md hover:shadow-emerald-700/20 active:scale-95 cursor-pointer shrink-0 group/btn border-y border-l border-emerald-400/40"
                 title="View dish details, chef pairings & add to order"
               >

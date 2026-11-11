@@ -12,4 +12,7 @@ const tableSessionSchema = new mongoose.Schema({
   totalAmount: { type: Number, default: 0 }
 }, { timestamps: true });
 
+// High-speed lookup index for active table sessions
+tableSessionSchema.index({ tableId: 1, status: 1 });
+
 module.exports = mongoose.model('TableSession', tableSessionSchema);
